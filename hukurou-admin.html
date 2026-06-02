@@ -114,12 +114,19 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="card-title">訪談內容</div>
         <div class="tip">💡 直接貼上逐字稿或摘要均可，儲存後同步至所有人的案例庫</div>
         <div class="form-group">
-          <label class="form-label">訪談逐字稿或摘要 *</label>
-          <textarea class="form-textarea" id="new-content" rows="10" placeholder="直接貼上訪談逐字稿，或輸入重點摘要..."></textarea>
+          <label class="form-label">原始逐字稿 *</label>
+          <textarea class="form-textarea" id="new-transcript" rows="10" placeholder="直接貼上完整原始逐字稿..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <button class="btn btn-primary btn-sm" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析</button>
         </div>
         <div class="form-group">
-          <label class="form-label">關鍵洞察（選填）</label>
-          <textarea class="form-textarea" id="new-insight" rows="3" placeholder="例：受訪者最在意寵物安全，「天然除蟲菊」比「殺蟲劑」更有說服力..."></textarea>
+          <label class="form-label">訪談摘要（AI 自動填入或手動輸入）</label>
+          <textarea class="form-textarea" id="new-content" rows="4" placeholder="訪談重點摘要..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">關鍵洞察含消費者痛點（AI 自動填入或手動輸入）</label>
+          <textarea class="form-textarea" id="new-insight" rows="4" placeholder="AI 分析後會自動填入消費者痛點與洞察建議..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">原始逐字稿（選填）</label>
@@ -407,6 +414,53 @@ async function deleteRecord(id){
 // ── ADD ──
 function initAddForm(){
   document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
+}
+
+async function analyzeTranscript(){
+  const transcript = document.getElementById('new-transcript').value.trim();
+  if(!transcript){ alert('請先貼上逐字稿'); return; }
+  const apiKey = localStorage.getItem('hk_api_key')||'';
+  if(!apiKey){ alert('請先在系統設定填入 Claude API Key'); return; }
+
+  const btn = document.getElementById('btn-analyze');
+  btn.textContent = '分析中...'; btn.disabled = true;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `以下是一份關於福來朗除蟲產品的消費者訪談逐字稿，請分析後以JSON格式回傳，不要加任何其他文字：
+
+逐字稿：
+${transcript}
+
+請回傳以下JSON格式（全部用繁體中文）：
+{
+  "summary": "3-5句話的訪談摘要，包含受訪者背景、主要蟲害問題、使用產品經驗",
+  "insight": "【消費者痛點】\n- 痛點1\n- 痛點2\n- 痛點3\n\n【關鍵洞察】\n- 洞察1\n- 洞察2\n\n【行銷建議】\n- 建議1\n- 建議2"
+}`
+        }]
+      })
+    });
+    const data = await res.json();
+    if(data.error){ alert('分析失敗：'+data.error.message); return; }
+    const text = data.content[0].text;
+    const clean = text.replace(/\`\`\`json|\`\`\`/g,'').trim();
+    const result = JSON.parse(clean);
+    document.getElementById('new-content').value = result.summary || '';
+    document.getElementById('new-insight').value = result.insight || '';
+    alert('✓ 分析完成！請確認內容後儲存');
+  } catch(e){
+    alert('分析失敗，請確認 API Key 是否正確');
+    console.error(e);
+  } finally {
+    btn.textContent = '✨ AI 自動分析'; btn.disabled = false;
+  }
 }
 
 async function saveInterview(){

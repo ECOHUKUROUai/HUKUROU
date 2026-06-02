@@ -219,11 +219,24 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="chat-input-area" id="chat-input-area">
         <div class="concept-row" id="concept-row" style="display:none">
           <input class="concept-input" id="concept-input" placeholder="輸入產品概念...">
+          <label for="concept-img-upload" style="padding:10px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">📷</label>
+          <input type="file" id="concept-img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event);document.getElementById('concept-img-label').textContent=event.target.files[0]?'📷✓':'📷';">
           <button class="btn-send" id="btn-start" onclick="startInterview()">開始訪談</button>
         </div>
         <div id="chat-controls" style="display:none">
-          <textarea class="msg-input" id="msg-input" rows="2" placeholder="繼續追問..." onkeydown="handleKey(event)"></textarea>
-          <div class="input-hint">Enter 送出　Shift+Enter 換行</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
+            <label for="img-upload" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:inherit;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">
+              📷 上傳圖片
+            </label>
+            <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+            <div id="img-preview-wrap" style="display:none;position:relative;">
+              <img id="img-preview" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:0.5px solid var(--border2);">
+              <button onclick="clearImage()" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;color:white;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+            </div>
+            <span id="img-filename" style="font-size:11px;color:var(--text3);"></span>
+          </div>
+          <textarea class="msg-input" id="msg-input" rows="2" placeholder="繼續追問，或上傳圖片詢問受訪者的看法..." onkeydown="handleKey(event)"></textarea>
+          <div class="input-hint">Enter 送出　Shift+Enter 換行　📷 可上傳產品圖或活動圖詢問受訪者意願</div>
         </div>
       </div>
     </div>
@@ -318,6 +331,33 @@ const ROLE_PROMPTS = {
 
 const BRAND_CONTEXT = '你是福來朗（HUKUROU）的模擬受訪者。福來朗是全台第一間居家環藥專賣店，主打居家除蟲專家，官網ecohukurou.com.tw，旗下有「和淨」清潔品牌，滿NT$850免運，提供B2B大宗採購。回答時請用口語化、有情緒、符合角色年齡職業語氣的方式，每次回應100-200字，可自然表達猶豫或抗拒。';
 
+// ── IMAGE STATE ──
+let currentImageBase64 = null;
+let currentImageType = null;
+
+function handleImageUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    currentImageBase64 = dataUrl.split(',')[1];
+    currentImageType = file.type;
+    document.getElementById('img-preview').src = dataUrl;
+    document.getElementById('img-preview-wrap').style.display = 'flex';
+    document.getElementById('img-filename').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(){
+  currentImageBase64 = null;
+  currentImageType = null;
+  document.getElementById('img-upload').value = '';
+  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('img-filename').textContent = '';
+}
+
 // ── STATE ──
 let currentPath = 1;
 let currentRole = null;
@@ -325,6 +365,7 @@ let currentRoleName = '';
 let currentRoleJob = '';
 let conversationHistory = [];
 let structuredMode = false;
+let webSearchMode = false;
 let interviewStarted = false;
 let currentAtRecordId = null;
 let allCases = [];
@@ -522,7 +563,8 @@ function selectCase(id){
     if(tbody){ tbody.textContent = c.transcript; tbody.style.maxHeight = 'none'; }
   }
   if(currentPath===2){
-    conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），關於「${c.concept}」的訪談背景：${c.content}` }];
+    const transcriptContext = c.transcript ? `\n\n【完整原始逐字稿】\n${c.transcript}` : '';
+    conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
     interviewStarted = true;
     document.getElementById('concept-row').style.display = 'none';
     document.getElementById('chat-controls').style.display = 'block';
@@ -534,6 +576,12 @@ function selectCase(id){
 }
 
 // ── CHAT ──
+function toggleWebSearch(){
+  webSearchMode = !webSearchMode;
+  const btn = document.getElementById('websearch-btn');
+  if(btn) btn.classList.toggle('on', webSearchMode);
+}
+
 function toggleStructured(){
   structuredMode = !structuredMode;
   const btn = document.getElementById('structured-btn');
@@ -584,7 +632,7 @@ async function startInterview(){
   appendBubble('user', `📦 ${concept}`);
   conversationHistory.push({ role:'user', content:userMsg });
   showTyping();
-  const reply = await callClaude(currentRole, conversationHistory, structuredMode);
+  const reply = await callClaude(currentRole, conversationHistory, structuredMode, webSearchMode);
   removeTyping();
   const formatted = formatReply(reply, structuredMode);
   appendBubble('ai', formatted);
@@ -596,14 +644,31 @@ async function sendMessage(){
   if(!interviewStarted||!currentRole) return;
   const input = document.getElementById('msg-input');
   const msg = input.value.trim();
-  if(!msg) return;
+  if(!msg && !currentImageBase64) return;
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
   input.value = ''; input.disabled = true;
-  appendBubble('user', msg);
-  conversationHistory.push({ role:'user', content:msg });
+
+  // Build user message content
+  let userContent;
+  let displayMsg = msg;
+  if(currentImageBase64){
+    const imgPrompt = msg || '請問你對這個圖片的看法如何？你願意購買嗎？';
+    displayMsg = (msg ? msg + '
+' : '') + '📷 [上傳了一張圖片]';
+    userContent = [
+      { type: 'image', source: { type: 'base64', media_type: currentImageType, data: currentImageBase64 } },
+      { type: 'text', text: imgPrompt }
+    ];
+    clearImage();
+  } else {
+    userContent = msg;
+  }
+
+  appendBubble('user', displayMsg.replace(/\n/g,'<br>'));
+  conversationHistory.push({ role:'user', content: userContent });
   showTyping();
-  const reply = await callClaude(currentRole, conversationHistory, structuredMode);
+  const reply = await callClaude(currentRole, conversationHistory, structuredMode, webSearchMode);
   removeTyping();
   appendBubble('ai', formatReply(reply, structuredMode));
   conversationHistory.push({ role:'assistant', content:reply });
@@ -644,19 +709,37 @@ async function updateAirtableContent(){
   } catch(e){}
 }
 
-async function callClaude(roleCode, history, structured){
+async function callClaude(roleCode, history, structured, useWebSearch=false){
   const apiKey = getApiKey();
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
-  const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${structured?'\n\n請用以下結構化格式回覆：\n購買意願: [1-10分] / [一句理由]\n核心抗拒點: [具體說明]\n吸引文案關鍵字: [2-3個]\n補充建議: [一句改善建議]\n與現有產品比較: [比較心得]':''}`;
+  const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
+  const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n請用以下結構化格式回覆：\n購買意願: [1-10分] / [一句理由]\n核心抗拒點: [具體說明]\n吸引文案關鍵字: [2-3個]\n補充建議: [一句改善建議]\n與現有產品比較: [比較心得]':''}`;
+
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages: history
+  };
+
+  if(useWebSearch){
+    body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+  }
+
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:600, system:systemPrompt, messages:history })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if(data.error) return `[錯誤] ${data.error.message}`;
-    return data.content[0].text;
+    // Extract text from potentially mixed content blocks
+    const text = data.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n');
+    return text || '[無回應]';
   } catch(e){ return '[連線失敗，請確認 API Key 是否正確]'; }
 }
 
