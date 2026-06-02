@@ -372,7 +372,7 @@ let allCases = [];
 
 // ── LOGIN ──
 document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-async function doLogin(){
+async async function doLogin(){
   await loadPasswords();
   const pw = document.getElementById('pw-input').value;
   if(pw === STAFF_PASSWORD || pw === ADMIN_PASSWORD){
