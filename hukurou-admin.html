@@ -122,6 +122,10 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <textarea class="form-textarea" id="new-insight" rows="3" placeholder="例：受訪者最在意寵物安全，「天然除蟲菊」比「殺蟲劑」更有說服力..."></textarea>
         </div>
         <div class="form-group">
+          <label class="form-label">原始逐字稿（選填）</label>
+          <textarea class="form-textarea" id="new-transcript" rows="6" placeholder="貼上完整原始逐字稿..."></textarea>
+        </div>
+        <div class="form-group">
           <label class="form-label">訪談類型</label>
           <select class="form-select" id="new-type">
             <option value="真實訪談">真實訪談</option>
@@ -363,6 +367,7 @@ async function saveInterview(){
         '受訪者': name, '職業身分': job, '產品主題': concept,
         '訪談日期': date, '訪談類型': type,
         '訪談內容': content,
+        ...(document.getElementById('new-transcript').value.trim() ? { '原始逐字稿': document.getElementById('new-transcript').value.trim() } : {}),
         ...(insight ? { '關鍵洞察': insight } : {})
       }}]})
     });
@@ -381,7 +386,7 @@ loadPasswords();
 }
 
 function clearAddForm(){
-  ['new-name','new-job','new-concept','new-content','new-insight'].forEach(id=>document.getElementById(id).value='');
+  ['new-name','new-job','new-concept','new-content','new-insight','new-transcript'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('new-type').value = '真實訪談';
 }
