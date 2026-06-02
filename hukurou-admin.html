@@ -197,6 +197,27 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box">
+    <div class="modal-title">編輯訪談紀錄</div>
+    <input type="hidden" id="edit-record-id">
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">受訪者姓名</label><input class="form-input" id="edit-name"></div>
+      <div class="form-group"><label class="form-label">職業身分</label><input class="form-input" id="edit-job"></div>
+      <div class="form-group"><label class="form-label">訪談日期</label><input class="form-input" id="edit-date" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">產品主題</label><input class="form-input" id="edit-concept"></div>
+    <div class="form-group"><label class="form-label">訪談內容摘要</label><textarea class="form-textarea" id="edit-content" rows="4"></textarea></div>
+    <div class="form-group"><label class="form-label">原始逐字稿</label><textarea class="form-textarea" id="edit-transcript" rows="8" placeholder="貼上完整原始逐字稿..."></textarea></div>
+    <div class="form-group"><label class="form-label">關鍵洞察</label><textarea class="form-textarea" id="edit-insight" rows="3"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveEditRecord()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeModal('edit-modal')">取消</button>
+    </div>
+  </div>
+</div>
+
 <!-- SESSION DETAIL MODAL -->
 <div class="modal-overlay" id="session-modal">
   <div class="modal-box">
@@ -248,6 +269,44 @@ async function savePasswords(){
     alert('✓ 密碼已更新！');
     await loadPasswords();
   } catch(e){ alert('更新失敗，請確認網路連線'); }
+}
+
+function editRecord(id){
+  const r = allRecords.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('edit-record-id').value = id;
+  document.getElementById('edit-name').value = r.name||'';
+  document.getElementById('edit-job').value = r.job||'';
+  document.getElementById('edit-date').value = r.date||'';
+  document.getElementById('edit-concept').value = r.concept||'';
+  document.getElementById('edit-content').value = r.content||'';
+  document.getElementById('edit-transcript').value = r.transcript||'';
+  document.getElementById('edit-insight').value = r.insight||'';
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+async function saveEditRecord(){
+  const id = document.getElementById('edit-record-id').value;
+  const fields = {
+    '受訪者': document.getElementById('edit-name').value.trim(),
+    '職業身分': document.getElementById('edit-job').value.trim(),
+    '訪談日期': document.getElementById('edit-date').value,
+    '產品主題': document.getElementById('edit-concept').value.trim(),
+    '訪談內容': document.getElementById('edit-content').value.trim(),
+    '原始逐字稿': document.getElementById('edit-transcript').value.trim(),
+    '關鍵洞察': document.getElementById('edit-insight').value.trim(),
+  };
+  try{
+    const res = await fetch(`${AT_URL}/${id}`, {
+      method: 'PATCH', headers: AT_HEADERS,
+      body: JSON.stringify({ fields })
+    });
+    const data = await res.json();
+    if(data.error){ alert('儲存失敗：'+data.error.message); return; }
+    alert('✓ 已儲存！');
+    closeModal('edit-modal');
+    await loadAllRecords();
+  } catch(e){ alert('連線失敗'); }
 }
 
 async function loadAllRecords(){
@@ -314,6 +373,7 @@ function renderSessionsTable(records){
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="display:flex;gap:4px;">
         <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
+        <button class="btn btn-ghost btn-sm" onclick="editRecord('${r.id}')">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">刪除</button>
       </td>
     </tr>
