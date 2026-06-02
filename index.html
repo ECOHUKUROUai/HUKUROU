@@ -514,12 +514,12 @@ function selectCase(id){
         <button id="transcript-btn" onclick="var d=document.getElementById('transcript-body');var expanded=d.style.display==='block';d.style.display=expanded?'none':'block';this.textContent=expanded?'展開':'收起';"
           style="font-size:11px;padding:2px 10px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;color:var(--text3);cursor:pointer;font-family:inherit;">展開</button>
       </div>
-      <div id="transcript-body" style="display:none;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;max-height:400px;overflow-y:auto;"></div>
+      <div id="transcript-body" style="display:none;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;overflow-y:auto;"></div>
     `;
     msgs.appendChild(tr);
     // Set transcript text safely
     const tbody = document.getElementById('transcript-body');
-    if(tbody) tbody.textContent = c.transcript;
+    if(tbody){ tbody.textContent = c.transcript; tbody.style.maxHeight = 'none'; }
   }
   if(currentPath===2){
     conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），關於「${c.concept}」的訪談背景：${c.content}` }];
