@@ -715,7 +715,7 @@ async function callClaude(roleCode, history, structured, useWebSearch=false){
   const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n請用以下結構化格式回覆：\n購買意願: [1-10分] / [一句理由]\n核心抗拒點: [具體說明]\n吸引文案關鍵字: [2-3個]\n補充建議: [一句改善建議]\n與現有產品比較: [比較心得]':''}`;
 
   const body = {
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-5',
     max_tokens: 1000,
     system: systemPrompt,
     messages: history
