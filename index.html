@@ -654,8 +654,7 @@ async function sendMessage(){
   let displayMsg = msg;
   if(currentImageBase64){
     const imgPrompt = msg || '請問你對這個圖片的看法如何？你願意購買嗎？';
-    displayMsg = (msg ? msg + '
-' : '') + '📷 [上傳了一張圖片]';
+    displayMsg = (msg ? msg + ' ' : '') + '📷 [上傳了一張圖片]';
     userContent = [
       { type: 'image', source: { type: 'base64', media_type: currentImageType, data: currentImageBase64 } },
       { type: 'text', text: imgPrompt }
