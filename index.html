@@ -331,6 +331,30 @@ const ROLE_PROMPTS = {
 
 const BRAND_CONTEXT = '你是福來朗（HUKUROU）的模擬受訪者。福來朗是全台第一間居家環藥專賣店，主打居家除蟲專家，官網ecohukurou.com.tw，旗下有「和淨」清潔品牌，滿NT$850免運，提供B2B大宗採購。回答時請用口語化、有情緒、符合角色年齡職業語氣的方式，每次回應100-200字，可自然表達猶豫或抗拒。';
 
+const STRUCTURED_PROMPT = `請以以下格式進行消費者輪廓分析（如實分析，不憑空增加內容）：
+
+購買意願: [1-10分] / [一句理由]
+核心抗拒點: [具體說明]
+吸引文案關鍵字: [2-3個最有效的詞]
+
+【1. 使用者背景／身分】
+清楚描述這個人的樣貌（年齡、職業、生活狀態、個性特質）
+
+【2. 情境任務】
+他在什麼情況下遇到這個問題？當時在做什麼？
+
+【3. 深層痛點與阻礙】
+表面問題背後真正的恐懼、焦慮或不便是什麼？
+
+【4. 目標與需求】
+他想透過產品完成什麼事？功能需求與情感需求各是什麼？
+
+【5. 期望成果與價值】
+使用產品後希望生活有什麼改變？最終想得到的結果是什麼？
+
+補充建議: [一句產品或訊息改善建議]
+與現有產品比較: [比較心得]`;
+
 // ── IMAGE STATE ──
 let currentImageBase64 = null;
 let currentImageType = null;
@@ -451,7 +475,12 @@ async function loadCases(){
     type: r.fields['訪談類型'] || '',
     content: r.fields['訪談內容'] || '',
     insight: r.fields['關鍵洞察'] || '',
-    transcript: r.fields['原始逐字稿'] || ''
+    transcript: r.fields['原始逐字稿'] || '',
+    background: r.fields['使用者背景'] || '',
+    situation: r.fields['情境任務'] || '',
+    painpoint: r.fields['深層痛點'] || '',
+    goal: r.fields['目標需求'] || '',
+    outcome: r.fields['期望成果'] || ''
   }));
   document.getElementById('cases-loading').style.display = 'none';
   renderCasesList();
@@ -543,8 +572,28 @@ function selectCase(id){
   if(c.insight){
     const ins = document.createElement('div');
     ins.style.cssText = 'background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);margin-top:4px;';
-    ins.innerHTML = `<span style="color:var(--accent);font-size:10px;font-family:DM Mono,monospace;display:block;margin-bottom:4px;">關鍵洞察</span>${c.insight.replace(/\n/g,'<br>')}`;
+    ins.innerHTML = '<span style="color:var(--accent);font-size:10px;font-family:DM Mono,monospace;display:block;margin-bottom:4px;">關鍵洞察</span>'+c.insight.replace(/\n/g,'<br>');
     msgs.appendChild(ins);
+  }
+  const dims = [
+    {key:'background', label:'1. 使用者背景'},
+    {key:'situation', label:'2. 情境任務'},
+    {key:'painpoint', label:'3. 深層痛點'},
+    {key:'goal', label:'4. 目標與需求'},
+    {key:'outcome', label:'5. 期望成果'},
+  ];
+  const hasAnyDim = dims.some(d => c[d.key]);
+  if(hasAnyDim){
+    const dimBlock = document.createElement('div');
+    dimBlock.style.cssText = 'margin-top:8px;display:flex;flex-direction:column;gap:6px;';
+    dims.forEach(d => {
+      if(!c[d.key]) return;
+      const el = document.createElement('div');
+      el.style.cssText = 'background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:12px;';
+      el.innerHTML = '<span style="color:var(--accent);font-size:10px;font-family:DM Mono,monospace;display:block;margin-bottom:4px;">'+d.label+'</span><span style="color:var(--text2);line-height:1.7;">'+c[d.key].replace(/\n/g,'<br>')+'</span>';
+      dimBlock.appendChild(el);
+    });
+    msgs.appendChild(dimBlock);
   }
   if(c.transcript){
     const tr = document.createElement('div');
@@ -712,7 +761,7 @@ async function callClaude(roleCode, history, structured, useWebSearch=false){
   const apiKey = getApiKey();
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
   const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
-  const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n請用以下結構化格式回覆：\n購買意願: [1-10分] / [一句理由]\n核心抗拒點: [具體說明]\n吸引文案關鍵字: [2-3個]\n補充建議: [一句改善建議]\n與現有產品比較: [比較心得]':''}`;
+  const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n'+STRUCTURED_PROMPT:''}`;
 
   const body = {
     model: 'claude-sonnet-4-5',

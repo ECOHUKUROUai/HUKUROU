@@ -121,12 +121,32 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <button class="btn btn-primary btn-sm" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析</button>
         </div>
         <div class="form-group">
-          <label class="form-label">訪談摘要（AI 自動填入或手動輸入）</label>
-          <textarea class="form-textarea" id="new-content" rows="4" placeholder="訪談重點摘要..."></textarea>
+          <label class="form-label">訪談摘要</label>
+          <textarea class="form-textarea" id="new-content" rows="3" placeholder="AI 分析後自動填入..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">1. 使用者背景</label>
+            <textarea class="form-textarea" id="new-background" rows="3" placeholder="這個人是誰？年齡職業生活狀態個性特質..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">2. 情境任務</label>
+            <textarea class="form-textarea" id="new-situation" rows="3" placeholder="他在什麼情境下遇到這個問題？..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">3. 深層痛點與阻礙</label>
+            <textarea class="form-textarea" id="new-painpoint" rows="3" placeholder="表面問題背後真正的恐懼焦慮是什麼？..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">4. 目標與需求</label>
+            <textarea class="form-textarea" id="new-goal" rows="3" placeholder="他想透過產品完成什麼事？..."></textarea>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label">關鍵洞察含消費者痛點（AI 自動填入或手動輸入）</label>
-          <textarea class="form-textarea" id="new-insight" rows="4" placeholder="AI 分析後會自動填入消費者痛點與洞察建議..."></textarea>
+          <label class="form-label">5. 期望成果與價值</label>
+          <textarea class="form-textarea" id="new-outcome" rows="3" placeholder="使用後希望生活有什麼改變？..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">原始逐字稿（選填）</label>
@@ -217,7 +237,19 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     <div class="form-group"><label class="form-label">產品主題</label><input class="form-input" id="edit-concept"></div>
     <div class="form-group"><label class="form-label">訪談內容摘要</label><textarea class="form-textarea" id="edit-content" rows="4"></textarea></div>
     <div class="form-group"><label class="form-label">原始逐字稿</label><textarea class="form-textarea" id="edit-transcript" rows="8" placeholder="貼上完整原始逐字稿..."></textarea></div>
-    <div class="form-group"><label class="form-label">關鍵洞察</label><textarea class="form-textarea" id="edit-insight" rows="3"></textarea></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="btn btn-primary btn-sm" id="btn-analyze-edit" onclick="analyzeEditTranscript()">✨ AI 自動分析</button>
+    </div>
+    <div class="form-group"><label class="form-label">訪談摘要</label><textarea class="form-textarea" id="edit-content" rows="3"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">1. 使用者背景</label><textarea class="form-textarea" id="edit-background" rows="3"></textarea></div>
+      <div class="form-group"><label class="form-label">2. 情境任務</label><textarea class="form-textarea" id="edit-situation" rows="3"></textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">3. 深層痛點與阻礙</label><textarea class="form-textarea" id="edit-painpoint" rows="3"></textarea></div>
+      <div class="form-group"><label class="form-label">4. 目標與需求</label><textarea class="form-textarea" id="edit-goal" rows="3"></textarea></div>
+    </div>
+    <div class="form-group"><label class="form-label">5. 期望成果與價值</label><textarea class="form-textarea" id="edit-outcome" rows="3"></textarea></div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="saveEditRecord()">儲存</button>
       <button class="btn btn-ghost" onclick="closeModal('edit-modal')">取消</button>
@@ -278,6 +310,40 @@ async function savePasswords(){
   } catch(e){ alert('更新失敗，請確認網路連線'); }
 }
 
+async function analyzeEditTranscript(){
+  const transcript = document.getElementById('edit-transcript').value.trim();
+  if(!transcript){ alert('請先填入逐字稿'); return; }
+  const apiKey = localStorage.getItem('hk_api_key')||'';
+  if(!apiKey){ alert('請先在系統設定填入 Claude API Key'); return; }
+  const btn = document.getElementById('btn-analyze-edit');
+  btn.textContent = '分析中...'; btn.disabled = true;
+  try{
+    const systemPrompt = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。';
+    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加內容，以JSON格式回傳（不要加任何其他文字）：\n\n逐字稿：' + transcript + '\n\n請回傳以下JSON格式（全部繁體中文，每個欄位2-4句精準描述）：{"summary":"訪談核心摘要2-3句","background":"這個人是誰？年齡職業生活狀態個性特質，讓任何人都能清楚想像到這個人","situation":"他在什麼情境下遇到這個問題？當時在做什麼事？環境是什麼？","painpoint":"表面問題背後真正的恐懼焦慮或不便是什麼？為什麼他需要這個產品？深層痛點是什麼？","goal":"他想透過這個產品完成什麼事？功能需求與情感需求各是什麼？","outcome":"使用產品後他希望生活有什麼改變？最終想得到的結果是什麼？"}';
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+    });
+    const data = await res.json();
+    if(data.error){ alert('分析失敗：'+data.error.message); return; }
+    const text = data.content[0].text;
+    const clean = text.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean);
+    document.getElementById('edit-content').value = result.summary || '';
+    document.getElementById('edit-background').value = result.background || '';
+    document.getElementById('edit-situation').value = result.situation || '';
+    document.getElementById('edit-painpoint').value = result.painpoint || '';
+    document.getElementById('edit-goal').value = result.goal || '';
+    document.getElementById('edit-outcome').value = result.outcome || '';
+    alert('✓ 分析完成！請確認內容後儲存');
+  } catch(e){
+    alert('分析失敗：'+e.message);
+  } finally {
+    btn.textContent = '✨ AI 自動分析'; btn.disabled = false;
+  }
+}
+
 function editRecord(id){
   const r = allRecords.find(x=>x.id===id);
   if(!r) return;
@@ -288,7 +354,11 @@ function editRecord(id){
   document.getElementById('edit-concept').value = r.concept||'';
   document.getElementById('edit-content').value = r.content||'';
   document.getElementById('edit-transcript').value = r.transcript||'';
-  document.getElementById('edit-insight').value = r.insight||'';
+  document.getElementById('edit-background').value = r.background||'';
+  document.getElementById('edit-situation').value = r.situation||'';
+  document.getElementById('edit-painpoint').value = r.painpoint||'';
+  document.getElementById('edit-goal').value = r.goal||'';
+  document.getElementById('edit-outcome').value = r.outcome||'';
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -301,7 +371,11 @@ async function saveEditRecord(){
     '產品主題': document.getElementById('edit-concept').value.trim(),
     '訪談內容': document.getElementById('edit-content').value.trim(),
     '原始逐字稿': document.getElementById('edit-transcript').value.trim(),
-    '關鍵洞察': document.getElementById('edit-insight').value.trim(),
+    '使用者背景': document.getElementById('edit-background').value.trim(),
+    '情境任務': document.getElementById('edit-situation').value.trim(),
+    '深層痛點': document.getElementById('edit-painpoint').value.trim(),
+    '目標需求': document.getElementById('edit-goal').value.trim(),
+    '期望成果': document.getElementById('edit-outcome').value.trim(),
   };
   try{
     const res = await fetch(`${AT_URL}/${id}`, {
@@ -426,25 +500,16 @@ async function analyzeTranscript(){
   btn.textContent = '分析中...'; btn.disabled = true;
 
   try{
+    const systemPrompt = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
+    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加內容，以JSON格式回傳（不要加任何其他文字）：\n\n逐字稿：' + transcript + '\n\n請回傳以下JSON格式（全部繁體中文，每個欄位2-4句精準描述）：{"summary":"訪談核心摘要2-3句","background":"這個人是誰？年齡職業生活狀態個性特質，讓任何人都能清楚想像到這個人","situation":"他在什麼情境下遇到這個問題？當時在做什麼事？環境是什麼？","painpoint":"表面問題背後真正的恐懼焦慮或不便是什麼？為什麼他需要這個產品？深層痛點是什麼？","goal":"他想透過這個產品完成什麼事？功能需求與情感需求各是什麼？","outcome":"使用產品後他希望生活有什麼改變？最終想得到的結果是什麼？"}';
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `以下是一份關於福來朗除蟲產品的消費者訪談逐字稿，請分析後以JSON格式回傳，不要加任何其他文字：
-
-逐字稿：
-${transcript}
-
-請回傳以下JSON格式（全部用繁體中文）：
-{
-  "summary": "3-5句話的訪談摘要，包含受訪者背景、主要蟲害問題、使用產品經驗",
-  "insight": "【消費者痛點】\n- 痛點1\n- 痛點2\n- 痛點3\n\n【關鍵洞察】\n- 洞察1\n- 洞察2\n\n【行銷建議】\n- 建議1\n- 建議2"
-}`
-        }]
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
       })
     });
     const data = await res.json();
@@ -453,7 +518,11 @@ ${transcript}
     const clean = text.replace(/\`\`\`json|\`\`\`/g,'').trim();
     const result = JSON.parse(clean);
     document.getElementById('new-content').value = result.summary || '';
-    document.getElementById('new-insight').value = result.insight || '';
+    document.getElementById('new-background').value = result.background || '';
+    document.getElementById('new-situation').value = result.situation || '';
+    document.getElementById('new-painpoint').value = result.painpoint || '';
+    document.getElementById('new-goal').value = result.goal || '';
+    document.getElementById('new-outcome').value = result.outcome || '';
     alert('✓ 分析完成！請確認內容後儲存');
   } catch(e){
     alert('分析失敗，請確認 API Key 是否正確');
@@ -500,7 +569,7 @@ loadPasswords();
 }
 
 function clearAddForm(){
-  ['new-name','new-job','new-concept','new-content','new-insight','new-transcript'].forEach(id=>document.getElementById(id).value='');
+  ['new-name','new-job','new-concept','new-content','new-transcript','new-background','new-situation','new-painpoint','new-goal','new-outcome'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('new-type').value = '真實訪談';
 }
