@@ -324,7 +324,7 @@ async function analyzeEditTranscript(){
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
   try{
-    const systemPrompt = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
+    const analyzeSystem3 = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
     const userPrompt = `請分析以下訪談逐字稿，以JSON格式回傳（只回傳JSON，不加任何其他文字）：
 
 逐字稿：
@@ -344,7 +344,7 @@ async function analyzeEditTranscript(){
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1500, system: analyzeSystem3, messages: [{ role: 'user', content: userPrompt2 }] })
     });
     const data = await res.json();
     if(data.error){ alert('分析失敗：'+data.error.message); return; }
@@ -528,8 +528,8 @@ async function analyzeTranscript(){
   btn.textContent = '分析中...'; btn.disabled = true;
 
   try{
-    const systemPrompt = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
-    const systemPrompt = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
+    const analyzeSystem2 = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
+    const analyzeSystem1 = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
     const userPrompt = `請分析以下訪談逐字稿，以JSON格式回傳（只回傳JSON，不加任何其他文字）：
 
 逐字稿：
@@ -552,7 +552,7 @@ async function analyzeTranscript(){
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 1500,
-        system: systemPrompt,
+        system: analyzeSystem1,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
