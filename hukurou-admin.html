@@ -112,42 +112,37 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       </div>
       <div class="card">
         <div class="card-title">訪談內容</div>
-        <div class="tip">💡 直接貼上逐字稿或摘要均可，儲存後同步至所有人的案例庫</div>
+        <div class="tip">💡 貼上逐字稿後點「AI 自動分析」，系統會自動填入以下所有欄位</div>
         <div class="form-group">
           <label class="form-label">原始逐字稿 *</label>
           <textarea class="form-textarea" id="new-transcript" rows="10" placeholder="直接貼上完整原始逐字稿..."></textarea>
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-          <button class="btn btn-primary btn-sm" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析</button>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:1.5rem;">
+          <button class="btn btn-primary" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析</button>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">1. 使用者背景</label>
-            <textarea class="form-textarea" id="new-background" rows="3" placeholder="這個人是誰？年齡職業生活狀態個性特質..."></textarea>
+            <textarea class="form-textarea" id="new-background" rows="3" placeholder="AI 分析後自動填入..."></textarea>
           </div>
           <div class="form-group">
             <label class="form-label">2. 情境任務</label>
-            <textarea class="form-textarea" id="new-situation" rows="3" placeholder="他在什麼情境下遇到這個問題？..."></textarea>
+            <textarea class="form-textarea" id="new-situation" rows="3" placeholder="AI 分析後自動填入..."></textarea>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">3. 深層痛點與阻礙</label>
-            <textarea class="form-textarea" id="new-painpoint" rows="3" placeholder="表面問題背後真正的恐懼焦慮是什麼？..."></textarea>
+            <textarea class="form-textarea" id="new-painpoint" rows="3" placeholder="AI 分析後自動填入..."></textarea>
           </div>
           <div class="form-group">
             <label class="form-label">4. 目標與需求</label>
-            <textarea class="form-textarea" id="new-goal" rows="3" placeholder="他想透過產品完成什麼事？..."></textarea>
+            <textarea class="form-textarea" id="new-goal" rows="3" placeholder="AI 分析後自動填入..."></textarea>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">5. 期望成果與價值</label>
-          <textarea class="form-textarea" id="new-outcome" rows="3" placeholder="使用後希望生活有什麼改變？..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">原始逐字稿（選填）</label>
-          <textarea class="form-textarea" id="new-transcript" rows="6" placeholder="貼上完整原始逐字稿..."></textarea>
+          <textarea class="form-textarea" id="new-outcome" rows="3" placeholder="AI 分析後自動填入..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">TA 標籤（AI 自動產生，可手動修改）</label>
@@ -161,7 +156,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           </select>
         </div>
       </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn btn-ghost" onclick="clearAddForm()">清除</button>
         <button class="btn btn-primary" id="btn-save" onclick="saveInterview()">儲存至 Airtable</button>
       </div>
@@ -335,7 +330,7 @@ async function analyzeEditTranscript(){
     const clean = text.replace(/```json|```/g,'').trim();
     const result = JSON.parse(clean);
     const taLineEdit = result.ta_profile ? 'TA 輪廓：' + result.ta_profile + '\n\n' : '';
-    document.getElementById('edit-content').value = taLineEdit + (result.summary || '');
+    if(document.getElementById('edit-content')) document.getElementById('edit-content').value = taLineEdit + (result.summary || '');
     document.getElementById('edit-background').value = result.background || '';
     document.getElementById('edit-situation').value = result.situation || '';
     document.getElementById('edit-painpoint').value = result.painpoint || '';
@@ -531,7 +526,7 @@ async function analyzeTranscript(){
     const clean = text.replace(/\`\`\`json|\`\`\`/g,'').trim();
     const result = JSON.parse(clean);
     const taLine = result.ta_profile ? 'TA 輪廓：' + result.ta_profile + '\n\n' : '';
-    document.getElementById('new-content').value = taLine + (result.summary || '');
+    if(document.getElementById('new-content')) document.getElementById('new-content').value = taLine + (result.summary || '');
     document.getElementById('new-background').value = result.background || '';
     document.getElementById('new-situation').value = result.situation || '';
     document.getElementById('new-painpoint').value = result.painpoint || '';
