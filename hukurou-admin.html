@@ -153,6 +153,10 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <textarea class="form-textarea" id="new-transcript" rows="6" placeholder="貼上完整原始逐字稿..."></textarea>
         </div>
         <div class="form-group">
+          <label class="form-label">TA 標籤（AI 自動產生，可手動修改）</label>
+          <input class="form-input" id="new-tags" placeholder="例：寵物飼主、老屋屋主、價格敏感">
+        </div>
+        <div class="form-group">
           <label class="form-label">訪談類型</label>
           <select class="form-select" id="new-type">
             <option value="真實訪談">真實訪談</option>
@@ -178,6 +182,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
             <option value="真實訪談">真實訪談</option>
             <option value="AI模擬">AI模擬</option>
           </select>
+          <input class="form-input" style="max-width:160px;" id="filter-tags" placeholder="篩選 TA 標籤..." oninput="filterSessions()">
           <div style="flex:1"></div>
           <button class="btn btn-ghost btn-sm" onclick="loadAllRecords()">🔄 重新整理</button>
           <button class="btn btn-ghost btn-sm" onclick="exportCSV()">匯出 CSV</button>
@@ -250,6 +255,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="form-group"><label class="form-label">4. 目標與需求</label><textarea class="form-textarea" id="edit-goal" rows="3"></textarea></div>
     </div>
     <div class="form-group"><label class="form-label">5. 期望成果與價值</label><textarea class="form-textarea" id="edit-outcome" rows="3"></textarea></div>
+    <div class="form-group"><label class="form-label">TA 標籤（AI 自動產生，可手動修改）</label><input class="form-input" id="edit-tags" placeholder="例：寵物飼主、老屋屋主、價格敏感"></div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="saveEditRecord()">儲存</button>
       <button class="btn btn-ghost" onclick="closeModal('edit-modal')">取消</button>
@@ -318,8 +324,23 @@ async function analyzeEditTranscript(){
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
   try{
-    const systemPrompt = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。';
-    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加內容，以JSON格式回傳（不要加任何其他文字）：\n\n逐字稿：' + transcript + '\n\n請回傳以下JSON格式（全部繁體中文，每個欄位2-4句精準描述）：{"summary":"訪談核心摘要2-3句","background":"這個人是誰？年齡職業生活狀態個性特質，讓任何人都能清楚想像到這個人","situation":"他在什麼情境下遇到這個問題？當時在做什麼事？環境是什麼？","painpoint":"表面問題背後真正的恐懼焦慮或不便是什麼？為什麼他需要這個產品？深層痛點是什麼？","goal":"他想透過這個產品完成什麼事？功能需求與情感需求各是什麼？","outcome":"使用產品後他希望生活有什麼改變？最終想得到的結果是什麼？"}';
+    const systemPrompt = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
+    const userPrompt = `請分析以下訪談逐字稿，以JSON格式回傳（只回傳JSON，不加任何其他文字）：
+
+逐字稿：
+{transcript}
+
+請回傳以下JSON（全部繁體中文）：
+{{
+  "ta_profile": "一句話定義這個TA輪廓，格式：[身分特徵]：[購買動機/行為模式]",
+  "summary": "2-3句話說明這次訪談的核心發現，包含受訪者遇到的問題、使用產品的結果",
+  "background": "具體描述這個人的樣貌——年齡、職業、生活狀態、與蟲害相關的環境背景、個性特質。讓行銷人員能清楚想像這個人在哪裡、怎麼生活",
+  "situation": "描述他在什麼具體情境下遇到這個問題、當時在做什麼、問題是怎麼發現的、嚴重程度如何",
+  "painpoint": "說明他真正的痛點不只是有蟲——背後的恐懼是什麼（怕傷到家人？怕被罰？怕花冤枉錢？）、之前用過什麼方法但失敗的原因",
+  "goal": "他想要的不只是殺蟲——具體說明功能需求（效果、包裝、價格範圍）和情感需求（安心感、省事、不影響生活）",
+  "outcome": "使用產品後他的生活有什麼具體改變、這個結果對他的意義是什麼、是否會持續回購及原因",
+  "ta_tags": "3-5個標籤用逗號分隔。完全根據逐字稿內容自由歸納，不限定類別。可從身分、環境、動機、心理特質、購買行為、家庭狀況、職業特性等任何維度下手，選最能精準描述這個人的標籤，讓相同輪廓的消費者能被歸在一起"
+}}`.replace('{transcript}', transcript).replace('{{', '{').replace('}}', '}');
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -330,12 +351,14 @@ async function analyzeEditTranscript(){
     const text = data.content[0].text;
     const clean = text.replace(/```json|```/g,'').trim();
     const result = JSON.parse(clean);
-    document.getElementById('edit-content').value = result.summary || '';
+    const taLineEdit = result.ta_profile ? 'TA 輪廓：' + result.ta_profile + '\n\n' : '';
+    document.getElementById('edit-content').value = taLineEdit + (result.summary || '');
     document.getElementById('edit-background').value = result.background || '';
     document.getElementById('edit-situation').value = result.situation || '';
     document.getElementById('edit-painpoint').value = result.painpoint || '';
     document.getElementById('edit-goal').value = result.goal || '';
     document.getElementById('edit-outcome').value = result.outcome || '';
+    if(document.getElementById('edit-tags')) document.getElementById('edit-tags').value = result.ta_tags || '';
     alert('✓ 分析完成！請確認內容後儲存');
   } catch(e){
     alert('分析失敗：'+e.message);
@@ -359,6 +382,7 @@ function editRecord(id){
   document.getElementById('edit-painpoint').value = r.painpoint||'';
   document.getElementById('edit-goal').value = r.goal||'';
   document.getElementById('edit-outcome').value = r.outcome||'';
+  document.getElementById('edit-tags').value = r.tags||'';
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -376,6 +400,7 @@ async function saveEditRecord(){
     '深層痛點': document.getElementById('edit-painpoint').value.trim(),
     '目標需求': document.getElementById('edit-goal').value.trim(),
     '期望成果': document.getElementById('edit-outcome').value.trim(),
+    'TA標籤': document.getElementById('edit-tags').value.trim(),
   };
   try{
     const res = await fetch(`${AT_URL}/${id}`, {
@@ -452,10 +477,13 @@ function renderSessionsTable(records){
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.concept}</td>
       <td><span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type||'訪談'}</span></td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
-      <td style="display:flex;gap:4px;">
-        <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
-        <button class="btn btn-ghost btn-sm" onclick="editRecord('${r.id}')">編輯</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">刪除</button>
+      <td>
+        ${r.tags?`<div style="font-size:11px;color:var(--accent2);margin-bottom:4px;">${r.tags}</div>`:''}
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
+          <button class="btn btn-ghost btn-sm" onclick="editRecord('${r.id}')">編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">刪除</button>
+        </div>
       </td>
     </tr>
   `).join('') : '<tr><td colspan="5"><div class="empty-state">沒有符合條件的紀錄</div></td></tr>';
@@ -501,7 +529,23 @@ async function analyzeTranscript(){
 
   try{
     const systemPrompt = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
-    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加內容，以JSON格式回傳（不要加任何其他文字）：\n\n逐字稿：' + transcript + '\n\n請回傳以下JSON格式（全部繁體中文，每個欄位2-4句精準描述）：{"summary":"訪談核心摘要2-3句","background":"這個人是誰？年齡職業生活狀態個性特質，讓任何人都能清楚想像到這個人","situation":"他在什麼情境下遇到這個問題？當時在做什麼事？環境是什麼？","painpoint":"表面問題背後真正的恐懼焦慮或不便是什麼？為什麼他需要這個產品？深層痛點是什麼？","goal":"他想透過這個產品完成什麼事？功能需求與情感需求各是什麼？","outcome":"使用產品後他希望生活有什麼改變？最終想得到的結果是什麼？"}';
+    const systemPrompt = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
+    const userPrompt = `請分析以下訪談逐字稿，以JSON格式回傳（只回傳JSON，不加任何其他文字）：
+
+逐字稿：
+{transcript}
+
+請回傳以下JSON（全部繁體中文）：
+{{
+  "ta_profile": "一句話定義這個TA輪廓，格式：[身分特徵]：[購買動機/行為模式]",
+  "summary": "2-3句話說明這次訪談的核心發現，包含受訪者遇到的問題、使用產品的結果",
+  "background": "具體描述這個人的樣貌——年齡、職業、生活狀態、與蟲害相關的環境背景、個性特質。讓行銷人員能清楚想像這個人在哪裡、怎麼生活",
+  "situation": "描述他在什麼具體情境下遇到這個問題、當時在做什麼、問題是怎麼發現的、嚴重程度如何",
+  "painpoint": "說明他真正的痛點不只是有蟲——背後的恐懼是什麼（怕傷到家人？怕被罰？怕花冤枉錢？）、之前用過什麼方法但失敗的原因",
+  "goal": "他想要的不只是殺蟲——具體說明功能需求（效果、包裝、價格範圍）和情感需求（安心感、省事、不影響生活）",
+  "outcome": "使用產品後他的生活有什麼具體改變、這個結果對他的意義是什麼、是否會持續回購及原因",
+  "ta_tags": "3-5個標籤用逗號分隔。完全根據逐字稿內容自由歸納，不限定類別。可從身分、環境、動機、心理特質、購買行為、家庭狀況、職業特性等任何維度下手，選最能精準描述這個人的標籤，讓相同輪廓的消費者能被歸在一起"
+}}`.replace('{transcript}', transcript).replace('{{', '{').replace('}}', '}');
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -517,12 +561,14 @@ async function analyzeTranscript(){
     const text = data.content[0].text;
     const clean = text.replace(/\`\`\`json|\`\`\`/g,'').trim();
     const result = JSON.parse(clean);
-    document.getElementById('new-content').value = result.summary || '';
+    const taLine = result.ta_profile ? 'TA 輪廓：' + result.ta_profile + '\n\n' : '';
+    document.getElementById('new-content').value = taLine + (result.summary || '');
     document.getElementById('new-background').value = result.background || '';
     document.getElementById('new-situation').value = result.situation || '';
     document.getElementById('new-painpoint').value = result.painpoint || '';
     document.getElementById('new-goal').value = result.goal || '';
     document.getElementById('new-outcome').value = result.outcome || '';
+    if(document.getElementById('new-tags')) document.getElementById('new-tags').value = result.ta_tags || '';
     alert('✓ 分析完成！請確認內容後儲存');
   } catch(e){
     alert('分析失敗，請確認 API Key 是否正確');
@@ -569,7 +615,7 @@ loadPasswords();
 }
 
 function clearAddForm(){
-  ['new-name','new-job','new-concept','new-content','new-transcript','new-background','new-situation','new-painpoint','new-goal','new-outcome'].forEach(id=>document.getElementById(id).value='');
+  ['new-name','new-job','new-concept','new-content','new-transcript','new-background','new-situation','new-painpoint','new-goal','new-outcome','new-tags'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('new-type').value = '真實訪談';
 }
