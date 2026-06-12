@@ -547,10 +547,10 @@ async function saveInterview(){
   const job = document.getElementById('new-job').value.trim();
   const date = document.getElementById('new-date').value;
   const concept = document.getElementById('new-concept').value.trim();
-  const content = document.getElementById('new-content').value.trim();
-  const insight = document.getElementById('new-insight').value.trim();
+  const transcript = document.getElementById('new-transcript') ? document.getElementById('new-transcript').value.trim() : '';
   const type = document.getElementById('new-type').value;
-  if(!name||!concept||!date||!content){ alert('姓名、產品主題、日期、訪談內容為必填'); return; }
+  if(!name||!concept||!date||!transcript){ alert('姓名、產品主題、日期、原始逐字稿為必填'); return; }
+  const content = transcript;
   const btn = document.getElementById('btn-save');
   btn.textContent = '儲存中...'; btn.disabled = true;
   try{
@@ -559,9 +559,14 @@ async function saveInterview(){
       body: JSON.stringify({ records: [{ fields: {
         '受訪者': name, '職業身分': job, '產品主題': concept,
         '訪談日期': date, '訪談類型': type,
-        '訪談內容': content,
-        ...(document.getElementById('new-transcript').value.trim() ? { '原始逐字稿': document.getElementById('new-transcript').value.trim() } : {}),
-        ...(insight ? { '關鍵洞察': insight } : {})
+        '訪談內容': transcript,
+        '原始逐字稿': transcript,
+        '使用者背景': document.getElementById('new-background') ? document.getElementById('new-background').value.trim() : '',
+        '情境任務': document.getElementById('new-situation') ? document.getElementById('new-situation').value.trim() : '',
+        '深層痛點': document.getElementById('new-painpoint') ? document.getElementById('new-painpoint').value.trim() : '',
+        '目標需求': document.getElementById('new-goal') ? document.getElementById('new-goal').value.trim() : '',
+        '期望成果': document.getElementById('new-outcome') ? document.getElementById('new-outcome').value.trim() : '',
+        'TA標籤': document.getElementById('new-tags') ? document.getElementById('new-tags').value.trim() : '',
       }}]})
     });
     const data = await res.json();
