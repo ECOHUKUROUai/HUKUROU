@@ -322,22 +322,8 @@ async function analyzeEditTranscript(){
   btn.textContent = '分析中...'; btn.disabled = true;
   try{
     const analyzeSystem3 = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
-    const userPrompt = `請分析以下訪談逐字稿，以JSON格式回傳（只回傳JSON，不加任何其他文字）：
-
-逐字稿：
-{transcript}
-
-請回傳以下JSON（全部繁體中文）：
-{{
-  "ta_profile": "一句話定義這個TA輪廓，格式：[身分特徵]：[購買動機/行為模式]",
-  "summary": "2-3句話說明這次訪談的核心發現，包含受訪者遇到的問題、使用產品的結果",
-  "background": "具體描述這個人的樣貌——年齡、職業、生活狀態、與蟲害相關的環境背景、個性特質。讓行銷人員能清楚想像這個人在哪裡、怎麼生活",
-  "situation": "描述他在什麼具體情境下遇到這個問題、當時在做什麼、問題是怎麼發現的、嚴重程度如何",
-  "painpoint": "說明他真正的痛點不只是有蟲——背後的恐懼是什麼（怕傷到家人？怕被罰？怕花冤枉錢？）、之前用過什麼方法但失敗的原因",
-  "goal": "他想要的不只是殺蟲——具體說明功能需求（效果、包裝、價格範圍）和情感需求（安心感、省事、不影響生活）",
-  "outcome": "使用產品後他的生活有什麼具體改變、這個結果對他的意義是什麼、是否會持續回購及原因",
-  "ta_tags": "3-5個標籤用逗號分隔。完全根據逐字稿內容自由歸納，不限定類別。可從身分、環境、動機、心理特質、購買行為、家庭狀況、職業特性等任何維度下手，選最能精準描述這個人的標籤，讓相同輪廓的消費者能被歸在一起"
-}}`.replace('{transcript}', transcript).replace('{{', '{').replace('}}', '}');
+    const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
+    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n回傳JSON格式（繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機]","summary":"訪談核心發現2-3句","background":"具體描述這個人樣貌年齡職業生活狀態","situation":"他在什麼情境下遇到這個問題","painpoint":"深層痛點背後的恐懼焦慮","goal":"功能需求與情感需求","outcome":"使用後的具體改變與價值","ta_tags":"3-5個自由歸納的標籤用逗號分隔"}';
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -527,22 +513,8 @@ async function analyzeTranscript(){
   try{
     const analyzeSystem2 = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
     const analyzeSystem1 = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
-    const userPrompt = `請分析以下訪談逐字稿，以JSON格式回傳（只回傳JSON，不加任何其他文字）：
-
-逐字稿：
-{transcript}
-
-請回傳以下JSON（全部繁體中文）：
-{{
-  "ta_profile": "一句話定義這個TA輪廓，格式：[身分特徵]：[購買動機/行為模式]",
-  "summary": "2-3句話說明這次訪談的核心發現，包含受訪者遇到的問題、使用產品的結果",
-  "background": "具體描述這個人的樣貌——年齡、職業、生活狀態、與蟲害相關的環境背景、個性特質。讓行銷人員能清楚想像這個人在哪裡、怎麼生活",
-  "situation": "描述他在什麼具體情境下遇到這個問題、當時在做什麼、問題是怎麼發現的、嚴重程度如何",
-  "painpoint": "說明他真正的痛點不只是有蟲——背後的恐懼是什麼（怕傷到家人？怕被罰？怕花冤枉錢？）、之前用過什麼方法但失敗的原因",
-  "goal": "他想要的不只是殺蟲——具體說明功能需求（效果、包裝、價格範圍）和情感需求（安心感、省事、不影響生活）",
-  "outcome": "使用產品後他的生活有什麼具體改變、這個結果對他的意義是什麼、是否會持續回購及原因",
-  "ta_tags": "3-5個標籤用逗號分隔。完全根據逐字稿內容自由歸納，不限定類別。可從身分、環境、動機、心理特質、購買行為、家庭狀況、職業特性等任何維度下手，選最能精準描述這個人的標籤，讓相同輪廓的消費者能被歸在一起"
-}}`.replace('{transcript}', transcript).replace('{{', '{').replace('}}', '}');
+    const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
+    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n回傳JSON格式（繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機]","summary":"訪談核心發現2-3句","background":"具體描述這個人樣貌年齡職業生活狀態","situation":"他在什麼情境下遇到這個問題","painpoint":"深層痛點背後的恐懼焦慮","goal":"功能需求與情感需求","outcome":"使用後的具體改變與價值","ta_tags":"3-5個自由歸納的標籤用逗號分隔"}';
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
