@@ -256,10 +256,11 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="chat-input-area" id="chat-input-area">
         <div class="concept-row" id="concept-row" style="display:none">
           <input class="concept-input" id="concept-input" placeholder="輸入產品概念...">
-          <label for="concept-img-upload" style="padding:10px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">📷</label>
-          <input type="file" id="concept-img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event);document.getElementById('concept-img-label').textContent=event.target.files[0]?'📷✓':'📷';">
+          <label for="concept-img-upload" style="padding:10px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s;">📷</label>
+          <input type="file" id="concept-img-upload" accept="image/*" multiple style="display:none" onchange="handleImageUpload(event);">
           <button class="btn-send" id="btn-start" onclick="startInterview()">開始訪談</button>
         </div>
+        <div id="concept-img-preview" style="display:none;padding:6px 0;display:flex;gap:6px;flex-wrap:wrap;"></div>
         <div id="chat-controls" style="display:none">
           <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
             <label for="img-upload" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:inherit;">
@@ -403,28 +404,41 @@ let currentDocName = null;
 function handleImageUpload(event){
   const files = Array.from(event.target.files);
   if(!files.length) return;
+  // Show in both chat-controls wrap and concept-img-preview
   const wrap = document.getElementById('img-preview-wrap');
-  wrap.style.display = 'flex';
+  const conceptPreview = document.getElementById('concept-img-preview');
+  if(wrap) wrap.style.display = 'flex';
   files.forEach(file => {
     if(currentImages.length >= 5){ alert('最多上傳 5 張圖片'); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target.result;
       const base64 = dataUrl.split(',')[1];
+      const imgIdx = currentImages.length;
       currentImages.push({base64, type:file.type, name:file.name});
-      // Add preview
-      const container = document.createElement('div');
-      container.style.cssText = 'position:relative;';
-      const img = document.createElement('img');
-      img.src = dataUrl;
-      img.style.cssText = 'height:40px;width:40px;object-fit:cover;border-radius:6px;border:0.5px solid var(--border2);';
-      const del = document.createElement('button');
-      del.textContent = '×';
-      del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;color:white;font-size:10px;cursor:pointer;';
-      const idx = currentImages.length - 1;
-      del.onclick = () => { currentImages.splice(idx,1); container.remove(); updateFileLabel(); };
-      container.appendChild(img); container.appendChild(del);
-      wrap.appendChild(container);
+      // Create preview container
+      const makePreview = (targetWrap) => {
+        if(!targetWrap) return;
+        const container = document.createElement('div');
+        container.style.cssText = 'position:relative;display:inline-block;';
+        container.id = 'img-container-'+imgIdx;
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.style.cssText = 'height:48px;width:48px;object-fit:cover;border-radius:6px;border:0.5px solid var(--border2);display:block;';
+        const del = document.createElement('button');
+        del.textContent = '×';
+        del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;color:white;font-size:10px;cursor:pointer;line-height:1;';
+        del.onclick = () => {
+          currentImages.splice(imgIdx, 1);
+          document.querySelectorAll('#img-container-'+imgIdx).forEach(el=>el.remove());
+          updateFileLabel();
+        };
+        container.appendChild(img); container.appendChild(del);
+        targetWrap.appendChild(container);
+        targetWrap.style.display = 'flex';
+      };
+      makePreview(wrap);
+      makePreview(conceptPreview);
       updateFileLabel();
     };
     reader.readAsDataURL(file);
@@ -452,12 +466,13 @@ function clearImage(){
   currentImages = [];
   currentDocText = null;
   currentDocName = null;
-  document.getElementById('img-upload').value = '';
-  document.getElementById('doc-upload').value = '';
+  ['img-upload','doc-upload','concept-img-upload'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const wrap = document.getElementById('img-preview-wrap');
-  wrap.innerHTML = '';
-  wrap.style.display = 'none';
-  document.getElementById('img-filename').textContent = '';
+  if(wrap){ wrap.innerHTML = ''; wrap.style.display = 'none'; }
+  const cPreview = document.getElementById('concept-img-preview');
+  if(cPreview){ cPreview.innerHTML = ''; cPreview.style.display = 'none'; }
+  const fn = document.getElementById('img-filename');
+  if(fn) fn.textContent = '';
 }
 
 // ── STATE ──
