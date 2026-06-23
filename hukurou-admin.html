@@ -150,6 +150,14 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <input class="form-input" id="new-tags" placeholder="例：寵物飼主、老屋屋主、價格敏感">
         </div>
         <div class="form-group">
+          <label class="form-label">行銷重點方向（含一見就進／一進就買／一買再買推演）</label>
+          <textarea class="form-textarea" id="new-marketing" rows="3" placeholder="AI 分析後自動填入..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">關鍵字 SEO</label>
+          <textarea class="form-textarea" id="new-seo" rows="3" placeholder="AI 分析後自動填入..."></textarea>
+        </div>
+        <div class="form-group">
           <label class="form-label">訪談類型</label>
           <select class="form-select" id="new-type">
             <option value="真實訪談">真實訪談</option>
@@ -249,6 +257,8 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     </div>
     <div class="form-group"><label class="form-label">5. 期望成果與價值</label><textarea class="form-textarea" id="edit-outcome" rows="3"></textarea></div>
     <div class="form-group"><label class="form-label">TA 標籤（AI 自動產生，可手動修改）</label><input class="form-input" id="edit-tags" placeholder="例：寵物飼主、老屋屋主、價格敏感"></div>
+    <div class="form-group"><label class="form-label">行銷重點方向（含一見就進／一進就買／一買再買推演）</label><textarea class="form-textarea" id="edit-marketing" rows="3"></textarea></div>
+    <div class="form-group"><label class="form-label">關鍵字 SEO</label><textarea class="form-textarea" id="edit-seo" rows="3"></textarea></div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="saveEditRecord()">儲存</button>
       <button class="btn btn-ghost" onclick="closeModal('edit-modal')">取消</button>
@@ -317,9 +327,9 @@ async function analyzeEditTranscript(){
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
   try{
-    const analyzeSystem3 = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
+    const analyzeSystem3 = '你是福來朗（HUKUROU）居家除蟲專賣品牌的行銷顧問，專門分析消費者訪談逐字稿，協助團隊制定精準行銷計畫、優化銷售頁面、提升轉換率。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，讓行銷人員清楚想像這個人 3.找出深層心理動機而非表面行為 4.以提升轉換率為最終目標。';
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n回傳JSON格式（繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機]","summary":"訪談核心發現2-3句","background":"具體描述這個人樣貌年齡職業生活狀態","situation":"他在什麼情境下遇到這個問題","painpoint":"深層痛點背後的恐懼焦慮","goal":"功能需求與情感需求","outcome":"使用後的具體改變與價值","ta_tags":"3-5個自由歸納的標籤用逗號分隔"}';
+    const userPrompt = '這是我們針對有購買過或有放入購物車沒下單的客戶進行的訪談逐字稿。最終目的是希望能夠更精準地做出行銷計劃，優化銷售頁面，讓轉換率提升。請針對逐字稿進行客戶輪廓分類，描述深刻且精準，讓行銷人員可以深入了解這類消費者。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n請判斷這份逐字稿屬於幾種客戶類型（可能是1類或2類），並回傳以下JSON格式（全部繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機/行為模式]","summary":"2-3句訪談核心發現，說明受訪者購買或未購買的關鍵原因","background":"【使用者背景/身份】讓人清楚想像到這個人——年齡、職業、生活環境、消費習慣、與產品相關的生活背景","situation":"【特定情境/任務】這個人在什麼情況下遇到問題？當時在做什麼？什麼事情觸發了他尋找解決方案？","painpoint":"【痛點/阻礙】為什麼他需要這個產品？表面問題背後的恐懼、焦慮、損失感是什麼？之前嘗試過什麼方法但失敗？","goal":"【目標/需求】他想透過這個產品完成什麼事？功能需求（效果、方便、安全）和情感需求（安心感、省事、被認可）各是什麼？","outcome":"【期望成果/價值】使用後他的生活有什麼具體改變？這個結果對他意味著什麼？是否會持續回購？","marketing":"【行銷重點方向】分為兩部分：(1)深層行銷切入：根據此客戶輪廓，最有效的行銷切入點是什麼？有哪些深層價值可以切入？哪些情感訴求最能打動這類消費者？建議的廣告角度與文案方向；(2)一見就進/一進就買/一買再買推演：什麼樣的觸發點讓他點進產品頁？什麼說服他第一次下單？什麼讓他持續回購？針對此受訪者逐一推演三個階段的關鍵因素","seo":"【關鍵字SEO】這類消費者在搜尋解決方案時會用什麼關鍵字？列出8-12個高相關性關鍵字，包含問題型（如：家裡有白蟻怎麼辦）、產品型（如：除白蟻噴霧推薦）、比較型（如：白蟻藥哪個好用）","ta_tags":"3-6個精準標籤用逗號分隔，自由歸納最能代表這個人的特質"}' ;
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -338,6 +348,8 @@ async function analyzeEditTranscript(){
     document.getElementById('edit-goal').value = result.goal || '';
     document.getElementById('edit-outcome').value = result.outcome || '';
     if(document.getElementById('edit-tags')) document.getElementById('edit-tags').value = result.ta_tags || '';
+    if(document.getElementById('edit-marketing')) document.getElementById('edit-marketing').value = result.marketing || '';
+    if(document.getElementById('edit-seo')) document.getElementById('edit-seo').value = result.seo || '';
     alert('✓ 分析完成！請確認內容後儲存');
   } catch(e){
     alert('分析失敗：'+e.message);
@@ -362,6 +374,8 @@ function editRecord(id){
   document.getElementById('edit-goal').value = r.goal||'';
   document.getElementById('edit-outcome').value = r.outcome||'';
   document.getElementById('edit-tags').value = r.tags||'';
+  if(document.getElementById('edit-marketing')) document.getElementById('edit-marketing').value = r.marketing||'';
+  if(document.getElementById('edit-seo')) document.getElementById('edit-seo').value = r.seo||'';
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -380,6 +394,8 @@ async function saveEditRecord(){
     '目標需求': document.getElementById('edit-goal').value.trim(),
     '期望成果': document.getElementById('edit-outcome').value.trim(),
     'TA標籤': document.getElementById('edit-tags').value.trim(),
+    '行銷重點方向': document.getElementById('edit-marketing') ? document.getElementById('edit-marketing').value.trim() : '',
+    '關鍵字SEO': document.getElementById('edit-seo') ? document.getElementById('edit-seo').value.trim() : '',
   };
   try{
     const res = await fetch(`${AT_URL}/${id}`, {
@@ -508,9 +524,9 @@ async function analyzeTranscript(){
 
   try{
     const analyzeSystem2 = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
-    const analyzeSystem1 = '你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。任務是從真實訪談逐字稿中萃取精準的用戶洞察，協助行銷團隊制定高轉換率的行銷策略。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，避免空泛形容詞 3.找出深層心理動機，不只是表面行為 4.每個欄位要有實際細節支撐。';
+    const analyzeSystem1 = '你是福來朗（HUKUROU）居家除蟲專賣品牌的行銷顧問，專門分析消費者訪談逐字稿，協助團隊制定精準行銷計畫、優化銷售頁面、提升轉換率。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，讓行銷人員清楚想像這個人 3.找出深層心理動機而非表面行為 4.以提升轉換率為最終目標。';
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = '請分析以下訪談逐字稿，如實分析不憑空增加。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n回傳JSON格式（繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機]","summary":"訪談核心發現2-3句","background":"具體描述這個人樣貌年齡職業生活狀態","situation":"他在什麼情境下遇到這個問題","painpoint":"深層痛點背後的恐懼焦慮","goal":"功能需求與情感需求","outcome":"使用後的具體改變與價值","ta_tags":"3-5個自由歸納的標籤用逗號分隔"}';
+    const userPrompt = '這是我們針對有購買過或有放入購物車沒下單的客戶進行的訪談逐字稿。最終目的是希望能夠更精準地做出行銷計劃，優化銷售頁面，讓轉換率提升。請針對逐字稿進行客戶輪廓分類，描述深刻且精準，讓行銷人員可以深入了解這類消費者。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n請判斷這份逐字稿屬於幾種客戶類型（可能是1類或2類），並回傳以下JSON格式（全部繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機/行為模式]","summary":"2-3句訪談核心發現，說明受訪者購買或未購買的關鍵原因","background":"【使用者背景/身份】讓人清楚想像到這個人——年齡、職業、生活環境、消費習慣、與產品相關的生活背景","situation":"【特定情境/任務】這個人在什麼情況下遇到問題？當時在做什麼？什麼事情觸發了他尋找解決方案？","painpoint":"【痛點/阻礙】為什麼他需要這個產品？表面問題背後的恐懼、焦慮、損失感是什麼？之前嘗試過什麼方法但失敗？","goal":"【目標/需求】他想透過這個產品完成什麼事？功能需求（效果、方便、安全）和情感需求（安心感、省事、被認可）各是什麼？","outcome":"【期望成果/價值】使用後他的生活有什麼具體改變？這個結果對他意味著什麼？是否會持續回購？","marketing":"【行銷重點方向】分為兩部分：(1)深層行銷切入：根據此客戶輪廓，最有效的行銷切入點是什麼？有哪些深層價值可以切入？哪些情感訴求最能打動這類消費者？建議的廣告角度與文案方向；(2)一見就進/一進就買/一買再買推演：什麼樣的觸發點讓他點進產品頁？什麼說服他第一次下單？什麼讓他持續回購？針對此受訪者逐一推演三個階段的關鍵因素","seo":"【關鍵字SEO】這類消費者在搜尋解決方案時會用什麼關鍵字？列出8-12個高相關性關鍵字，包含問題型（如：家裡有白蟻怎麼辦）、產品型（如：除白蟻噴霧推薦）、比較型（如：白蟻藥哪個好用）","ta_tags":"3-6個精準標籤用逗號分隔，自由歸納最能代表這個人的特質"}' ;
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -534,6 +550,8 @@ async function analyzeTranscript(){
     document.getElementById('new-goal').value = result.goal || '';
     document.getElementById('new-outcome').value = result.outcome || '';
     if(document.getElementById('new-tags')) document.getElementById('new-tags').value = result.ta_tags || '';
+    if(document.getElementById('new-marketing')) document.getElementById('new-marketing').value = result.marketing || '';
+    if(document.getElementById('new-seo')) document.getElementById('new-seo').value = result.seo || '';
     alert('✓ 分析完成！請確認內容後儲存');
   } catch(e){
     alert('分析失敗，請確認 API Key 是否正確');
@@ -568,6 +586,8 @@ async function saveInterview(){
         '目標需求': document.getElementById('new-goal') ? document.getElementById('new-goal').value.trim() : '',
         '期望成果': document.getElementById('new-outcome') ? document.getElementById('new-outcome').value.trim() : '',
         'TA標籤': document.getElementById('new-tags') ? document.getElementById('new-tags').value.trim() : '',
+        '行銷重點方向': document.getElementById('new-marketing') ? document.getElementById('new-marketing').value.trim() : '',
+        '關鍵字SEO': document.getElementById('new-seo') ? document.getElementById('new-seo').value.trim() : '',
       }}]})
     });
     const data = await res.json();
@@ -585,7 +605,7 @@ loadPasswords();
 }
 
 function clearAddForm(){
-  ['new-name','new-job','new-concept','new-content','new-transcript','new-background','new-situation','new-painpoint','new-goal','new-outcome','new-tags'].forEach(id=>document.getElementById(id).value='');
+  ['new-name','new-job','new-concept','new-content','new-transcript','new-background','new-situation','new-painpoint','new-goal','new-outcome','new-tags','new-marketing','new-seo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('new-type').value = '真實訪談';
 }

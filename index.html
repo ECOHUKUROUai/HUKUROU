@@ -169,6 +169,11 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <div class="path-name">全新模擬受訪者</div>
           <div class="path-desc">從 20 位角色中選定對象，測試新產品或訊息</div>
         </div>
+        <div class="path-card" id="path-4" onclick="selectPath(4)">
+          <div class="path-num">路線 04</div>
+          <div class="path-name">焦點座談</div>
+          <div class="path-desc">選 2–5 位參與者同時討論，模擬焦點座談</div>
+        </div>
       </div>
 
       <div class="tab-content" id="tab-roles">
@@ -203,6 +208,22 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="loading-bar" id="cases-loading">載入案例庫中...</div>
         <div id="cases-list"></div>
       </div>
+
+      <!-- FOCUS GROUP TAB -->
+      <div class="tab-content" id="tab-focus" style="display:none;flex-direction:column;gap:6px;">
+        <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">選擇 2–5 位參與者</div>
+        <div style="display:flex;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+          <button class="tab-btn" id="focus-tab-real" onclick="switchFocusTab('real',this)" style="flex:none;padding:6px 12px;border-radius:99px;font-size:12px;">真實訪談用戶</button>
+          <button class="tab-btn" id="focus-tab-virtual" onclick="switchFocusTab('virtual',this)" style="flex:none;padding:6px 12px;border-radius:99px;font-size:12px;">虛擬 AI 角色</button>
+        </div>
+        <div id="focus-real-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="focus-virtual-list" style="display:none;flex-direction:column;gap:6px;"></div>
+        <div id="focus-selected-bar" style="display:none;background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 12px;margin-top:4px;">
+          <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:6px;">已選參與者（<span id="focus-count">0</span>/5）</div>
+          <div id="focus-selected-names" style="font-size:12px;color:var(--text2);"></div>
+        </div>
+        <button id="btn-start-focus" onclick="startFocusGroup()" style="display:none;padding:10px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;">開始焦點座談</button>
+      </div>
     </div>
 
     <div class="right-panel">
@@ -225,18 +246,21 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         </div>
         <div id="chat-controls" style="display:none">
           <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
-            <label for="img-upload" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:inherit;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">
-              📷 上傳圖片
+            <label for="img-upload" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:inherit;">
+              📷 圖片
             </label>
-            <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
-            <div id="img-preview-wrap" style="display:none;position:relative;">
-              <img id="img-preview" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:0.5px solid var(--border2);">
-              <button onclick="clearImage()" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;color:white;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+            <input type="file" id="img-upload" accept="image/*" multiple style="display:none" onchange="handleImageUpload(event)">
+            <label for="doc-upload" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:inherit;">
+              📄 文件
+            </label>
+            <input type="file" id="doc-upload" accept=".pdf,.txt,.md" style="display:none" onchange="handleDocUpload(event)">
+            <div id="img-preview-wrap" style="display:none;position:relative;display:flex;gap:4px;flex-wrap:wrap;">
             </div>
             <span id="img-filename" style="font-size:11px;color:var(--text3);"></span>
+            <button id="btn-send-msg" onclick="if(currentPath===4)sendFocusMessage();else sendMessage();" style="padding:6px 14px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;">送出</button>
           </div>
           <textarea class="msg-input" id="msg-input" rows="2" placeholder="繼續追問，或上傳圖片詢問受訪者的看法..." onkeydown="handleKey(event)"></textarea>
-          <div class="input-hint">Enter 送出　Shift+Enter 換行　📷 可上傳產品圖或活動圖詢問受訪者意願</div>
+          <div class="input-hint">連按兩次 Enter 送出　或點右側送出鍵　📷 可上傳圖片或文件</div>
         </div>
       </div>
     </div>
@@ -355,30 +379,68 @@ const STRUCTURED_PROMPT = `請以以下格式進行消費者輪廓分析（如�
 補充建議: [一句產品或訊息改善建議]
 與現有產品比較: [比較心得]`;
 
-// ── IMAGE STATE ──
-let currentImageBase64 = null;
-let currentImageType = null;
+// ── IMAGE & DOC STATE ──
+let currentImages = []; // [{base64, type, name}]
+let currentDocText = null;
+let currentDocName = null;
 
 function handleImageUpload(event){
+  const files = Array.from(event.target.files);
+  if(!files.length) return;
+  const wrap = document.getElementById('img-preview-wrap');
+  wrap.style.display = 'flex';
+  files.forEach(file => {
+    if(currentImages.length >= 5){ alert('最多上傳 5 張圖片'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const base64 = dataUrl.split(',')[1];
+      currentImages.push({base64, type:file.type, name:file.name});
+      // Add preview
+      const container = document.createElement('div');
+      container.style.cssText = 'position:relative;';
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.style.cssText = 'height:40px;width:40px;object-fit:cover;border-radius:6px;border:0.5px solid var(--border2);';
+      const del = document.createElement('button');
+      del.textContent = '×';
+      del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;color:white;font-size:10px;cursor:pointer;';
+      const idx = currentImages.length - 1;
+      del.onclick = () => { currentImages.splice(idx,1); container.remove(); updateFileLabel(); };
+      container.appendChild(img); container.appendChild(del);
+      wrap.appendChild(container);
+      updateFileLabel();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleDocUpload(event){
   const file = event.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    const dataUrl = e.target.result;
-    currentImageBase64 = dataUrl.split(',')[1];
-    currentImageType = file.type;
-    document.getElementById('img-preview').src = dataUrl;
-    document.getElementById('img-preview-wrap').style.display = 'flex';
-    document.getElementById('img-filename').textContent = file.name;
+    currentDocText = e.target.result;
+    currentDocName = file.name;
+    document.getElementById('img-filename').textContent = '📄 ' + file.name;
   };
-  reader.readAsDataURL(file);
+  reader.readAsText(file);
+}
+
+function updateFileLabel(){
+  const count = currentImages.length;
+  document.getElementById('img-filename').textContent = count > 0 ? `已選 ${count} 張圖片` + (currentDocName?' + 📄 '+currentDocName:'') : (currentDocName?'📄 '+currentDocName:'');
 }
 
 function clearImage(){
-  currentImageBase64 = null;
-  currentImageType = null;
+  currentImages = [];
+  currentDocText = null;
+  currentDocName = null;
   document.getElementById('img-upload').value = '';
-  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('doc-upload').value = '';
+  const wrap = document.getElementById('img-preview-wrap');
+  wrap.innerHTML = '';
+  wrap.style.display = 'none';
   document.getElementById('img-filename').textContent = '';
 }
 
@@ -484,6 +546,7 @@ async function loadCases(){
   }));
   document.getElementById('cases-loading').style.display = 'none';
   renderCasesList();
+  if(document.getElementById('focus-real-list')) renderFocusLists();
 }
 
 function renderCasesList(){
@@ -524,6 +587,17 @@ function selectPath(n){
   document.querySelectorAll('.path-card').forEach((c,i) => c.classList.toggle('active', i+1===n));
   resetChat();
   if(n===1||n===2){ switchTab('cases', document.querySelectorAll('.tab-btn')[2]); }
+  else if(n===4){
+    // Show focus group tab
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    document.getElementById('tab-focus').classList.add('active');
+    document.getElementById('tab-focus').style.display = 'flex';
+    focusParticipants = [];
+    document.querySelectorAll('.focus-participant-card').forEach(c=>{c.classList.remove('selected');const ch=c.querySelector('.focus-check');if(ch)ch.textContent='';});
+    updateFocusBar();
+    renderFocusLists();
+  }
   else { switchTab('roles', document.querySelectorAll('.tab-btn')[1]); }
 }
 
@@ -700,14 +774,18 @@ async function sendMessage(){
 
   // Build user message content
   let userContent;
-  let displayMsg = msg;
-  if(currentImageBase64){
-    const imgPrompt = msg || '請問你對這個圖片的看法如何？你願意購買嗎？';
-    displayMsg = (msg ? msg + ' ' : '') + '📷 [上傳了一張圖片]';
-    userContent = [
-      { type: 'image', source: { type: 'base64', media_type: currentImageType, data: currentImageBase64 } },
-      { type: 'text', text: imgPrompt }
-    ];
+  let displayMsg = msg || '';
+  if(currentImages.length > 0 || currentDocText){
+    const parts = [];
+    currentImages.forEach(img => {
+      parts.push({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.base64 } });
+    });
+    let textContent = msg || '';
+    if(currentDocText) textContent += (textContent?'\n\n':'') + '【文件內容】\n' + currentDocText.substring(0, 8000);
+    if(!textContent) textContent = '請問你對這些內容的看法如何？你願意購買嗎？';
+    parts.push({ type: 'text', text: textContent });
+    userContent = parts;
+    displayMsg = (msg || '') + (currentImages.length>0?' 📷 ['+currentImages.length+'張圖片]':'') + (currentDocText?' 📄 ['+currentDocName+']':'');
     clearImage();
   } else {
     userContent = msg;
@@ -802,7 +880,241 @@ function formatReply(text, structured){
   }).join('')}</div>`;
 }
 
-function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } }
+let lastEnterTime = 0;
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){
+    const now = Date.now();
+    if(now - lastEnterTime < 500){
+      // Double Enter within 500ms - send
+      e.preventDefault();
+      lastEnterTime = 0;
+      if(currentPath===4) sendFocusMessage(); else sendMessage();
+    } else {
+      lastEnterTime = now;
+      // First Enter - just newline, show hint
+    }
+  }
+}
+
+// ── FOCUS GROUP ──
+let focusParticipants = []; // {id, name, job, type, prompt, transcript}
+let focusSubTab = 'real';
+
+function switchFocusTab(tab, btn){
+  focusSubTab = tab;
+  document.getElementById('focus-real-list').style.display = tab==='real' ? 'flex' : 'none';
+  document.getElementById('focus-virtual-list').style.display = tab==='virtual' ? 'flex' : 'none';
+  document.querySelectorAll('#tab-focus .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderFocusLists(){
+  // Real users
+  const realList = document.getElementById('focus-real-list');
+  realList.innerHTML = '';
+  if(!allCases.length){
+    realList.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px;">尚無真實訪談案例</div>';
+  } else {
+    allCases.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'focus-participant-card';
+      div.id = 'focus-real-'+c.id;
+      div.onclick = () => toggleFocusParticipant({id:c.id, name:c.roleName, job:c.roleJob, type:'real', transcript:c.transcript||c.content}, 'focus-real-'+c.id);
+      div.innerHTML = `<div class="focus-check"></div>
+        <div><div style="font-size:13px;font-weight:500;">${c.roleName}</div>
+        <div style="font-size:11px;color:var(--text2);">${c.roleJob} ／ ${c.concept}</div></div>`;
+      realList.appendChild(div);
+    });
+  }
+  // Virtual roles
+  const virtualList = document.getElementById('focus-virtual-list');
+  virtualList.innerHTML = '';
+  const cards = document.querySelectorAll('#tab-roles .role-card');
+  cards.forEach(card => {
+    const code = card.querySelector('.role-code')?.textContent || '';
+    const name = card.querySelector('.role-name')?.textContent || '';
+    const job = card.querySelector('.role-job')?.textContent || '';
+    const bugs = card.querySelector('.role-bugs')?.textContent || '';
+    const div = document.createElement('div');
+    div.className = 'focus-participant-card';
+    div.id = 'focus-virtual-'+code;
+    div.onclick = () => toggleFocusParticipant({id:code, name, job, type:'virtual', bugs, prompt:ROLE_PROMPTS[code]||''}, 'focus-virtual-'+code);
+    div.innerHTML = `<div class="focus-check"></div>
+      <div><div style="font-size:13px;font-weight:500;">${code} ${name}</div>
+      <div style="font-size:11px;color:var(--text2);">${job}</div></div>`;
+    virtualList.appendChild(div);
+  });
+}
+
+function toggleFocusParticipant(participant, cardId){
+  const card = document.getElementById(cardId);
+  const existing = focusParticipants.findIndex(p => p.id === participant.id);
+  if(existing >= 0){
+    focusParticipants.splice(existing, 1);
+    card.classList.remove('selected');
+    card.querySelector('.focus-check').textContent = '';
+  } else {
+    if(focusParticipants.length >= 5){ alert('最多選 5 位參與者'); return; }
+    focusParticipants.push(participant);
+    card.classList.add('selected');
+    card.querySelector('.focus-check').textContent = '✓';
+  }
+  updateFocusBar();
+}
+
+function updateFocusBar(){
+  const bar = document.getElementById('focus-selected-bar');
+  const btn = document.getElementById('btn-start-focus');
+  const count = focusParticipants.length;
+  document.getElementById('focus-count').textContent = count;
+  document.getElementById('focus-selected-names').textContent = focusParticipants.map(p=>p.name).join('、');
+  bar.style.display = count > 0 ? 'block' : 'none';
+  btn.style.display = count >= 2 ? 'block' : 'none';
+}
+
+function startFocusGroup(){
+  if(focusParticipants.length < 2){ alert('請至少選擇 2 位參與者'); return; }
+  currentPath = 4;
+  const names = focusParticipants.map(p=>p.name).join('、');
+  document.getElementById('chat-header').innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      ${focusParticipants.map(p=>`<div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);">${p.name[0]}</div>`).join('')}
+      <div><div class="chat-role-name">焦點座談</div><div class="chat-role-sub">${names}</div></div>
+    </div>
+    <div class="chat-spacer"></div>
+  `;
+  document.getElementById('chat-messages').innerHTML = `<div class="chat-empty"><div class="chat-empty-icon">👥</div><div style="font-size:14px;">輸入討論主題開始座談</div><div style="font-size:12px;color:var(--text3);">每位參與者都會針對你的問題自由發言</div></div>`;
+  document.getElementById('concept-row').style.display = 'flex';
+  document.getElementById('concept-input').placeholder = '輸入討論主題，例如：我們想推出防水老鼠毒餌大包裝，你們覺得如何？';
+  document.getElementById('btn-start').textContent = '開始討論';
+  document.getElementById('btn-start').onclick = startFocusDiscussion;
+  document.getElementById('chat-controls').style.display = 'none';
+  interviewStarted = false;
+  conversationHistory = [];
+}
+
+let focusHistory = []; // shared conversation history
+
+async function startFocusDiscussion(){
+  const topic = document.getElementById('concept-input').value.trim();
+  if(!topic) return;
+  const apiKey = getApiKey();
+  if(!apiKey){ openApiSetting(); return; }
+
+  document.getElementById('concept-row').style.display = 'none';
+  document.getElementById('chat-controls').style.display = 'block';
+  document.getElementById('msg-input').placeholder = '繼續提問或追問某位參與者...';
+  interviewStarted = true;
+  focusHistory = [];
+
+  appendBubble('user', '📋 ' + topic);
+  await runFocusRound(topic, apiKey);
+}
+
+async function runFocusRound(userMsg, apiKey){
+  for(const p of focusParticipants){
+    showTypingFor(p.name);
+    const reply = await callFocusClaude(p, userMsg, apiKey);
+    removeTypingFor(p.name);
+    appendFocusBubble(p, reply);
+    focusHistory.push({participant: p.name, message: reply});
+  }
+  // Save to Airtable
+  if(currentAtRecordId){
+    updateAirtableContent();
+  } else {
+    const concept = document.getElementById('concept-input')?.value || '焦點座談';
+    saveFocusToAirtable(concept);
+  }
+}
+
+function showTypingFor(name){
+  const msgs = document.getElementById('chat-messages');
+  document.querySelector('.chat-empty')?.remove();
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = 'typing-'+name;
+  div.innerHTML = `<div class="msg-dot" style="font-size:10px;">${name[0]}</div><div class="msg-bubble"><div class="focus-msg-header" style="color:var(--text3);">${name}</div><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTypingFor(name){ document.getElementById('typing-'+name)?.remove(); }
+
+function appendFocusBubble(p, text){
+  const msgs = document.getElementById('chat-messages');
+  document.querySelector('.chat-empty')?.remove();
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = `<div class="msg-dot" style="font-size:10px;">${p.name[0]}</div>
+    <div class="msg-bubble">
+      <div class="focus-msg-header" style="color:var(--accent2);">${p.name}${p.job?' · '+p.job:''}</div>
+      ${text.replace(/\n/g,'<br>')}
+    </div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function callFocusClaude(participant, userMsg, apiKey){
+  const prevDiscussion = focusHistory.length > 0
+    ? '\n\n【其他參與者的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
+    : '';
+
+  let systemPrompt = '';
+  if(participant.type === 'real'){
+    systemPrompt = `你是${participant.name}（${participant.job}），福來朗的真實消費者。
+以下是你之前的真實訪談逐字稿，請完全依據你的口氣、用詞習慣、個性和立場來回應，不要偏離你原有的特質：
+${participant.transcript || '（無逐字稿）'}
+
+現在你正在參加一個關於福來朗產品的焦點座談。請用你自己的口吻自然發言，可以回應其他人說的話，保持你原有的說話方式。每次發言 50-120 字。`;
+  } else {
+    systemPrompt = `${BRAND_CONTEXT}\n\n${participant.prompt || ''}
+你現在正在參加一個焦點座談，其他消費者也在場。請用你自己的口吻自然發言，可以回應或同意/反對其他人說的話。每次發言 50-120 字。`;
+  }
+
+  const messages = [{
+    role: 'user',
+    content: `主持人說：${userMsg}${prevDiscussion}\n\n請以${participant.name}的身份回應：`
+  }];
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:300, system:systemPrompt, messages })
+    });
+    const data = await res.json();
+    if(data.error) return `[錯誤] ${data.error.message}`;
+    return data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  } catch(e){ return '[連線失敗]'; }
+}
+
+async function sendFocusMessage(){
+  const input = document.getElementById('msg-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+  const apiKey = getApiKey();
+  if(!apiKey){ openApiSetting(); return; }
+  input.value = ''; input.disabled = true;
+  appendBubble('user', msg);
+  await runFocusRound(msg, apiKey);
+  input.disabled = false; input.focus();
+}
+
+async function saveFocusToAirtable(concept){
+  currentAtRecordId = null;
+  const fullContent = '【焦點座談】\n主題：' + concept + '\n\n' +
+    focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n\n');
+  const names = focusParticipants.map(p=>p.name).join('、');
+  const result = await atCreate({
+    '受訪者': '焦點座談：'+names,
+    '職業身分': focusParticipants.map(p=>p.job||'').join('、'),
+    '產品主題': concept,
+    '訪談日期': new Date().toISOString().slice(0,10),
+    '訪談類型': 'AI模擬',
+    '訪談內容': fullContent
+  });
+  if(result && result.records && result.records[0]){
+    currentAtRecordId = result.records[0].id;
+  }
+}
 </script>
 </body>
 </html>
