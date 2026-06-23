@@ -1102,14 +1102,25 @@ async function startFocusDiscussion(){
   interviewStarted = true;
   focusHistory = [];
 
-  appendBubble('user', '📋 ' + topic);
-  await runFocusRound(topic, apiKey);
+  let displayMsg = '📋 ' + topic;
+  let fullTopic = topic;
+  if(currentImages.length > 0){
+    displayMsg += ' 📷 [' + currentImages.length + '張圖片]';
+    fullTopic = topic + ' [含' + currentImages.length + '張圖片，請根據圖片內容一起回應]';
+  }
+  if(currentDocText){
+    displayMsg += ' 📄 [' + currentDocName + ']';
+    fullTopic = fullTopic + '\n\n【文件內容】\n' + currentDocText.substring(0, 4000);
+  }
+  appendBubble('user', displayMsg);
+  await runFocusRound(topic, apiKey, currentImages.slice(), currentDocText);
+  clearImage();
 }
 
-async function runFocusRound(userMsg, apiKey){
+async function runFocusRound(userMsg, apiKey, images=[], docText=null){
   for(const p of focusParticipants){
     showTypingFor(p.name);
-    const reply = await callFocusClaude(p, userMsg, apiKey);
+    const reply = await callFocusClaude(p, userMsg, apiKey, images, docText);
     removeTypingFor(p.name);
     appendFocusBubble(p, reply);
     focusHistory.push({participant: p.name, message: reply});
@@ -1147,7 +1158,7 @@ function appendFocusBubble(p, text){
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
 }
 
-async function callFocusClaude(participant, userMsg, apiKey){
+async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
   const prevDiscussion = focusHistory.length > 0
     ? '\n\n【其他參與者的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
     : '';
@@ -1164,10 +1175,15 @@ ${participant.transcript || '（無逐字稿）'}
 你現在正在參加一個多人討論，其他消費者也在場。請用你自己的口吻自然發言，可以回應或同意/反對其他人說的話。每次發言 50-120 字。`;
   }
 
-  const messages = [{
-    role: 'user',
-    content: `主持人說：${userMsg}${prevDiscussion}\n\n請以${participant.name}的身份回應：`
-  }];
+  const promptText = `主持人說：${userMsg}${prevDiscussion}\n\n請以${participant.name}的身份回應：` + (docText ? '\n\n【文件內容】\n'+docText.substring(0,3000) : '');
+  let msgContent;
+  if(images && images.length > 0){
+    msgContent = images.map(img => ({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.base64 } }));
+    msgContent.push({ type: 'text', text: promptText });
+  } else {
+    msgContent = promptText;
+  }
+  const messages = [{ role: 'user', content: msgContent }];
 
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1184,12 +1200,18 @@ ${participant.transcript || '（無逐字稿）'}
 async function sendFocusMessage(){
   const input = document.getElementById('msg-input');
   const msg = input.value.trim();
-  if(!msg) return;
+  if(!msg && currentImages.length === 0 && !currentDocText) return;
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
   input.value = ''; input.disabled = true;
-  appendBubble('user', msg);
-  await runFocusRound(msg, apiKey);
+  let displayMsg = msg;
+  if(currentImages.length > 0) displayMsg += ' 📷 [' + currentImages.length + '張圖片]';
+  if(currentDocText) displayMsg += ' 📄 [' + currentDocName + ']';
+  appendBubble('user', displayMsg || '📷');
+  const imgs = currentImages.slice();
+  const doc = currentDocText;
+  clearImage();
+  await runFocusRound(msg, apiKey, imgs, doc);
   input.disabled = false; input.focus();
 }
 
