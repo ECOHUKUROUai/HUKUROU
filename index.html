@@ -171,8 +171,8 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         </div>
         <div class="path-card" id="path-4" onclick="selectPath(4)">
           <div class="path-num">路線 04</div>
-          <div class="path-name">焦點座談</div>
-          <div class="path-desc">選 2–5 位參與者同時討論，模擬焦點座談</div>
+          <div class="path-name">多人討論</div>
+          <div class="path-desc">先選產品主題，再選 2–5 位相關用戶同時討論</div>
         </div>
       </div>
 
@@ -211,18 +211,34 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 
       <!-- FOCUS GROUP TAB -->
       <div class="tab-content" id="tab-focus" style="display:none;flex-direction:column;gap:6px;">
-        <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">選擇 2–5 位參與者</div>
-        <div style="display:flex;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
-          <button class="tab-btn" id="focus-tab-real" onclick="switchFocusTab('real',this)" style="flex:none;padding:6px 12px;border-radius:99px;font-size:12px;">真實訪談用戶</button>
-          <button class="tab-btn" id="focus-tab-virtual" onclick="switchFocusTab('virtual',this)" style="flex:none;padding:6px 12px;border-radius:99px;font-size:12px;">虛擬 AI 角色</button>
+
+        <!-- STEP 1: Product -->
+        <div id="focus-step1">
+          <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第一步：選擇產品主題</div>
+          <div id="focus-product-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          <input id="focus-custom-product" class="concept-input" placeholder="或輸入自訂產品主題..." style="margin-top:6px;display:none;">
+          <button onclick="confirmFocusProduct()" style="margin-top:8px;padding:8px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;width:100%;">下一步：選擇用戶 →</button>
         </div>
-        <div id="focus-real-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-        <div id="focus-virtual-list" style="display:none;flex-direction:column;gap:6px;"></div>
-        <div id="focus-selected-bar" style="display:none;background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 12px;margin-top:4px;">
-          <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:6px;">已選參與者（<span id="focus-count">0</span>/5）</div>
-          <div id="focus-selected-names" style="font-size:12px;color:var(--text2);"></div>
+
+        <!-- STEP 2: Users -->
+        <div id="focus-step2" style="display:none;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <button onclick="backToStep1()" style="padding:4px 10px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">← 返回</button>
+            <div id="focus-product-label" style="font-size:12px;color:var(--accent);font-weight:500;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第二步：選擇 2–5 位參與者</div>
+          <div style="display:flex;gap:6px;margin-bottom:4px;">
+            <button class="tab-btn active" id="focus-tab-real" onclick="switchFocusTab('real',this)" style="flex:1;padding:6px;border-radius:99px;font-size:11px;">真實訪談用戶</button>
+            <button class="tab-btn" id="focus-tab-virtual" onclick="switchFocusTab('virtual',this)" style="flex:1;padding:6px;border-radius:99px;font-size:11px;">虛擬 AI 角色</button>
+          </div>
+          <div id="focus-real-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          <div id="focus-virtual-list" style="display:none;flex-direction:column;gap:6px;"></div>
+          <div id="focus-selected-bar" style="display:none;background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 12px;margin-top:4px;">
+            <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:6px;">已選參與者（<span id="focus-count">0</span>/5）</div>
+            <div id="focus-selected-names" style="font-size:12px;color:var(--text2);"></div>
+          </div>
+          <button id="btn-start-focus" onclick="startFocusGroup()" style="display:none;padding:10px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;">開始多人討論 →</button>
         </div>
-        <button id="btn-start-focus" onclick="startFocusGroup()" style="display:none;padding:10px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;">開始焦點座談</button>
       </div>
     </div>
 
@@ -588,15 +604,18 @@ function selectPath(n){
   resetChat();
   if(n===1||n===2){ switchTab('cases', document.querySelectorAll('.tab-btn')[2]); }
   else if(n===4){
-    // Show focus group tab
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     document.getElementById('tab-focus').classList.add('active');
     document.getElementById('tab-focus').style.display = 'flex';
+    // Reset to step 1
+    document.getElementById('focus-step1').style.display = 'block';
+    document.getElementById('focus-step2').style.display = 'none';
     focusParticipants = [];
+    selectedFocusProduct = null;
     document.querySelectorAll('.focus-participant-card').forEach(c=>{c.classList.remove('selected');const ch=c.querySelector('.focus-check');if(ch)ch.textContent='';});
     updateFocusBar();
-    renderFocusLists();
+    renderFocusProductList();
   }
   else { switchTab('roles', document.querySelectorAll('.tab-btn')[1]); }
 }
@@ -908,14 +927,87 @@ function switchFocusTab(tab, btn){
   btn.classList.add('active');
 }
 
-function renderFocusLists(){
+// Product categories for focus group
+const FOCUS_PRODUCTS = [
+  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','塵蟎'] },
+  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻'] },
+  { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠'] },
+  { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂'] },
+  { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻'] },
+  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子'] },
+  { id:'water', name:'水性除蟲噴霧', desc:'多蟲通用水性配方', bugs:['蟑螂','螞蟻','蚊子'] },
+  { id:'custom', name:'自訂產品主題', desc:'輸入自訂主題', bugs:[] },
+];
+
+let selectedFocusProduct = null;
+
+function renderFocusProductList(){
+  const list = document.getElementById('focus-product-list');
+  if(!list) return;
+  list.innerHTML = '';
+  FOCUS_PRODUCTS.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'focus-participant-card';
+    div.id = 'fp-'+p.id;
+    div.onclick = () => selectFocusProduct(p);
+    div.innerHTML = `<div class="focus-check"></div>
+      <div><div style="font-size:13px;font-weight:500;">${p.name}</div>
+      <div style="font-size:11px;color:var(--text2);">${p.desc}</div></div>`;
+    list.appendChild(div);
+  });
+}
+
+function selectFocusProduct(product){
+  document.querySelectorAll('#focus-product-list .focus-participant-card').forEach(c=>{
+    c.classList.remove('selected');
+    c.querySelector('.focus-check').textContent='';
+  });
+  const card = document.getElementById('fp-'+product.id);
+  if(card){ card.classList.add('selected'); card.querySelector('.focus-check').textContent='✓'; }
+  selectedFocusProduct = product;
+  if(product.id === 'custom'){
+    document.getElementById('focus-custom-product').style.display = 'block';
+  } else {
+    document.getElementById('focus-custom-product').style.display = 'none';
+  }
+}
+
+function confirmFocusProduct(){
+  if(!selectedFocusProduct){ alert('請先選擇產品主題'); return; }
+  let productName = selectedFocusProduct.name;
+  if(selectedFocusProduct.id === 'custom'){
+    productName = document.getElementById('focus-custom-product').value.trim();
+    if(!productName){ alert('請輸入自訂產品主題'); return; }
+  }
+  document.getElementById('focus-product-label').textContent = '📦 ' + productName;
+  document.getElementById('focus-step1').style.display = 'none';
+  document.getElementById('focus-step2').style.display = 'flex';
+  focusParticipants = [];
+  renderFocusLists(selectedFocusProduct.bugs);
+}
+
+function backToStep1(){
+  document.getElementById('focus-step1').style.display = 'block';
+  document.getElementById('focus-step2').style.display = 'none';
+  focusParticipants = [];
+  updateFocusBar();
+}
+
+function renderFocusLists(bugFilter){
   // Real users
   const realList = document.getElementById('focus-real-list');
   realList.innerHTML = '';
-  if(!allCases.length){
+  const filteredCases = (bugFilter && bugFilter.length > 0)
+    ? allCases.filter(c => bugFilter.some(b => (c.concept||'').includes(b) || (c.roleJob||'').includes(b) || (c.tags||'').includes(b)))
+    : allCases;
+  const casesToShow = filteredCases.length > 0 ? filteredCases : allCases;
+  if(!casesToShow.length){
     realList.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px;">尚無真實訪談案例</div>';
   } else {
-    allCases.forEach(c => {
+    if(filteredCases.length === 0 && allCases.length > 0){
+      realList.innerHTML += '<div style="color:var(--text3);font-size:11px;padding:2px 4px;">無直接相關案例，顯示全部</div>';
+    }
+    casesToShow.forEach(c => {
       const div = document.createElement('div');
       div.className = 'focus-participant-card';
       div.id = 'focus-real-'+c.id;
@@ -976,16 +1068,19 @@ function startFocusGroup(){
   if(focusParticipants.length < 2){ alert('請至少選擇 2 位參與者'); return; }
   currentPath = 4;
   const names = focusParticipants.map(p=>p.name).join('、');
+  const productLabel = document.getElementById('focus-product-label')?.textContent || '';
   document.getElementById('chat-header').innerHTML = `
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
       ${focusParticipants.map(p=>`<div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);">${p.name[0]}</div>`).join('')}
-      <div><div class="chat-role-name">焦點座談</div><div class="chat-role-sub">${names}</div></div>
+      <div><div class="chat-role-name">多人討論</div><div class="chat-role-sub">${productLabel} ／ ${names}</div></div>
     </div>
     <div class="chat-spacer"></div>
   `;
   document.getElementById('chat-messages').innerHTML = `<div class="chat-empty"><div class="chat-empty-icon">👥</div><div style="font-size:14px;">輸入討論主題開始座談</div><div style="font-size:12px;color:var(--text3);">每位參與者都會針對你的問題自由發言</div></div>`;
   document.getElementById('concept-row').style.display = 'flex';
-  document.getElementById('concept-input').placeholder = '輸入討論主題，例如：我們想推出防水老鼠毒餌大包裝，你們覺得如何？';
+  const pLabel = document.getElementById('focus-product-label')?.textContent?.replace('📦 ','') || '';
+  document.getElementById('concept-input').placeholder = pLabel ? `針對「${pLabel}」，你想問參與者什麼？` : '輸入討論主題，例如：這個產品你會買嗎？原因是什麼？';
+  document.getElementById('concept-input').value = pLabel ? '' : '';
   document.getElementById('btn-start').textContent = '開始討論';
   document.getElementById('btn-start').onclick = startFocusDiscussion;
   document.getElementById('chat-controls').style.display = 'none';
@@ -1023,7 +1118,7 @@ async function runFocusRound(userMsg, apiKey){
   if(currentAtRecordId){
     updateAirtableContent();
   } else {
-    const concept = document.getElementById('concept-input')?.value || '焦點座談';
+    const concept = document.getElementById('concept-input')?.value || '多人討論';
     saveFocusToAirtable(concept);
   }
 }
@@ -1063,10 +1158,10 @@ async function callFocusClaude(participant, userMsg, apiKey){
 以下是你之前的真實訪談逐字稿，請完全依據你的口氣、用詞習慣、個性和立場來回應，不要偏離你原有的特質：
 ${participant.transcript || '（無逐字稿）'}
 
-現在你正在參加一個關於福來朗產品的焦點座談。請用你自己的口吻自然發言，可以回應其他人說的話，保持你原有的說話方式。每次發言 50-120 字。`;
+現在你正在參加一個關於福來朗產品的多人討論。請用你自己的口吻自然發言，可以回應其他人說的話，保持你原有的說話方式。每次發言 50-120 字。`;
   } else {
     systemPrompt = `${BRAND_CONTEXT}\n\n${participant.prompt || ''}
-你現在正在參加一個焦點座談，其他消費者也在場。請用你自己的口吻自然發言，可以回應或同意/反對其他人說的話。每次發言 50-120 字。`;
+你現在正在參加一個多人討論，其他消費者也在場。請用你自己的口吻自然發言，可以回應或同意/反對其他人說的話。每次發言 50-120 字。`;
   }
 
   const messages = [{
@@ -1100,11 +1195,11 @@ async function sendFocusMessage(){
 
 async function saveFocusToAirtable(concept){
   currentAtRecordId = null;
-  const fullContent = '【焦點座談】\n主題：' + concept + '\n\n' +
+  const fullContent = '【多人討論】\n主題：' + concept + '\n\n' +
     focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n\n');
   const names = focusParticipants.map(p=>p.name).join('、');
   const result = await atCreate({
-    '受訪者': '焦點座談：'+names,
+    '受訪者': '多人討論：'+names,
     '職業身分': focusParticipants.map(p=>p.job||'').join('、'),
     '產品主題': concept,
     '訪談日期': new Date().toISOString().slice(0,10),
