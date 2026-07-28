@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-kano-8fields-fix -->
+<!-- v20260728-kano-8fields-safe-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -299,13 +299,13 @@ async function analyzeTranscript(){
   const transcript = document.getElementById('new-transcript').value.trim();
   if(!transcript){ alert('請先填入原始逐字稿'); return; }
   const apiKey = localStorage.getItem('hk_api_key')||'';
-  if(!apiKey){ alert('請先在系統設定填入 Claude API Key'); return; }
+  if(!apiKey){ alert('請先在系統設定填入 API Key'); return; }
   const btn = document.getElementById('btn-analyze');
   btn.textContent = '分析 8 大欄位中...'; btn.disabled = true;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = `請對以下逐字稿進行分析，嚴格輸出 JSON：
+    const userPrompt = `請對以下逐字稿進行分析，嚴格僅輸出 JSON：
 {
   "summary": "一句話總結",
   "persona_context": "受訪者與情境",
@@ -332,27 +332,26 @@ ${cleanTranscript}`;
         model: 'claude-3-5-sonnet-20241022',
         max_tokens: 2500,
         temperature: 0.1,
-        system: promptSystem,
-        messages: [{ role: 'user', content: userPrompt }]
+        messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
 
     const data = await res.json();
 
-    if(!res.ok || data.error){
-      alert('API 呼叫失敗：' + (data.error?.message || JSON.stringify(data)));
+    if(!res.ok){
+      const errMsg = data?.error?.message || JSON.stringify(data);
+      alert(`API 呼叫失敗 (HTTP ${res.status})：${errMsg}`);
       return;
     }
 
-    if(!data.content || !data.content[0] || !data.content[0].text){
-      alert('API 未回傳有效內容，請檢查輸入內容或 API 設定。');
+    const rawText = data?.content?.[0]?.text;
+    if(!rawText){
+      alert('API 未回傳預期內容，完整回應：' + JSON.stringify(data));
       return;
     }
 
-    let rawText = data.content[0].text.trim();
-    rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    
-    const result = JSON.parse(rawText);
+    const cleanJson = rawText.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+    const result = JSON.parse(cleanJson);
 
     document.getElementById('new-summary').value = result.summary || '';
     document.getElementById('new-background').value = result.persona_context || '';
@@ -365,7 +364,7 @@ ${cleanTranscript}`;
 
     alert('✓ 8 大欄位分析成功帶入！');
   } catch(e){ 
-    alert('分析失敗：' + e.message); 
+    alert('執行發生例外錯誤：' + e.message); 
   }
   finally { 
     btn.textContent = '✨ AI 自動分析 (拆解 8 大欄位)'; 
@@ -407,27 +406,25 @@ async function analyzeEditTranscript(){
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
         max_tokens: 2500,
-        system: promptSystem,
-        messages: [{ role: 'user', content: userPrompt }]
+        messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
 
     const data = await res.json();
 
-    if(!res.ok || data.error){
-      alert('API 呼叫失敗：' + (data.error?.message || JSON.stringify(data)));
+    if(!res.ok){
+      alert(`API 呼叫失敗 (HTTP ${res.status})：${data?.error?.message || JSON.stringify(data)}`);
       return;
     }
 
-    if(!data.content || !data.content[0] || !data.content[0].text){
-      alert('API 未回傳有效內容，請檢查輸入內容或 API 設定。');
+    const rawText = data?.content?.[0]?.text;
+    if(!rawText){
+      alert('API 未回傳預期內容，完整回應：' + JSON.stringify(data));
       return;
     }
 
-    let rawText = data.content[0].text.trim();
-    rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-
-    const result = JSON.parse(rawText);
+    const cleanJson = rawText.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+    const result = JSON.parse(cleanJson);
 
     document.getElementById('edit-summary').value = result.summary || '';
     document.getElementById('edit-background').value = result.persona_context || '';
@@ -440,7 +437,7 @@ async function analyzeEditTranscript(){
 
     alert('✓ 分析完成！');
   } catch(e){ 
-    alert('分析失敗：' + e.message); 
+    alert('執行發生例外錯誤：' + e.message); 
   }
   finally { 
     btn.textContent = '✨ AI 自動分析 (8欄位)'; 
