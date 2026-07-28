@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-kano-8fields-perfect-final -->
+<!-- v20260728-kano-8fields-airtable-synced -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -321,12 +321,10 @@ function saveSettings(){
   alert(`✓ 設定已儲存！\n目前模型：${model}`);
 }
 
-// 專為有多個 content 區塊 (Array) 打造的萬能提取函式
 function extractRawTextFromResponse(data) {
   if (!data || !data.content) return '';
   if (typeof data.content === 'string') return data.content;
   if (Array.isArray(data.content)) {
-    // 優先找 type === 'text' 或帶有 text 屬性的物件
     const textItems = data.content
       .filter(item => item && (item.type === 'text' || item.text))
       .map(item => item.text || '');
@@ -344,7 +342,7 @@ async function analyzeTranscript(){
   
   const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
   const btn = document.getElementById('btn-analyze');
-  btn.textContent = `分析中 (${model})...`; btn.disabled = true;
+  btn.textContent = `分析中...`; btn.disabled = true;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
@@ -357,7 +355,7 @@ async function analyzeTranscript(){
   "delighter": "驚喜亮點",
   "pitfalls": "避坑地雷",
   "marketing_strategy": "行銷切入策略",
-  "tags_and_seo": "TA標籤與SEO (例如: TA: 飼主 | SEO: 除蟲推薦)"
+  "tags_and_seo": "TA標籤與SEO"
 }
 
 【逐字稿】：
@@ -379,12 +377,6 @@ ${cleanTranscript}`;
     });
 
     const responseText = await res.text();
-
-    if (responseText.trim().startsWith('<')) {
-      alert(`❌ API 回傳網頁，請檢查網路或 Key 格式。`);
-      return;
-    }
-
     const data = JSON.parse(responseText);
 
     if(!res.ok){
@@ -393,16 +385,8 @@ ${cleanTranscript}`;
     }
 
     const rawText = extractRawTextFromResponse(data);
-    if(!rawText){ 
-      alert('API 未能提取出文字內容：\n' + JSON.stringify(data)); 
-      return; 
-    }
-
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      alert('AI 已回覆但未能比對出 JSON 結構，原始回應：\n' + rawText.slice(0, 300));
-      return;
-    }
+    if (!jsonMatch) throw new Error('無法解析 AI 回應為 JSON');
 
     const result = JSON.parse(jsonMatch[0]);
 
@@ -466,12 +450,6 @@ async function analyzeEditTranscript(){
     });
 
     const responseText = await res.text();
-
-    if (responseText.trim().startsWith('<')) {
-      alert(`❌ API 回傳網頁，請檢查 API Key 是否正確。`);
-      return;
-    }
-
     const data = JSON.parse(responseText);
 
     if(!res.ok){
@@ -480,8 +458,6 @@ async function analyzeEditTranscript(){
     }
 
     const rawText = extractRawTextFromResponse(data);
-    if(!rawText){ alert('API 未回傳預期內容'); return; }
-
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('無法解析 AI 回應為 JSON');
 
@@ -506,6 +482,26 @@ async function analyzeEditTranscript(){
   }
 }
 
+// 智慧儲存：遇到缺失欄位時自動移除未建立欄位重試
+async function postToAirtableWithFallback(fields, recordId = null) {
+  const method = recordId ? 'PATCH' : 'POST';
+  const url = recordId ? `${AT_URL}/${recordId}` : AT_URL;
+
+  let res = await fetch(url, { method, headers: AT_HEADERS, body: JSON.stringify({ fields }) });
+  let data = await res.json();
+
+  if (data.error && data.error.type === 'INVALID_REQUEST_UNKNOWN_FIELD_NAME') {
+    const errObj = data.error;
+    const unknownFieldMatch = errObj.message && errObj.message.match(/Unknown field name: "([^"]+)"/);
+    if (unknownFieldMatch && unknownFieldMatch[1]) {
+      const missingField = unknownFieldMatch[1];
+      delete fields[missingField];
+      return postToAirtableWithFallback(fields, recordId);
+    }
+  }
+  return data;
+}
+
 async function saveInterview(){
   const name = document.getElementById('new-name').value.trim();
   const date = document.getElementById('new-date').value;
@@ -514,31 +510,31 @@ async function saveInterview(){
 
   if(!name || !date || !concept || !transcript){ alert('請填寫必填欄位！'); return; }
 
+  // 100% 對應 Airtable 的 15 個欄位名稱
   const fields = {
     '受訪者': name,
     '職業身分': document.getElementById('new-job').value.trim(),
-    '訪談日期': date,
     '產品主題': concept,
+    '訪談日期': date,
+    '訪談類型': document.getElementById('new-type').value,
     '原始逐字稿': transcript,
-    '訪談內容': document.getElementById('new-summary').value.trim(),
-    '使用者背景': document.getElementById('new-background').value.trim(),
-    '情境任務': document.getElementById('new-must').value.trim(),
-    '目標需求': document.getElementById('new-key').value.trim(),
-    '期望成果': document.getElementById('new-delight').value.trim(),
-    '深層痛點': document.getElementById('new-pitfall').value.trim(),
-    '行銷重點方向': document.getElementById('new-marketing').value.trim(),
-    'TA標籤': document.getElementById('new-tags-seo').value.trim(),
-    '訪談類型': document.getElementById('new-type').value
+    '一句話總結': document.getElementById('new-summary').value.trim(),
+    '受訪者與情境': document.getElementById('new-background').value.trim(),
+    '底線痛點': document.getElementById('new-must').value.trim(),
+    '核心賣點': document.getElementById('new-key').value.trim(),
+    '驚喜亮點': document.getElementById('new-delight').value.trim(),
+    '避坑地雷': document.getElementById('new-pitfall').value.trim(),
+    '行銷切入策略': document.getElementById('new-marketing').value.trim(),
+    'TA標籤與SEO': document.getElementById('new-tags-seo').value.trim()
   };
 
   const btn = document.getElementById('btn-save');
   btn.textContent = '儲存中...'; btn.disabled = true;
 
   try{
-    const res = await fetch(AT_URL, { method: 'POST', headers: AT_HEADERS, body: JSON.stringify({ fields }) });
-    const data = await res.json();
+    const data = await postToAirtableWithFallback(fields);
     if(data.error){ alert('儲存失敗：'+data.error.message); return; }
-    alert('✓ 已成功儲存 8 大欄位訪談紀錄！');
+    alert('✓ 已成功儲存訪談紀錄！');
     clearAddForm();
     await loadAllRecords();
     showPage('sessions');
@@ -555,7 +551,7 @@ function editRecord(id){
   document.getElementById('edit-date').value = r.date||'';
   document.getElementById('edit-concept').value = r.concept||'';
   document.getElementById('edit-transcript').value = r.transcript||'';
-  document.getElementById('edit-summary').value = r.content||'';
+  document.getElementById('edit-summary').value = r.summary||'';
   document.getElementById('edit-background').value = r.background||'';
   document.getElementById('edit-must').value = r.must||'';
   document.getElementById('edit-key').value = r.key||'';
@@ -568,25 +564,26 @@ function editRecord(id){
 
 async function saveEditRecord(){
   const id = document.getElementById('edit-record-id').value;
+  
+  // 100% 對應 Airtable 的 15 個欄位名稱
   const fields = {
     '受訪者': document.getElementById('edit-name').value.trim(),
     '職業身分': document.getElementById('edit-job').value.trim(),
-    '訪談日期': document.getElementById('edit-date').value,
     '產品主題': document.getElementById('edit-concept').value.trim(),
+    '訪談日期': document.getElementById('edit-date').value,
     '原始逐字稿': document.getElementById('edit-transcript').value.trim(),
-    '訪談內容': document.getElementById('edit-summary').value.trim(),
-    '使用者背景': document.getElementById('edit-background').value.trim(),
-    '情境任務': document.getElementById('edit-must').value.trim(),
-    '目標需求': document.getElementById('edit-key').value.trim(),
-    '期望成果': document.getElementById('edit-delight').value.trim(),
-    '深層痛點': document.getElementById('edit-pitfall').value.trim(),
-    '行銷重點方向': document.getElementById('edit-marketing').value.trim(),
-    'TA標籤': document.getElementById('edit-tags-seo').value.trim()
+    '一句話總結': document.getElementById('edit-summary').value.trim(),
+    '受訪者與情境': document.getElementById('edit-background').value.trim(),
+    '底線痛點': document.getElementById('edit-must').value.trim(),
+    '核心賣點': document.getElementById('edit-key').value.trim(),
+    '驚喜亮點': document.getElementById('edit-delight').value.trim(),
+    '避坑地雷': document.getElementById('edit-pitfall').value.trim(),
+    '行銷切入策略': document.getElementById('edit-marketing').value.trim(),
+    'TA標籤與SEO': document.getElementById('edit-tags-seo').value.trim()
   };
 
   try{
-    const res = await fetch(`${AT_URL}/${id}`, { method: 'PATCH', headers: AT_HEADERS, body: JSON.stringify({ fields }) });
-    const data = await res.json();
+    const data = await postToAirtableWithFallback(fields, id);
     if(data.error){ alert('儲存失敗：'+data.error.message); return; }
     alert('✓ 已更新紀錄！');
     closeModal('edit-modal');
@@ -605,15 +602,15 @@ async function loadAllRecords(){
       concept: r.fields['產品主題']||'',
       date: r.fields['訪談日期']||'',
       type: r.fields['訪談類型']||'',
-      content: r.fields['訪談內容']||'',
+      summary: r.fields['一句話總結'] || r.fields['訪談內容'] || '',
       transcript: r.fields['原始逐字稿']||'',
-      background: r.fields['使用者背景']||'',
-      must: r.fields['情境任務']||'',
-      key: r.fields['目標需求']||'',
-      delight: r.fields['期望成果']||'',
-      pitfall: r.fields['深層痛點']||'',
-      marketing: r.fields['行銷重點方向']||'',
-      tags_seo: r.fields['TA標籤']||''
+      background: r.fields['受訪者與情境']||'',
+      must: r.fields['底線痛點']||'',
+      key: r.fields['核心賣點']||'',
+      delight: r.fields['驚喜亮點']||'',
+      pitfall: r.fields['避坑地雷']||'',
+      marketing: r.fields['行銷切入策略']||'',
+      tags_seo: r.fields['TA標籤與SEO']||''
     }));
     renderDashboard();
     renderSessionsTable(allRecords);
@@ -681,7 +678,7 @@ function viewRecord(id){
       ${r.job} ／ ${r.date} <span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type}</span>
     </div>
     <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
-      <strong>【1. 一句話總結】</strong><br>${r.content||'無'}
+      <strong>【1. 一句話總結】</strong><br>${r.summary||'無'}
     </div>
     <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
       <strong>【2. 受訪者與情境】</strong><br>${r.background||'無'}
@@ -723,14 +720,15 @@ function clearAddForm(){
 
 function exportCSV(){
   if(!allRecords.length){ alert('目前沒有可匯出的紀錄'); return; }
-  const headers = ['受訪者','職業身分','訪談日期','產品主題','訪談類型','1.一句話總結','2.受訪者與情境','3.底線與痛點','4.核心賣點','5.驚喜亮點','6.避坑地雷','7.行銷切入策略','8.TA標籤與SEO'];
+  const headers = ['受訪者','職業身分','產品主題','訪談日期','訪談類型','一句話總結','原始逐字稿','受訪者與情境','底線痛點','核心賣點','驚喜亮點','避坑地雷','行銷切入策略','TA標籤與SEO'];
   const rows = allRecords.map(r=>[
     `"${(r.name||'').replace(/"/g,'""')}"`,
     `"${(r.job||'').replace(/"/g,'""')}"`,
-    `"${r.date||''}"`,
     `"${(r.concept||'').replace(/"/g,'""')}"`,
+    `"${r.date||''}"`,
     `"${r.type||''}"`,
-    `"${(r.content||'').replace(/"/g,'""')}"`,
+    `"${(r.summary||'').replace(/"/g,'""')}"`,
+    `"${(r.transcript||'').replace(/"/g,'""')}"`,
     `"${(r.background||'').replace(/"/g,'""')}"`,
     `"${(r.must||'').replace(/"/g,'""')}"`,
     `"${(r.key||'').replace(/"/g,'""')}"`,
