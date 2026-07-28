@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-kano-8fields -->
+<!-- v20260728-kano-8fields-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -338,8 +338,21 @@ ${cleanTranscript}`;
     });
 
     const data = await res.json();
-    if(data.error){ alert('分析失敗：'+data.error.message); return; }
-    const result = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+
+    if(!res.ok || data.error){
+      alert('API 呼叫失敗：' + (data.error?.message || JSON.stringify(data)));
+      return;
+    }
+
+    if(!data.content || !data.content[0] || !data.content[0].text){
+      alert('API 未回傳有效內容，請檢查輸入內容或 API 設定。');
+      return;
+    }
+
+    let rawText = data.content[0].text.trim();
+    rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+    
+    const result = JSON.parse(rawText);
 
     document.getElementById('new-summary').value = result.summary || '';
     document.getElementById('new-background').value = result.persona_context || '';
@@ -351,8 +364,13 @@ ${cleanTranscript}`;
     document.getElementById('new-tags-seo').value = result.tags_and_seo || '';
 
     alert('✓ 8 大欄位分析成功帶入！');
-  } catch(e){ alert('分析失敗：'+e.message); }
-  finally { btn.textContent = '✨ AI 自動分析 (拆解 8 大欄位)'; btn.disabled = false; }
+  } catch(e){ 
+    alert('分析失敗：' + e.message); 
+  }
+  finally { 
+    btn.textContent = '✨ AI 自動分析 (拆解 8 大欄位)'; 
+    btn.disabled = false; 
+  }
 }
 
 async function analyzeEditTranscript(){
@@ -378,7 +396,7 @@ async function analyzeEditTranscript(){
 }
 【逐字稿】：${cleanTranscript}`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('[https://api.anthropic.com/v1/messages](https://api.anthropic.com/v1/messages)', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -395,7 +413,21 @@ async function analyzeEditTranscript(){
     });
 
     const data = await res.json();
-    const result = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+
+    if(!res.ok || data.error){
+      alert('API 呼叫失敗：' + (data.error?.message || JSON.stringify(data)));
+      return;
+    }
+
+    if(!data.content || !data.content[0] || !data.content[0].text){
+      alert('API 未回傳有效內容，請檢查輸入內容或 API 設定。');
+      return;
+    }
+
+    let rawText = data.content[0].text.trim();
+    rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+
+    const result = JSON.parse(rawText);
 
     document.getElementById('edit-summary').value = result.summary || '';
     document.getElementById('edit-background').value = result.persona_context || '';
@@ -407,8 +439,13 @@ async function analyzeEditTranscript(){
     document.getElementById('edit-tags-seo').value = result.tags_and_seo || '';
 
     alert('✓ 分析完成！');
-  } catch(e){ alert('分析失敗：'+e.message); }
-  finally { btn.textContent = '✨ AI 自動分析 (8欄位)'; btn.disabled = false; }
+  } catch(e){ 
+    alert('分析失敗：' + e.message); 
+  }
+  finally { 
+    btn.textContent = '✨ AI 自動分析 (8欄位)'; 
+    btn.disabled = false; 
+  }
 }
 
 async function saveInterview(){
