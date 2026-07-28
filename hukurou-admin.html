@@ -1,4 +1,300 @@
-// 新增訪談 AI 分析 (使用全帳號通用 Haiku 模型)
+<!DOCTYPE html>
+<!-- v20260728-kano-8fields-safe-fix -->
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>福來朗 後台管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0f0f;--bg2:#161616;--bg3:#1e1e1e;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8e6e0;--text2:#8a8880;--text3:#5a5856;--accent:#c8a96e;--accent2:#a07840;--accent-bg:rgba(200,169,110,0.10);--accent-border:rgba(200,169,110,0.25);--green:#5a9e6f;--green-bg:rgba(90,158,111,0.12);--red:#c05a5a;--red-bg:rgba(192,90,90,0.12);--radius:10px;--radius-lg:16px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.topbar{height:52px;background:var(--bg2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:12px;}
+.topbar-brand{font-size:13px;font-weight:500;color:var(--accent);letter-spacing:0.06em;}
+.admin-badge{font-size:10px;padding:2px 8px;background:var(--red-bg);color:var(--red);border-radius:99px;font-family:'DM Mono',monospace;}
+.topbar-spacer{flex:1;}
+.topbar-btn{padding:5px 14px;border-radius:99px;font-size:12px;font-family:inherit;cursor:pointer;background:transparent;border:0.5px solid var(--border2);color:var(--text2);}
+.topbar-btn:hover{color:var(--text);}
+.layout{display:flex;height:calc(100vh - 52px);}
+.sidebar{width:200px;background:var(--bg2);border-right:0.5px solid var(--border);padding:1rem 0;flex-shrink:0;}
+.nav-item{padding:10px 1.25rem;font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:8px;}
+.nav-item:hover{color:var(--text);background:var(--bg3);}
+.nav-item.active{color:var(--accent);background:var(--accent-bg);border-right:2px solid var(--accent);}
+.content{flex:1;overflow-y:auto;padding:2rem;}
+.page{display:none;}.page.active{display:block;}
+.page-title{font-size:20px;font-weight:500;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:2rem;}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;}
+.card-title{font-size:14px;font-weight:500;margin-bottom:1rem;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:2rem;}
+.stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+.stat-num{font-size:28px;font-weight:500;color:var(--accent);font-family:'DM Mono',monospace;}
+.stat-label{font-size:12px;color:var(--text2);margin-top:4px;}
+.table{width:100%;border-collapse:collapse;}
+.table th{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.06em;padding:8px 12px;text-align:left;border-bottom:0.5px solid var(--border);}
+.table td{padding:10px 12px;font-size:13px;border-bottom:0.5px solid var(--border);vertical-align:top;}
+.table tr:last-child td{border-bottom:none;}
+.table tr:hover td{background:var(--bg3);}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:99px;font-family:'DM Mono',monospace;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-blue{background:rgba(100,150,220,0.15);color:#7aaae8;}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:13px;font-family:inherit;cursor:pointer;transition:all 0.15s;border:none;}
+.btn-primary{background:var(--accent);color:#1a1200;font-weight:500;}
+.btn-primary:hover{background:#d4b87a;}
+.btn-ghost{background:transparent;border:0.5px solid var(--border2);color:var(--text2);}
+.btn-ghost:hover{color:var(--text);}
+.btn-danger{background:var(--red-bg);border:0.5px solid rgba(192,90,90,0.3);color:var(--red);}
+.btn-danger:hover{background:rgba(192,90,90,0.2);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.form-group{margin-bottom:1rem;}
+.form-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;}
+.form-input,.form-textarea,.form-select{width:100%;padding:9px 13px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent-border);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.tip{font-size:12px;color:var(--text2);background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;line-height:1.6;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
+.modal-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:680px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:1.5rem;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;}
+.kano-header{font-size:13px;font-weight:600;color:var(--accent);margin:1.2rem 0 0.8rem 0;padding-bottom:4px;border-bottom:1px dashed var(--accent-border);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span style="font-size:18px">🦉</span>
+  <span class="topbar-brand">HUKUROU 後台管理</span>
+  <span class="admin-badge">ADMIN</span>
+  <div class="topbar-spacer"></div>
+  <button class="topbar-btn" onclick="window.location.href='index.html'">← 回前台</button>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span>📊</span>總覽</div>
+    <div class="nav-item" onclick="showPage('add',this)"><span>✏️</span>新增訪談</div>
+    <div class="nav-item" onclick="showPage('sessions',this)"><span>📝</span>訪談紀錄</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span>⚙️</span>系統設定</div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">總覽</div>
+      <div class="page-sub">系統使用狀況一覽</div>
+      <div class="stats-row" id="stats-row"><div class="stat-card"><div class="stat-num">...</div><div class="stat-label">載入中</div></div></div>
+      <div class="card">
+        <div class="card-title">最近訪談紀錄</div>
+        <table class="table"><thead><tr><th>受訪者</th><th>產品主題</th><th>類型</th><th>日期</th><th></th></tr></thead><tbody id="recent-tbody"><tr><td colspan="5" style="color:var(--text3);text-align:center;padding:2rem;">載入中...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ADD -->
+    <div class="page" id="page-add">
+      <div class="page-title">新增訪談紀錄</div>
+      <div class="page-sub">輸入真實訪談內容，儲存後所有人立即看到</div>
+      <div class="card">
+        <div class="card-title">基本資料</div>
+        <div class="form-row-3">
+          <div class="form-group"><label class="form-label">受訪者姓名 *</label><input class="form-input" id="new-name" placeholder="例：王小姐"></div>
+          <div class="form-group"><label class="form-label">職業／身份</label><input class="form-input" id="new-job" placeholder="例：家庭主婦 ／ 45歲"></div>
+          <div class="form-group"><label class="form-label">訪談日期 *</label><input class="form-input" id="new-date" type="date"></div>
+        </div>
+        <div class="form-group"><label class="form-label">產品主題 *</label><input class="form-input" id="new-concept" placeholder="例：水性除蟲噴霧（蟑螂問題）"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">訪談內容與 8 大欄位分析</div>
+        <div class="tip">💡 貼上逐字稿後點擊「AI 自動分析」，系統將精準拆解帶入下方 8 個欄位。</div>
+        <div class="form-group">
+          <label class="form-label">原始逐字稿 *</label>
+          <textarea class="form-textarea" id="new-transcript" rows="8" placeholder="貼上完整原始逐字稿..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:1.5rem;">
+          <button class="btn btn-primary" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析 (拆解 8 大欄位)</button>
+        </div>
+
+        <div class="kano-header">📌 1~2. 概觀與情境</div>
+        <div class="form-group">
+          <label class="form-label">1. 一句話總結</label>
+          <input class="form-input" id="new-summary" placeholder="AI 分析後自動帶入...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">2. 受訪者與情境</label>
+          <textarea class="form-textarea" id="new-background" rows="3" placeholder="AI 分析後自動帶入..."></textarea>
+        </div>
+
+        <div class="kano-header">📊 3~6. Kano 模型四維度分析</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">3. 底線與痛點 (Must-have)</label>
+            <textarea class="form-textarea" id="new-must" rows="3" placeholder="未滿足引發極大不滿、直接拒買的門檻..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">4. 核心賣點 (Performance)</label>
+            <textarea class="form-textarea" id="new-key" rows="3" placeholder="決定購買的主要效益與期待..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">5. 驚喜亮點 (Delighter)</label>
+            <textarea class="form-textarea" id="new-delight" rows="3" placeholder="超乎預期的附加價值與亮點..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">6. 避坑地雷 (Pitfalls)</label>
+            <textarea class="form-textarea" id="new-pitfall" rows="3" placeholder="使用阻力、令人扣分與流失的體驗..."></textarea>
+          </div>
+        </div>
+
+        <div class="kano-header">🎯 7~8. 行銷與定位策略</div>
+        <div class="form-group">
+          <label class="form-label">7. 行銷切入策略</label>
+          <textarea class="form-textarea" id="new-marketing" rows="3" placeholder="AI 分析後自動帶入..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">8. TA標籤與SEO</label>
+          <input class="form-input" id="new-tags-seo" placeholder="例：TA: 寵物飼主, 老屋屋主 | SEO: 除蟲推薦, 寵物友善蟑螂藥">
+        </div>
+
+        <div class="form-group" style="margin-top:1rem;">
+          <label class="form-label">訪談類型</label>
+          <select class="form-select" id="new-type">
+            <option value="真實訪談">真實訪談</option>
+            <option value="AI模擬">AI模擬</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="clearAddForm()">清除</button>
+        <button class="btn btn-primary" id="btn-save" onclick="saveInterview()">儲存至 Airtable</button>
+      </div>
+    </div>
+
+    <!-- SESSIONS -->
+    <div class="page" id="page-sessions">
+      <div class="page-title">訪談紀錄</div>
+      <div class="page-sub">所有訪談記錄，來自 Airtable 即時同步</div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+          <input class="form-input" style="max-width:220px;" id="search-input" placeholder="搜尋姓名或產品主題..." oninput="filterSessions()">
+          <select class="form-select" style="max-width:130px;" id="filter-type" onchange="filterSessions()">
+            <option value="">所有類型</option>
+            <option value="真實訪談">真實訪談</option>
+            <option value="AI模擬">AI模擬</option>
+          </select>
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost btn-sm" onclick="loadAllRecords()">🔄 重新整理</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV()">匯出 CSV</button>
+        </div>
+        <table class="table"><thead><tr><th>受訪者</th><th>產品主題</th><th>類型</th><th>日期</th><th></th></tr></thead><tbody id="sessions-tbody"><tr><td colspan="5" style="color:var(--text3);text-align:center;padding:2rem;">載入中...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-title">系統設定</div>
+      <div class="page-sub">API 金鑰與連線資訊</div>
+      <div class="card">
+        <div class="card-title">Claude API 設定</div>
+        <div class="form-group"><label class="form-label">API Key</label><input class="form-input" id="api-key-setting" type="password" placeholder="sk-ant-..."></div>
+        <button class="btn btn-primary btn-sm" onclick="saveApiKey()">儲存 Key</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box">
+    <div class="modal-title">編輯訪談紀錄 (8 大欄位)</div>
+    <input type="hidden" id="edit-record-id">
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">受訪者姓名</label><input class="form-input" id="edit-name"></div>
+      <div class="form-group"><label class="form-label">職業身分</label><input class="form-input" id="edit-job"></div>
+      <div class="form-group"><label class="form-label">訪談日期</label><input class="form-input" id="edit-date" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">產品主題</label><input class="form-input" id="edit-concept"></div>
+    <div class="form-group"><label class="form-label">原始逐字稿</label><textarea class="form-textarea" id="edit-transcript" rows="6"></textarea></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="btn btn-primary btn-sm" id="btn-analyze-edit" onclick="analyzeEditTranscript()">✨ AI 自動分析 (8欄位)</button>
+    </div>
+
+    <div class="form-group"><label class="form-label">1. 一句話總結</label><input class="form-input" id="edit-summary"></div>
+    <div class="form-group"><label class="form-label">2. 受訪者與情境</label><textarea class="form-textarea" id="edit-background" rows="2"></textarea></div>
+
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">3. 底線與痛點</label><textarea class="form-textarea" id="edit-must" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">4. 核心賣點</label><textarea class="form-textarea" id="edit-key" rows="2"></textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">5. 驚喜亮點</label><textarea class="form-textarea" id="edit-delight" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">6. 避坑地雷</label><textarea class="form-textarea" id="edit-pitfall" rows="2"></textarea></div>
+    </div>
+
+    <div class="form-group"><label class="form-label">7. 行銷切入策略</label><textarea class="form-textarea" id="edit-marketing" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">8. TA標籤與SEO</label><input class="form-input" id="edit-tags-seo"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveEditRecord()">儲存更新</button>
+      <button class="btn btn-ghost" onclick="closeModal('edit-modal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="session-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="session-modal-title"></div>
+    <div id="session-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="btn-delete-session">刪除此紀錄</button>
+      <button class="btn btn-ghost" onclick="closeModal('session-modal')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AT_TOKEN = 'patL5putpmiU8T7pm.8a70ea20b01940477b622b6abbaa8e2878f54c91e10ffc1b46b939d726413acd';
+const AT_BASE = 'app4GP2bJKQSCLutF';
+const AT_TABLE = 'tblKhNAw16jvsQ97K';
+const AT_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_TABLE}`;
+const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
+
+let allRecords = [];
+
+const promptSystem = `你是一位高階消費者洞察與行銷策略專家。
+請嚴格將逐字稿拆解為以下 8 個標準欄位：
+1. 一句話總結 (summary)
+2. 受訪者與情境 (persona_context)
+3. 底線與痛點 (must_have)
+4. 核心賣點 (key_selling_points)
+5. 驚喜亮點 (delighter)
+6. 避坑地雷 (pitfalls)
+7. 行銷切入策略 (marketing_strategy)
+8. TA標籤與SEO (tags_and_seo)
+
+只回傳 JSON 格式，不可包含任何額外說明或 markdown 標籤。`;
+
+function showPage(pageId, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`page-${pageId}`).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+function closeModal(id){ document.getElementById(id).style.display = 'none'; }
+
+function saveApiKey(){
+  const key = document.getElementById('api-key-setting').value.trim();
+  if(!key){ alert('請輸入 API Key'); return; }
+  localStorage.setItem('hk_api_key', key);
+  alert('✓ API Key 已儲存');
+}
+
 async function analyzeTranscript(){
   const transcript = document.getElementById('new-transcript').value.trim();
   if(!transcript){ alert('請先填入原始逐字稿'); return; }
@@ -34,7 +330,7 @@ ${cleanTranscript}`;
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307', // 更換為全帳號通用模型
+        model: 'claude-3-haiku-20240307',
         max_tokens: 2500,
         temperature: 0.1,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
@@ -82,7 +378,6 @@ ${cleanTranscript}`;
   }
 }
 
-// 編輯視窗 AI 分析 (使用全帳號通用 Haiku 模型)
 async function analyzeEditTranscript(){
   const transcript = document.getElementById('edit-transcript').value.trim();
   if(!transcript){ alert('請填寫逐字稿'); return; }
@@ -116,7 +411,7 @@ async function analyzeEditTranscript(){
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307', // 更換為全帳號通用模型
+        model: 'claude-3-haiku-20240307',
         max_tokens: 2500,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
@@ -162,3 +457,257 @@ async function analyzeEditTranscript(){
     btn.disabled = false; 
   }
 }
+
+async function saveInterview(){
+  const name = document.getElementById('new-name').value.trim();
+  const date = document.getElementById('new-date').value;
+  const concept = document.getElementById('new-concept').value.trim();
+  const transcript = document.getElementById('new-transcript').value.trim();
+
+  if(!name || !date || !concept || !transcript){ alert('請填寫必填欄位！'); return; }
+
+  const fields = {
+    '受訪者': name,
+    '職業身分': document.getElementById('new-job').value.trim(),
+    '訪談日期': date,
+    '產品主題': concept,
+    '原始逐字稿': transcript,
+    '訪談內容': document.getElementById('new-summary').value.trim(),
+    '使用者背景': document.getElementById('new-background').value.trim(),
+    '情境任務': document.getElementById('new-must').value.trim(),
+    '目標需求': document.getElementById('new-key').value.trim(),
+    '期望成果': document.getElementById('new-delight').value.trim(),
+    '深層痛點': document.getElementById('new-pitfall').value.trim(),
+    '行銷重點方向': document.getElementById('new-marketing').value.trim(),
+    'TA標籤': document.getElementById('new-tags-seo').value.trim(),
+    '訪談類型': document.getElementById('new-type').value
+  };
+
+  const btn = document.getElementById('btn-save');
+  btn.textContent = '儲存中...'; btn.disabled = true;
+
+  try{
+    const res = await fetch(AT_URL, { method: 'POST', headers: AT_HEADERS, body: JSON.stringify({ fields }) });
+    const data = await res.json();
+    if(data.error){ alert('儲存失敗：'+data.error.message); return; }
+    alert('✓ 已成功儲存 8 大欄位訪談紀錄！');
+    clearAddForm();
+    await loadAllRecords();
+    showPage('sessions');
+  } catch(e){ alert('連線失敗'); }
+  finally { btn.textContent = '儲存至 Airtable'; btn.disabled = false; }
+}
+
+function editRecord(id){
+  const r = allRecords.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('edit-record-id').value = id;
+  document.getElementById('edit-name').value = r.name||'';
+  document.getElementById('edit-job').value = r.job||'';
+  document.getElementById('edit-date').value = r.date||'';
+  document.getElementById('edit-concept').value = r.concept||'';
+  document.getElementById('edit-transcript').value = r.transcript||'';
+  document.getElementById('edit-summary').value = r.content||'';
+  document.getElementById('edit-background').value = r.background||'';
+  document.getElementById('edit-must').value = r.must||'';
+  document.getElementById('edit-key').value = r.key||'';
+  document.getElementById('edit-delight').value = r.delight||'';
+  document.getElementById('edit-pitfall').value = r.pitfall||'';
+  document.getElementById('edit-marketing').value = r.marketing||'';
+  document.getElementById('edit-tags-seo').value = r.tags_seo||'';
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+async function saveEditRecord(){
+  const id = document.getElementById('edit-record-id').value;
+  const fields = {
+    '受訪者': document.getElementById('edit-name').value.trim(),
+    '職業身分': document.getElementById('edit-job').value.trim(),
+    '訪談日期': document.getElementById('edit-date').value,
+    '產品主題': document.getElementById('edit-concept').value.trim(),
+    '原始逐字稿': document.getElementById('edit-transcript').value.trim(),
+    '訪談內容': document.getElementById('edit-summary').value.trim(),
+    '使用者背景': document.getElementById('edit-background').value.trim(),
+    '情境任務': document.getElementById('edit-must').value.trim(),
+    '目標需求': document.getElementById('edit-key').value.trim(),
+    '期望成果': document.getElementById('edit-delight').value.trim(),
+    '深層痛點': document.getElementById('edit-pitfall').value.trim(),
+    '行銷重點方向': document.getElementById('edit-marketing').value.trim(),
+    'TA標籤': document.getElementById('edit-tags-seo').value.trim()
+  };
+
+  try{
+    const res = await fetch(`${AT_URL}/${id}`, { method: 'PATCH', headers: AT_HEADERS, body: JSON.stringify({ fields }) });
+    const data = await res.json();
+    if(data.error){ alert('儲存失敗：'+data.error.message); return; }
+    alert('✓ 已更新紀錄！');
+    closeModal('edit-modal');
+    await loadAllRecords();
+  } catch(e){ alert('連線失敗'); }
+}
+
+async function loadAllRecords(){
+  try{
+    const res = await fetch(AT_URL+'?pageSize=100&sort[0][field]=訪談日期&sort[0][direction]=desc', { headers: AT_HEADERS });
+    const data = await res.json();
+    allRecords = (data.records||[]).map(r=>({
+      id: r.id,
+      name: r.fields['受訪者']||'',
+      job: r.fields['職業身分']||'',
+      concept: r.fields['產品主題']||'',
+      date: r.fields['訪談日期']||'',
+      type: r.fields['訪談類型']||'',
+      content: r.fields['訪談內容']||'',
+      transcript: r.fields['原始逐字稿']||'',
+      background: r.fields['使用者背景']||'',
+      must: r.fields['情境任務']||'',
+      key: r.fields['目標需求']||'',
+      delight: r.fields['期望成果']||'',
+      pitfall: r.fields['深層痛點']||'',
+      marketing: r.fields['行銷重點方向']||'',
+      tags_seo: r.fields['TA標籤']||''
+    }));
+    renderDashboard();
+    renderSessionsTable(allRecords);
+  } catch(e){}
+}
+
+function renderDashboard(){
+  const real = allRecords.filter(r=>r.type==='真實訪談').length;
+  const sim = allRecords.filter(r=>r.type==='AI模擬').length;
+  const today = new Date().toISOString().slice(0,10);
+  const todayCount = allRecords.filter(r=>r.date===today).length;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${allRecords.length}</div><div class="stat-label">總訪談數</div></div>
+    <div class="stat-card"><div class="stat-num">${real}</div><div class="stat-label">真實訪談</div></div>
+    <div class="stat-card"><div class="stat-num">${sim}</div><div class="stat-label">AI 模擬</div></div>
+    <div class="stat-card"><div class="stat-num">${todayCount}</div><div class="stat-label">今日新增</div></div>
+  `;
+  const recent = allRecords.slice(0,5);
+  document.getElementById('recent-tbody').innerHTML = recent.length ? recent.map(r=>`
+    <tr>
+      <td><span style="font-weight:500">${r.name}</span><br><span style="font-size:12px;color:var(--text2)">${r.job}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.concept}</td>
+      <td><span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type||'訪談'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button></td>
+    </tr>
+  `).join('') : '<tr><td colspan="5"><div class="empty-state">尚無訪談紀錄</div></td></tr>';
+}
+
+function filterSessions(){
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const type = document.getElementById('filter-type').value;
+  const filtered = allRecords.filter(r=>{
+    const matchSearch = !search || r.name.toLowerCase().includes(search) || r.concept.toLowerCase().includes(search);
+    const matchType = !type || r.type === type;
+    return matchSearch && matchType;
+  });
+  renderSessionsTable(filtered);
+}
+
+function renderSessionsTable(records){
+  document.getElementById('sessions-tbody').innerHTML = records.length ? records.map(r=>`
+    <tr>
+      <td><span style="font-weight:500">${r.name}</span><br><span style="font-size:12px;color:var(--text2)">${r.job}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.concept}</td>
+      <td><span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type||'訪談'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
+          <button class="btn btn-ghost btn-sm" onclick="editRecord('${r.id}')">編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">刪除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="5"><div class="empty-state">沒有符合條件的紀錄</div></td></tr>';
+}
+
+function viewRecord(id){
+  const r = allRecords.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('session-modal-title').textContent = `${r.name} ${r.concept}`;
+  document.getElementById('session-modal-body').innerHTML = `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:1rem;">
+      ${r.job} ／ ${r.date} <span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type}</span>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
+      <strong>【1. 一句話總結】</strong><br>${r.content||'無'}
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
+      <strong>【2. 受訪者與情境】</strong><br>${r.background||'無'}
+    </div>
+    <div style="background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:1rem;font-size:12px;line-height:1.8;margin-bottom:12px;">
+      <div style="color:var(--accent);font-weight:bold;margin-bottom:6px;">📊 Kano 模型拆解：</div>
+      <div>• <strong>3. 底線與痛點：</strong>${r.must||'無'}</div>
+      <div>• <strong>4. 核心賣點：</strong>${r.key||'無'}</div>
+      <div>• <strong>5. 驚喜亮點：</strong>${r.delight||'無'}</div>
+      <div>• <strong>6. 避坑地雷：</strong>${r.pitfall||'無'}</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
+      <strong>【7. 行銷切入策略】</strong><br>${r.marketing||'無'}
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;">
+      <strong>【8. TA標籤與SEO】</strong><br>${r.tags_seo||'無'}
+    </div>
+  `;
+  document.getElementById('btn-delete-session').onclick = ()=>{ deleteRecord(id); closeModal('session-modal'); };
+  document.getElementById('session-modal').style.display = 'flex';
+}
+
+async function deleteRecord(id){
+  if(!confirm('確定要刪除這筆訪談紀錄嗎？')) return;
+  await fetch(`${AT_URL}/${id}`, { method:'DELETE', headers:AT_HEADERS });
+  allRecords = allRecords.filter(r=>r.id!==id);
+  renderDashboard();
+  filterSessions();
+}
+
+function initAddForm(){ document.getElementById('new-date').value = new Date().toISOString().slice(0,10); }
+
+function clearAddForm(){
+  ['new-name','new-job','new-concept','new-transcript','new-summary','new-background','new-must','new-key','new-delight','new-pitfall','new-marketing','new-tags-seo'].forEach(id=>{
+    if(document.getElementById(id)) document.getElementById(id).value = '';
+  });
+  initAddForm();
+}
+
+function exportCSV(){
+  if(!allRecords.length){ alert('目前沒有可匯出的紀錄'); return; }
+  const headers = ['受訪者','職業身分','訪談日期','產品主題','訪談類型','1.一句話總結','2.受訪者與情境','3.底線與痛點','4.核心賣點','5.驚喜亮點','6.避坑地雷','7.行銷切入策略','8.TA標籤與SEO'];
+  const rows = allRecords.map(r=>[
+    `"${(r.name||'').replace(/"/g,'""')}"`,
+    `"${(r.job||'').replace(/"/g,'""')}"`,
+    `"${r.date||''}"`,
+    `"${(r.concept||'').replace(/"/g,'""')}"`,
+    `"${r.type||''}"`,
+    `"${(r.content||'').replace(/"/g,'""')}"`,
+    `"${(r.background||'').replace(/"/g,'""')}"`,
+    `"${(r.must||'').replace(/"/g,'""')}"`,
+    `"${(r.key||'').replace(/"/g,'""')}"`,
+    `"${(r.delight||'').replace(/"/g,'""')}"`,
+    `"${(r.pitfall||'').replace(/"/g,'""')}"`,
+    `"${(r.marketing||'').replace(/"/g,'""')}"`,
+    `"${(r.tags_seo||'').replace(/"/g,'""')}"`
+  ]);
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e=>e.join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `interview_records_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const savedKey = localStorage.getItem('hk_api_key');
+  if(savedKey) document.getElementById('api-key-setting').value = savedKey;
+  initAddForm();
+  loadAllRecords();
+});
+</script>
+</body>
+</html>
