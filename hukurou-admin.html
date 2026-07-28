@@ -165,7 +165,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           </select>
         </div>
       </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn btn-ghost" onclick="clearAddForm()">清除</button>
         <button class="btn btn-primary" id="btn-save" onclick="saveInterview()">儲存至 Airtable</button>
       </div>
@@ -288,8 +288,45 @@ const AT_SETTINGS_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_SETTINGS_TA
 const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
 
 let allRecords = [];
-
 let settingsRecords = {};
+
+const analyzeSystem3 = `你是一位擁有 10 年資歷的專業消費者洞察與產品行銷專家（Consumer Insight & Product Marketing Lead）。
+
+在分析逐字稿時，你必須嚴格遵循以下 4 大分析原則，確保每次產出具備高度的一致性與商業價值：
+
+1.【精準歸納，拒絕廢話】
+  - 避免重複逐字稿的表面描述，直接提取「動機、痛點、顧慮與決策邏輯」。
+  - 所有欄位語言必須精煉、扎實、具備商業可執行性。
+
+2.【Kano 模型白話轉化】
+  - 底線痛點 (must_have)：顧客視為「理所當然」的基礎條件。未滿足會引發極大不滿或直接放棄購買。
+  - 核心賣點 (key_selling_points)：影響買單意願的核心效益。表現越好，顧客滿意度越高。
+  - 驚喜亮點 (delighter)：超乎預期的附加價值或貼心體驗，能引發衝動購物與口碑推薦。
+  - 避坑地雷 (pitfalls)：使用流程中的阻力、麻煩感或負面體驗，會直接降低回購率或導致負評。
+
+3.【視角轉換】
+  - 行銷策略必須緊扣訪談中揭露的「心理阻力」，給出具體可用的銷售頁 (LP) 主打訴求與廣告 Hook。
+
+4.【輸出一致性】
+  - 嚴格遵守要求的 JSON 結構，不得遺漏任何欄位，不得加入任何 JSON 格式以外的字詞。`;
+
+function showPage(pageId, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`page-${pageId}`).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+function closeModal(id){
+  document.getElementById(id).style.display = 'none';
+}
+
+function saveApiKey(){
+  const key = document.getElementById('api-key-setting').value.trim();
+  if(!key){ alert('請輸入 API Key'); return; }
+  localStorage.setItem('hk_api_key', key);
+  alert('✓ API Key 已儲存');
+}
 
 async function loadPasswords(){
   try{
@@ -327,29 +364,61 @@ async function analyzeEditTranscript(){
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
   try{
-    const analyzeSystem3 = '你是福來朗（HUKUROU）居家除蟲專賣品牌的行銷顧問，專門分析消費者訪談逐字稿，協助團隊制定精準行銷計畫、優化銷售頁面、提升轉換率。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，讓行銷人員清楚想像這個人 3.找出深層心理動機而非表面行為 4.以提升轉換率為最終目標。';
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = '這是我們針對有購買過或有放入購物車沒下單的客戶進行的訪談逐字稿。最終目的是希望能夠更精準地做出行銷計劃，優化銷售頁面，讓轉換率提升。請針對逐字稿進行客戶輪廓分類，描述深刻且精準，讓行銷人員可以深入了解這類消費者。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n請判斷這份逐字稿屬於幾種客戶類型（可能是1類或2類），並回傳以下JSON格式（全部繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機/行為模式]","summary":"2-3句訪談核心發現，說明受訪者購買或未購買的關鍵原因","background":"【使用者背景/身份】讓人清楚想像到這個人——年齡、職業、生活環境、消費習慣、與產品相關的生活背景","situation":"【特定情境/任務】這個人在什麼情況下遇到問題？當時在做什麼？什麼事情觸發了他尋找解決方案？","painpoint":"【痛點/阻礙】為什麼他需要這個產品？表面問題背後的恐懼、焦慮、損失感是什麼？之前嘗試過什麼方法但失敗？","goal":"【目標/需求】他想透過這個產品完成什麼事？功能需求（效果、方便、安全）和情感需求（安心感、省事、被認可）各是什麼？","outcome":"【期望成果/價值】使用後他的生活有什麼具體改變？這個結果對他意味著什麼？是否會持續回購？","marketing":"【行銷重點方向】分為兩部分：(1)深層行銷切入：根據此客戶輪廓，最有效的行銷切入點是什麼？有哪些深層價值可以切入？哪些情感訴求最能打動這類消費者？建議的廣告角度與文案方向；(2)一見就進/一進就買/一買再買推演：什麼樣的觸發點讓他點進產品頁？什麼說服他第一次下單？什麼讓他持續回購？針對此受訪者逐一推演三個階段的關鍵因素","seo":"【關鍵字SEO】這類消費者在搜尋解決方案時會用什麼關鍵字？列出8-12個高相關性關鍵字，包含問題型（如：家裡有白蟻怎麼辦）、產品型（如：除白蟻噴霧推薦）、比較型（如：白蟻藥哪個好用）","ta_tags":"3-6個精準標籤用逗號分隔，自由歸納最能代表這個人的特質"}' ;
+    const userPrompt = `請對以下訪談逐字稿進行深度的商業邏輯拆解，並嚴格按照 JSON 格式輸出：
+
+{
+  "summary": "【一句話總結】限制 30 字以內。公式：對象 + 核心衝突/痛點 + 決策關鍵。",
+  "persona_context": "【受訪者與情境】限制 80 字以內。明確交代：1. 身份屬性 2. 觸發需求的具體生活場景 3. 當時面臨的核心困境。",
+  "product_positioning": {
+    "must_have": "【底線痛點】沒做到直接拒買的門檻。",
+    "key_selling_points": "【核心賣點】決定購買的主要效益與理由。",
+    "delighter": "【驚喜亮點】超越期待的貼心細節或亮點。",
+    "pitfalls": "【避坑地雷】令人感到麻煩、討厭或扣分的體驗。"
+  },
+  "marketing_strategy": "【行銷切入策略】給出 2-3 個具體可用的切入點。",
+  "tags_and_seo": {
+    "ta_tags": "3-5 個精準 TA 標籤，以逗號分隔",
+    "seo_keywords": "8-12 個高轉換搜尋關鍵字，以逗號分隔"
+  }
+}
+
+【待分析逐字稿】：
+${cleanTranscript}`;
+
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1500, system: analyzeSystem3, messages: [{ role: 'user', content: userPrompt }] })
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 2500,
+        temperature: 0.1,
+        system: analyzeSystem3,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
     });
+
     const data = await res.json();
     if(data.error){ alert('分析失敗：'+data.error.message); return; }
     const text = data.content[0].text;
     const clean = text.replace(/```json|```/g,'').trim();
     const result = JSON.parse(clean);
-    const taLineEdit = result.ta_profile ? 'TA 輪廓：' + result.ta_profile + '\n\n' : '';
-    if(document.getElementById('edit-content')) document.getElementById('edit-content').value = taLineEdit + (result.summary || '');
-    document.getElementById('edit-background').value = result.background || '';
-    document.getElementById('edit-situation').value = result.situation || '';
-    document.getElementById('edit-painpoint').value = result.painpoint || '';
-    document.getElementById('edit-goal').value = result.goal || '';
-    document.getElementById('edit-outcome').value = result.outcome || '';
-    if(document.getElementById('edit-tags')) document.getElementById('edit-tags').value = result.ta_tags || '';
-    if(document.getElementById('edit-marketing')) document.getElementById('edit-marketing').value = result.marketing || '';
-    if(document.getElementById('edit-seo')) document.getElementById('edit-seo').value = result.seo || '';
+
+    if(document.getElementById('edit-content')) document.getElementById('edit-content').value = result.summary || '';
+    if(document.getElementById('edit-background')) document.getElementById('edit-background').value = result.persona_context || '';
+    if(document.getElementById('edit-situation')) document.getElementById('edit-situation').value = result.product_positioning?.must_have || '';
+    if(document.getElementById('edit-painpoint')) document.getElementById('edit-painpoint').value = result.product_positioning?.pitfalls || '';
+    if(document.getElementById('edit-goal')) document.getElementById('edit-goal').value = result.product_positioning?.key_selling_points || '';
+    if(document.getElementById('edit-outcome')) document.getElementById('edit-outcome').value = result.product_positioning?.delighter || '';
+    if(document.getElementById('edit-marketing')) document.getElementById('edit-marketing').value = result.marketing_strategy || '';
+    if(document.getElementById('edit-tags')) document.getElementById('edit-tags').value = result.tags_and_seo?.ta_tags || '';
+    if(document.getElementById('edit-seo')) document.getElementById('edit-seo').value = result.tags_and_seo?.seo_keywords || '';
+
     alert('✓ 分析完成！請確認內容後儲存');
   } catch(e){
     alert('分析失敗：'+e.message);
@@ -422,7 +491,16 @@ async function loadAllRecords(){
       date: r.fields['訪談日期']||'',
       type: r.fields['訪談類型']||'',
       content: r.fields['訪談內容']||'',
-      insight: r.fields['關鍵洞察']||''
+      insight: r.fields['關鍵洞察']||'',
+      transcript: r.fields['原始逐字稿']||'',
+      background: r.fields['使用者背景']||'',
+      situation: r.fields['情境任務']||'',
+      painpoint: r.fields['深層痛點']||'',
+      goal: r.fields['目標需求']||'',
+      outcome: r.fields['期望成果']||'',
+      tags: r.fields['TA標籤']||'',
+      marketing: r.fields['行銷重點方向']||'',
+      seo: r.fields['關鍵字SEO']||''
     }));
     renderDashboard();
     renderSessionsTable(allRecords);
@@ -457,10 +535,12 @@ function renderDashboard(){
 function filterSessions(){
   const search = document.getElementById('search-input').value.toLowerCase();
   const type = document.getElementById('filter-type').value;
+  const tagsFilter = document.getElementById('filter-tags').value.toLowerCase();
   const filtered = allRecords.filter(r=>{
-    const matchSearch = !search || r.name.includes(search) || r.concept.includes(search);
+    const matchSearch = !search || r.name.toLowerCase().includes(search) || r.concept.toLowerCase().includes(search);
     const matchType = !type || r.type === type;
-    return matchSearch && matchType;
+    const matchTags = !tagsFilter || (r.tags && r.tags.toLowerCase().includes(tagsFilter));
+    return matchSearch && matchType && matchTags;
   });
   renderSessionsTable(filtered);
 }
@@ -487,7 +567,7 @@ function renderSessionsTable(records){
 function viewRecord(id){
   const r = allRecords.find(x=>x.id===id);
   if(!r) return;
-  document.getElementById('session-modal-title').textContent = `${r.name}　${r.concept}`;
+  document.getElementById('session-modal-title').textContent = `${r.name} ${r.concept}`;
   document.getElementById('session-modal-body').innerHTML = `
     <div style="font-size:12px;color:var(--text2);margin-bottom:1rem;">
       ${r.job} ／ ${r.date}
@@ -508,54 +588,92 @@ async function deleteRecord(id){
   filterSessions();
 }
 
-// ── ADD ──
+// ── ADD FORM ──
 function initAddForm(){
   document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
 }
 
+function clearAddForm(){
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-job').value = '';
+  document.getElementById('new-concept').value = '';
+  document.getElementById('new-transcript').value = '';
+  document.getElementById('new-background').value = '';
+  document.getElementById('new-situation').value = '';
+  document.getElementById('new-painpoint').value = '';
+  document.getElementById('new-goal').value = '';
+  document.getElementById('new-outcome').value = '';
+  document.getElementById('new-tags').value = '';
+  document.getElementById('new-marketing').value = '';
+  document.getElementById('new-seo').value = '';
+  initAddForm();
+}
+
 async function analyzeTranscript(){
   const transcript = document.getElementById('new-transcript').value.trim();
-  if(!transcript){ alert('請先貼上逐字稿'); return; }
+  if(!transcript){ alert('請先填入原始逐字稿'); return; }
   const apiKey = localStorage.getItem('hk_api_key')||'';
   if(!apiKey){ alert('請先在系統設定填入 Claude API Key'); return; }
-
   const btn = document.getElementById('btn-analyze');
   btn.textContent = '分析中...'; btn.disabled = true;
-
   try{
-    const analyzeSystem2 = `你是一位專業的消費者洞察分析師，服務於福來朗（HUKUROU）居家除蟲專賣品牌。請根據消費者訪談逐字稿進行精準的客戶輪廓分析。重要原則：如實分析，不憑空增加逐字稿中沒有提及的內容；找出深層痛點，不只是表面問題；目的是協助行銷人員制定精準行銷計畫、提高轉換率。`;
-    const analyzeSystem1 = '你是福來朗（HUKUROU）居家除蟲專賣品牌的行銷顧問，專門分析消費者訪談逐字稿，協助團隊制定精準行銷計畫、優化銷售頁面、提升轉換率。分析原則：1.只分析逐字稿中實際出現的內容，不憑空捏造 2.描述要具體有畫面感，讓行銷人員清楚想像這個人 3.找出深層心理動機而非表面行為 4.以提升轉換率為最終目標。';
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = '這是我們針對有購買過或有放入購物車沒下單的客戶進行的訪談逐字稿。最終目的是希望能夠更精準地做出行銷計劃，優化銷售頁面，讓轉換率提升。請針對逐字稿進行客戶輪廓分類，描述深刻且精準，讓行銷人員可以深入了解這類消費者。只回傳JSON不加其他文字。\n\n逐字稿：' + cleanTranscript + '\n\n請判斷這份逐字稿屬於幾種客戶類型（可能是1類或2類），並回傳以下JSON格式（全部繁體中文）：{"ta_profile":"一句話定義TA輪廓：[身分特徵]：[購買動機/行為模式]","summary":"2-3句訪談核心發現，說明受訪者購買或未購買的關鍵原因","background":"【使用者背景/身份】讓人清楚想像到這個人——年齡、職業、生活環境、消費習慣、與產品相關的生活背景","situation":"【特定情境/任務】這個人在什麼情況下遇到問題？當時在做什麼？什麼事情觸發了他尋找解決方案？","painpoint":"【痛點/阻礙】為什麼他需要這個產品？表面問題背後的恐懼、焦慮、損失感是什麼？之前嘗試過什麼方法但失敗？","goal":"【目標/需求】他想透過這個產品完成什麼事？功能需求（效果、方便、安全）和情感需求（安心感、省事、被認可）各是什麼？","outcome":"【期望成果/價值】使用後他的生活有什麼具體改變？這個結果對他意味著什麼？是否會持續回購？","marketing":"【行銷重點方向】分為兩部分：(1)深層行銷切入：根據此客戶輪廓，最有效的行銷切入點是什麼？有哪些深層價值可以切入？哪些情感訴求最能打動這類消費者？建議的廣告角度與文案方向；(2)一見就進/一進就買/一買再買推演：什麼樣的觸發點讓他點進產品頁？什麼說服他第一次下單？什麼讓他持續回購？針對此受訪者逐一推演三個階段的關鍵因素","seo":"【關鍵字SEO】這類消費者在搜尋解決方案時會用什麼關鍵字？列出8-12個高相關性關鍵字，包含問題型（如：家裡有白蟻怎麼辦）、產品型（如：除白蟻噴霧推薦）、比較型（如：白蟻藥哪個好用）","ta_tags":"3-6個精準標籤用逗號分隔，自由歸納最能代表這個人的特質"}' ;
+    const userPrompt = `請對以下訪談逐字稿進行深度的商業邏輯拆解，並嚴格按照 JSON 格式輸出：
+
+{
+  "summary": "【一句話總結】限制 30 字以內。",
+  "persona_context": "【受訪者與情境】限制 80 字以內。",
+  "product_positioning": {
+    "must_have": "【底線痛點】沒做到直接拒買的門檻。",
+    "key_selling_points": "【核心賣點】決定購買的主要效益與理由。",
+    "delighter": "【驚喜亮點】超越期待的貼心細節或亮點。",
+    "pitfalls": "【避坑地雷】令人感到麻煩、討厭或扣分的體驗。"
+  },
+  "marketing_strategy": "【行銷切入策略】給出 2-3 個具體可用的切入點。",
+  "tags_and_seo": {
+    "ta_tags": "3-5 個精準 TA 標籤，以逗號分隔",
+    "seo_keywords": "8-12 個高轉換搜尋關鍵字，以逗號分隔"
+  }
+}
+
+【待分析逐字稿】：
+${cleanTranscript}`;
+
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1500,
-        system: analyzeSystem1,
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 2500,
+        temperature: 0.1,
+        system: analyzeSystem3,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
+
     const data = await res.json();
     if(data.error){ alert('分析失敗：'+data.error.message); return; }
     const text = data.content[0].text;
-    const clean = text.replace(/\`\`\`json|\`\`\`/g,'').trim();
+    const clean = text.replace(/```json|```/g,'').trim();
     const result = JSON.parse(clean);
-    const taLine = result.ta_profile ? 'TA 輪廓：' + result.ta_profile + '\n\n' : '';
-    if(document.getElementById('new-content')) document.getElementById('new-content').value = taLine + (result.summary || '');
-    document.getElementById('new-background').value = result.background || '';
-    document.getElementById('new-situation').value = result.situation || '';
-    document.getElementById('new-painpoint').value = result.painpoint || '';
-    document.getElementById('new-goal').value = result.goal || '';
-    document.getElementById('new-outcome').value = result.outcome || '';
-    if(document.getElementById('new-tags')) document.getElementById('new-tags').value = result.ta_tags || '';
-    if(document.getElementById('new-marketing')) document.getElementById('new-marketing').value = result.marketing || '';
-    if(document.getElementById('new-seo')) document.getElementById('new-seo').value = result.seo || '';
-    alert('✓ 分析完成！請確認內容後儲存');
+
+    document.getElementById('new-background').value = result.persona_context || '';
+    document.getElementById('new-situation').value = result.product_positioning?.must_have || '';
+    document.getElementById('new-painpoint').value = result.product_positioning?.pitfalls || '';
+    document.getElementById('new-goal').value = result.product_positioning?.key_selling_points || '';
+    document.getElementById('new-outcome').value = result.product_positioning?.delighter || '';
+    document.getElementById('new-tags').value = result.tags_and_seo?.ta_tags || '';
+    document.getElementById('new-marketing').value = result.marketing_strategy || '';
+    document.getElementById('new-seo').value = result.tags_and_seo?.seo_keywords || '';
+
+    alert('✓ 分析完成！請檢查並完善表單後點選「儲存至 Airtable」');
   } catch(e){
-    alert('分析失敗，請確認 API Key 是否正確');
-    console.error(e);
+    alert('分析失敗：'+e.message);
   } finally {
     btn.textContent = '✨ AI 自動分析'; btn.disabled = false;
   }
@@ -563,79 +681,85 @@ async function analyzeTranscript(){
 
 async function saveInterview(){
   const name = document.getElementById('new-name').value.trim();
-  const job = document.getElementById('new-job').value.trim();
   const date = document.getElementById('new-date').value;
   const concept = document.getElementById('new-concept').value.trim();
-  const transcript = document.getElementById('new-transcript') ? document.getElementById('new-transcript').value.trim() : '';
-  const type = document.getElementById('new-type').value;
-  if(!name||!concept||!date||!transcript){ alert('姓名、產品主題、日期、原始逐字稿為必填'); return; }
-  const content = transcript;
+  const transcript = document.getElementById('new-transcript').value.trim();
+
+  if(!name || !date || !concept || !transcript){
+    alert('請填寫受訪者姓名、日期、產品主題與原始逐字稿！');
+    return;
+  }
+
+  const fields = {
+    '受訪者': name,
+    '職業身分': document.getElementById('new-job').value.trim(),
+    '訪談日期': date,
+    '產品主題': concept,
+    '原始逐字稿': transcript,
+    '使用者背景': document.getElementById('new-background').value.trim(),
+    '情境任務': document.getElementById('new-situation').value.trim(),
+    '深層痛點': document.getElementById('new-painpoint').value.trim(),
+    '目標需求': document.getElementById('new-goal').value.trim(),
+    '期望成果': document.getElementById('new-outcome').value.trim(),
+    'TA標籤': document.getElementById('new-tags').value.trim(),
+    '行銷重點方向': document.getElementById('new-marketing').value.trim(),
+    '關鍵字SEO': document.getElementById('new-seo').value.trim(),
+    '訪談類型': document.getElementById('new-type').value
+  };
+
   const btn = document.getElementById('btn-save');
   btn.textContent = '儲存中...'; btn.disabled = true;
+
   try{
     const res = await fetch(AT_URL, {
-      method:'POST', headers: AT_HEADERS,
-      body: JSON.stringify({ records: [{ fields: {
-        '受訪者': name, '職業身分': job, '產品主題': concept,
-        '訪談日期': date, '訪談類型': type,
-        '訪談內容': transcript,
-        '原始逐字稿': transcript,
-        '使用者背景': document.getElementById('new-background') ? document.getElementById('new-background').value.trim() : '',
-        '情境任務': document.getElementById('new-situation') ? document.getElementById('new-situation').value.trim() : '',
-        '深層痛點': document.getElementById('new-painpoint') ? document.getElementById('new-painpoint').value.trim() : '',
-        '目標需求': document.getElementById('new-goal') ? document.getElementById('new-goal').value.trim() : '',
-        '期望成果': document.getElementById('new-outcome') ? document.getElementById('new-outcome').value.trim() : '',
-        'TA標籤': document.getElementById('new-tags') ? document.getElementById('new-tags').value.trim() : '',
-        '行銷重點方向': document.getElementById('new-marketing') ? document.getElementById('new-marketing').value.trim() : '',
-        '關鍵字SEO': document.getElementById('new-seo') ? document.getElementById('new-seo').value.trim() : '',
-      }}]})
+      method: 'POST',
+      headers: AT_HEADERS,
+      body: JSON.stringify({ fields })
     });
     const data = await res.json();
     if(data.error){ alert('儲存失敗：'+data.error.message); return; }
-    alert(`✓ 已儲存「${name}」的訪談紀錄，所有人立即可見！`);
+    alert('✓ 新增訪談成功！');
     clearAddForm();
     await loadAllRecords();
-loadPasswords();
-    showPage('sessions', document.querySelectorAll('.nav-item')[2]);
+    showPage('sessions');
   } catch(e){
-    alert('連線失敗，請確認網路');
-  } finally{
+    alert('連線失敗，請檢查網路');
+  } finally {
     btn.textContent = '儲存至 Airtable'; btn.disabled = false;
   }
 }
 
-function clearAddForm(){
-  ['new-name','new-job','new-concept','new-content','new-transcript','new-background','new-situation','new-painpoint','new-goal','new-outcome','new-tags','new-marketing','new-seo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('new-type').value = '真實訪談';
-}
-
-// ── NAV ──
-function showPage(name, el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  el.classList.add('active');
-  if(name==='add') initAddForm();
-  if(name==='settings'){ document.getElementById('api-key-setting').value = localStorage.getItem('hk_api_key')||''; loadPasswords(); }
-}
-
-function saveApiKey(){ localStorage.setItem('hk_api_key', document.getElementById('api-key-setting').value.trim()); alert('已儲存'); }
-
 function exportCSV(){
-  if(!allRecords.length){ alert('尚無訪談紀錄'); return; }
-  const rows = [['日期','姓名','身份','產品主題','類型','訪談內容','關鍵洞察']];
-  allRecords.forEach(r => rows.push([r.date, r.name, r.job, r.concept, r.type, `"${(r.content||'').replace(/"/g,'""')}"`, `"${(r.insight||'').replace(/"/g,'""')}"`]));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+rows.map(r=>r.join(',')).join('\n')], {type:'text/csv;charset=utf-8'}));
-  a.download = `hukurou_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  if(!allRecords.length){ alert('目前沒有可匯出的紀錄'); return; }
+  const headers = ['受訪者','職業身分','訪談日期','產品主題','訪談類型','TA標籤','關鍵洞察'];
+  const rows = allRecords.map(r=>[
+    `"${(r.name||'').replace(/"/g,'""')}"`,
+    `"${(r.job||'').replace(/"/g,'""')}"`,
+    `"${r.date||''}"`,
+    `"${(r.concept||'').replace(/"/g,'""')}"`,
+    `"${r.type||''}"`,
+    `"${(r.tags||'').replace(/"/g,'""')}"`,
+    `"${(r.insight||'').replace(/"/g,'""')}"`
+  ]);
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e=>e.join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `interview_records_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
-function closeModal(id){ document.getElementById(id).style.display='none'; }
-document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.style.display='none'; }));
-
-loadAllRecords();
-loadPasswords();
+// 初始化執行
+window.addEventListener('DOMContentLoaded', () => {
+  const savedKey = localStorage.getItem('hk_api_key');
+  if(savedKey) document.getElementById('api-key-setting').value = savedKey;
+  initAddForm();
+  loadAllRecords();
+  loadPasswords();
+});
 </script>
 </body>
 </html>
