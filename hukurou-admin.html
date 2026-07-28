@@ -196,11 +196,26 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-title">系統設定</div>
-      <div class="page-sub">API 金鑰與連線資訊</div>
+      <div class="page-sub">API 金鑰與連線模型設定</div>
       <div class="card">
         <div class="card-title">Claude API 設定</div>
-        <div class="form-group"><label class="form-label">API Key</label><input class="form-input" id="api-key-setting" type="password" placeholder="sk-ant-..."></div>
-        <button class="btn btn-primary btn-sm" onclick="saveApiKey()">儲存 Key</button>
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <input class="form-input" id="api-key-setting" type="password" placeholder="sk-ant-...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">選擇 AI 模型 (Model)</label>
+          <select class="form-select" id="model-setting" style="margin-bottom:8px;" onchange="toggleCustomModelInput()">
+            <option value="claude-3-5-haiku-20241022">claude-3-5-haiku-20241022 (推薦：速度最快/最新)</option>
+            <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022 (高智能深度拆解)</option>
+            <option value="claude-3-5-sonnet-20240620">claude-3-5-sonnet-20240620</option>
+            <option value="claude-3-haiku-20240307">claude-3-haiku-20240307</option>
+            <option value="claude-3-opus-20240229">claude-3-opus-20240229</option>
+            <option value="custom">手動輸入自訂模型名稱...</option>
+          </select>
+          <input class="form-input" id="custom-model-setting" placeholder="例：claude-3-5-haiku-20241022" style="display:none;">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">儲存設定</button>
       </div>
     </div>
 
@@ -288,11 +303,23 @@ function showPage(pageId, el){
 
 function closeModal(id){ document.getElementById(id).style.display = 'none'; }
 
-function saveApiKey(){
+function toggleCustomModelInput(){
+  const val = document.getElementById('model-setting').value;
+  document.getElementById('custom-model-setting').style.display = (val === 'custom') ? 'block' : 'none';
+}
+
+function saveSettings(){
   const key = document.getElementById('api-key-setting').value.trim();
+  let model = document.getElementById('model-setting').value;
+  if(model === 'custom'){
+    model = document.getElementById('custom-model-setting').value.trim();
+  }
   if(!key){ alert('請輸入 API Key'); return; }
+  if(!model){ alert('請選擇或輸入 AI 模型名稱'); return; }
+
   localStorage.setItem('hk_api_key', key);
-  alert('✓ API Key 已儲存');
+  localStorage.setItem('hk_model', model);
+  alert(`✓ 設定已儲存！\n目前模型：${model}`);
 }
 
 async function analyzeTranscript(){
@@ -301,8 +328,9 @@ async function analyzeTranscript(){
   const apiKey = localStorage.getItem('hk_api_key')||'';
   if(!apiKey){ alert('請先至「系統設定」填寫 Claude API Key！'); return; }
   
+  const model = localStorage.getItem('hk_model') || 'claude-3-5-haiku-20241022';
   const btn = document.getElementById('btn-analyze');
-  btn.textContent = '分析 8 大欄位中...'; btn.disabled = true;
+  btn.textContent = `分析中 (${model})...`; btn.disabled = true;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
@@ -330,7 +358,7 @@ ${cleanTranscript}`;
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: model,
         max_tokens: 2500,
         temperature: 0.1,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
@@ -347,7 +375,7 @@ ${cleanTranscript}`;
     const data = JSON.parse(responseText);
 
     if(!res.ok){
-      alert(`API 呼叫失敗 (HTTP ${res.status})：${data?.error?.message || JSON.stringify(data)}`);
+      alert(`API 呼叫失敗 (HTTP ${res.status})：${data?.error?.message || JSON.stringify(data)}\n\n💡 若跳出 404，請點擊左側「系統設定」切換其他 AI 模型。`);
       return;
     }
 
@@ -383,9 +411,10 @@ async function analyzeEditTranscript(){
   if(!transcript){ alert('請填寫逐字稿'); return; }
   const apiKey = localStorage.getItem('hk_api_key')||'';
   if(!apiKey){ alert('請先至「系統設定」填寫 API Key'); return; }
-  
+
+  const model = localStorage.getItem('hk_model') || 'claude-3-5-haiku-20241022';
   const btn = document.getElementById('btn-analyze-edit');
-  btn.textContent = '分析中...'; btn.disabled = true;
+  btn.textContent = `分析中 (${model})...`; btn.disabled = true;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
@@ -411,7 +440,7 @@ async function analyzeEditTranscript(){
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: model,
         max_tokens: 2500,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
@@ -705,6 +734,21 @@ function exportCSV(){
 window.addEventListener('DOMContentLoaded', () => {
   const savedKey = localStorage.getItem('hk_api_key');
   if(savedKey) document.getElementById('api-key-setting').value = savedKey;
+
+  const savedModel = localStorage.getItem('hk_model') || 'claude-3-5-haiku-20241022';
+  const modelSelect = document.getElementById('model-setting');
+  if(modelSelect){
+    let found = false;
+    for(let opt of modelSelect.options){
+      if(opt.value === savedModel){ opt.selected = true; found = true; break; }
+    }
+    if(!found){
+      modelSelect.value = 'custom';
+      document.getElementById('custom-model-setting').value = savedModel;
+      toggleCustomModelInput();
+    }
+  }
+
   initAddForm();
   loadAllRecords();
 });
