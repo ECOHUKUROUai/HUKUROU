@@ -299,13 +299,14 @@ async function analyzeTranscript(){
   const transcript = document.getElementById('new-transcript').value.trim();
   if(!transcript){ alert('請先填入原始逐字稿'); return; }
   const apiKey = localStorage.getItem('hk_api_key')||'';
-  if(!apiKey){ alert('請先在系統設定填入 API Key'); return; }
+  if(!apiKey){ alert('請先至「系統設定」填寫 Claude API Key！'); return; }
+  
   const btn = document.getElementById('btn-analyze');
   btn.textContent = '分析 8 大欄位中...'; btn.disabled = true;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = `請對以下逐字稿進行分析，嚴格僅輸出 JSON：
+    const userPrompt = `請對以下逐字稿進行分析，嚴格僅輸出 JSON 格式：
 {
   "summary": "一句話總結",
   "persona_context": "受訪者與情境",
@@ -339,19 +340,22 @@ ${cleanTranscript}`;
     const data = await res.json();
 
     if(!res.ok){
-      const errMsg = data?.error?.message || JSON.stringify(data);
-      alert(`API 呼叫失敗 (HTTP ${res.status})：${errMsg}`);
+      alert(`API 呼叫失敗 (HTTP ${res.status})：${data?.error?.message || JSON.stringify(data)}`);
       return;
     }
 
     const rawText = data?.content?.[0]?.text;
     if(!rawText){
-      alert('API 未回傳預期內容，完整回應：' + JSON.stringify(data));
+      alert('API 未回傳預期內容');
       return;
     }
 
-    const cleanJson = rawText.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    const result = JSON.parse(cleanJson);
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('AI 回傳內容無法解析為 JSON 格式');
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
 
     document.getElementById('new-summary').value = result.summary || '';
     document.getElementById('new-background').value = result.persona_context || '';
@@ -364,7 +368,7 @@ ${cleanTranscript}`;
 
     alert('✓ 8 大欄位分析成功帶入！');
   } catch(e){ 
-    alert('執行發生例外錯誤：' + e.message); 
+    alert('執行發生錯誤：' + e.message); 
   }
   finally { 
     btn.textContent = '✨ AI 自動分析 (拆解 8 大欄位)'; 
@@ -376,7 +380,8 @@ async function analyzeEditTranscript(){
   const transcript = document.getElementById('edit-transcript').value.trim();
   if(!transcript){ alert('請填寫逐字稿'); return; }
   const apiKey = localStorage.getItem('hk_api_key')||'';
-  if(!apiKey){ alert('請填寫 API Key'); return; }
+  if(!apiKey){ alert('請先至「系統設定」填寫 API Key'); return; }
+  
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
 
@@ -395,7 +400,7 @@ async function analyzeEditTranscript(){
 }
 【逐字稿】：${cleanTranscript}`;
 
-    const res = await fetch('[https://api.anthropic.com/v1/messages](https://api.anthropic.com/v1/messages)', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -418,13 +423,12 @@ async function analyzeEditTranscript(){
     }
 
     const rawText = data?.content?.[0]?.text;
-    if(!rawText){
-      alert('API 未回傳預期內容，完整回應：' + JSON.stringify(data));
-      return;
-    }
+    if(!rawText){ alert('API 未回傳預期內容'); return; }
 
-    const cleanJson = rawText.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    const result = JSON.parse(cleanJson);
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('無法解析 AI 回應為 JSON');
+
+    const result = JSON.parse(jsonMatch[0]);
 
     document.getElementById('edit-summary').value = result.summary || '';
     document.getElementById('edit-background').value = result.persona_context || '';
@@ -437,7 +441,7 @@ async function analyzeEditTranscript(){
 
     alert('✓ 分析完成！');
   } catch(e){ 
-    alert('執行發生例外錯誤：' + e.message); 
+    alert('執行發生錯誤：' + e.message); 
   }
   finally { 
     btn.textContent = '✨ AI 自動分析 (8欄位)'; 
