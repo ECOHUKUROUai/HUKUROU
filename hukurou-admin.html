@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-kano-8fields-final-fix -->
+<!-- v20260728-kano-8fields-fix-no-temperature -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -376,7 +376,6 @@ ${cleanTranscript}`;
       body: JSON.stringify({
         model: model,
         max_tokens: 2500,
-        temperature: 0.1,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
