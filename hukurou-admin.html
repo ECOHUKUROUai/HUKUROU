@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-kano-8fields-fix-no-temperature -->
+<!-- v20260728-kano-8fields-perfect-final -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -321,19 +321,17 @@ function saveSettings(){
   alert(`✓ 設定已儲存！\n目前模型：${model}`);
 }
 
-// 萬能 API 內容提取函式
+// 專為有多個 content 區塊 (Array) 打造的萬能提取函式
 function extractRawTextFromResponse(data) {
   if (!data || !data.content) return '';
   if (typeof data.content === 'string') return data.content;
   if (Array.isArray(data.content)) {
-    return data.content
-      .map(item => {
-        if (typeof item === 'string') return item;
-        if (item && item.text) return item.text;
-        return '';
-      })
-      .filter(Boolean)
-      .join('\n');
+    // 優先找 type === 'text' 或帶有 text 屬性的物件
+    const textItems = data.content
+      .filter(item => item && (item.type === 'text' || item.text))
+      .map(item => item.text || '');
+    if (textItems.length > 0) return textItems.join('\n');
+    return data.content.map(item => typeof item === 'string' ? item : (item.text || '')).join('\n');
   }
   return '';
 }
@@ -341,12 +339,12 @@ function extractRawTextFromResponse(data) {
 async function analyzeTranscript(){
   const transcript = document.getElementById('new-transcript').value.trim();
   if(!transcript){ alert('請先填入原始逐字稿'); return; }
-  const apiKey = localStorage.getItem('hk_api_key')||'';
+  const apiKey = (localStorage.getItem('hk_api_key')||'').trim();
   if(!apiKey){ alert('請先至「系統設定」填寫 Claude API Key！'); return; }
   
   const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
   const btn = document.getElementById('btn-analyze');
-  btn.textContent = `分析中...`; btn.disabled = true;
+  btn.textContent = `分析中 (${model})...`; btn.disabled = true;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
@@ -375,7 +373,7 @@ ${cleanTranscript}`;
       },
       body: JSON.stringify({
         model: model,
-        max_tokens: 2500,
+        max_tokens: 8192,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
@@ -383,7 +381,7 @@ ${cleanTranscript}`;
     const responseText = await res.text();
 
     if (responseText.trim().startsWith('<')) {
-      alert(`❌ API 回傳網頁，請檢查 API Key 是否正確。`);
+      alert(`❌ API 回傳網頁，請檢查網路或 Key 格式。`);
       return;
     }
 
@@ -396,12 +394,15 @@ ${cleanTranscript}`;
 
     const rawText = extractRawTextFromResponse(data);
     if(!rawText){ 
-      alert('API 未能解析為文字內容，回應物件：\n' + JSON.stringify(data)); 
+      alert('API 未能提取出文字內容：\n' + JSON.stringify(data)); 
       return; 
     }
 
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI 回傳內容無法解析為 JSON 格式');
+    if (!jsonMatch) {
+      alert('AI 已回覆但未能比對出 JSON 結構，原始回應：\n' + rawText.slice(0, 300));
+      return;
+    }
 
     const result = JSON.parse(jsonMatch[0]);
 
@@ -427,7 +428,7 @@ ${cleanTranscript}`;
 async function analyzeEditTranscript(){
   const transcript = document.getElementById('edit-transcript').value.trim();
   if(!transcript){ alert('請填寫逐字稿'); return; }
-  const apiKey = localStorage.getItem('hk_api_key')||'';
+  const apiKey = (localStorage.getItem('hk_api_key')||'').trim();
   if(!apiKey){ alert('請先至「系統設定」填寫 API Key'); return; }
 
   const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
@@ -459,7 +460,7 @@ async function analyzeEditTranscript(){
       },
       body: JSON.stringify({
         model: model,
-        max_tokens: 2500,
+        max_tokens: 8192,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
