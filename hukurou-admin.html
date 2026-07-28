@@ -330,14 +330,21 @@ ${cleanTranscript}`;
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-latest',
         max_tokens: 2500,
         temperature: 0.1,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
 
-    const data = await res.json();
+    const responseText = await res.text();
+
+    if (responseText.trim().startsWith('<')) {
+      alert(`❌ API 回傳網頁，請檢查 API Key 是否正確或廣告攔截器。`);
+      return;
+    }
+
+    const data = JSON.parse(responseText);
 
     if(!res.ok){
       alert(`API 呼叫失敗 (HTTP ${res.status})：${data?.error?.message || JSON.stringify(data)}`);
@@ -345,15 +352,10 @@ ${cleanTranscript}`;
     }
 
     const rawText = data?.content?.[0]?.text;
-    if(!rawText){
-      alert('API 未回傳預期內容');
-      return;
-    }
+    if(!rawText){ alert('API 未回傳預期內容'); return; }
 
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('AI 回傳內容無法解析為 JSON 格式');
-    }
+    if (!jsonMatch) throw new Error('AI 回傳內容無法解析為 JSON 格式');
 
     const result = JSON.parse(jsonMatch[0]);
 
@@ -409,13 +411,20 @@ async function analyzeEditTranscript(){
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-latest',
         max_tokens: 2500,
         messages: [{ role: 'user', content: `${promptSystem}\n\n${userPrompt}` }]
       })
     });
 
-    const data = await res.json();
+    const responseText = await res.text();
+
+    if (responseText.trim().startsWith('<')) {
+      alert(`❌ API 回傳網頁，請檢查 API Key 是否正確。`);
+      return;
+    }
+
+    const data = JSON.parse(responseText);
 
     if(!res.ok){
       alert(`API 呼叫失敗 (HTTP ${res.status})：${data?.error?.message || JSON.stringify(data)}`);
