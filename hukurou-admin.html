@@ -1,6 +1,5 @@
-
 <!DOCTYPE html>
-<!-- v20260612-fix -->
+<!-- v20260728-kano-8fields -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -40,8 +39,6 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:99px;font-family:'DM Mono',monospace;}
 .badge-green{background:var(--green-bg);color:var(--green);}
 .badge-blue{background:rgba(100,150,220,0.15);color:#7aaae8;}
-.badge-amber{background:var(--accent-bg);color:var(--accent2);}
-.badge-red{background:var(--red-bg);color:var(--red);}
 .btn{padding:8px 16px;border-radius:var(--radius);font-size:13px;font-family:inherit;cursor:pointer;transition:all 0.15s;border:none;}
 .btn-primary{background:var(--accent);color:#1a1200;font-weight:500;}
 .btn-primary:hover{background:#d4b87a;}
@@ -55,19 +52,14 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 .form-input,.form-textarea,.form-select{width:100%;padding:9px 13px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
 .form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent-border);}
 .form-textarea{resize:vertical;min-height:80px;}
-.form-select option{background:var(--bg3);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 .tip{font-size:12px;color:var(--text2);background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;line-height:1.6;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
-.modal-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:640px;max-height:85vh;overflow-y:auto;}
+.modal-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:680px;max-height:85vh;overflow-y:auto;}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:1.5rem;}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;}
-.session-msg{padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:13px;line-height:1.6;}
-.session-msg.user{background:rgba(90,158,111,0.1);border:0.5px solid rgba(90,158,111,0.2);}
-.session-msg.ai{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);}
-.session-msg-label{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;}
-.empty-state{text-align:center;padding:3rem;color:var(--text3);}
+.kano-header{font-size:13px;font-weight:600;color:var(--accent);margin:1.2rem 0 0.8rem 0;padding-bottom:4px;border-bottom:1px dashed var(--accent-border);}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
@@ -104,7 +96,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="page-title">新增訪談紀錄</div>
       <div class="page-sub">輸入真實訪談內容，儲存後所有人立即看到</div>
       <div class="card">
-        <div class="card-title">受訪者基本資料</div>
+        <div class="card-title">基本資料</div>
         <div class="form-row-3">
           <div class="form-group"><label class="form-label">受訪者姓名 *</label><input class="form-input" id="new-name" placeholder="例：王小姐"></div>
           <div class="form-group"><label class="form-label">職業／身份</label><input class="form-input" id="new-job" placeholder="例：家庭主婦 ／ 45歲"></div>
@@ -112,53 +104,61 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         </div>
         <div class="form-group"><label class="form-label">產品主題 *</label><input class="form-input" id="new-concept" placeholder="例：水性除蟲噴霧（蟑螂問題）"></div>
       </div>
+
       <div class="card">
-        <div class="card-title">訪談內容</div>
-        <div class="tip">💡 貼上逐字稿後點「AI 自動分析」，系統會自動填入以下所有欄位</div>
+        <div class="card-title">訪談內容與 8 大欄位分析</div>
+        <div class="tip">💡 貼上逐字稿後點擊「AI 自動分析」，系統將精準拆解帶入下方 8 個欄位。</div>
         <div class="form-group">
           <label class="form-label">原始逐字稿 *</label>
-          <textarea class="form-textarea" id="new-transcript" rows="10" placeholder="直接貼上完整原始逐字稿..."></textarea>
+          <textarea class="form-textarea" id="new-transcript" rows="8" placeholder="貼上完整原始逐字稿..."></textarea>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:1.5rem;">
-          <button class="btn btn-primary" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析</button>
+          <button class="btn btn-primary" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析 (拆解 8 大欄位)</button>
+        </div>
+
+        <div class="kano-header">📌 1~2. 概觀與情境</div>
+        <div class="form-group">
+          <label class="form-label">1. 一句話總結</label>
+          <input class="form-input" id="new-summary" placeholder="AI 分析後自動帶入...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">2. 受訪者與情境</label>
+          <textarea class="form-textarea" id="new-background" rows="3" placeholder="AI 分析後自動帶入..."></textarea>
+        </div>
+
+        <div class="kano-header">📊 3~6. Kano 模型四維度分析</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">3. 底線與痛點 (Must-have)</label>
+            <textarea class="form-textarea" id="new-must" rows="3" placeholder="未滿足引發極大不滿、直接拒買的門檻..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">4. 核心賣點 (Performance)</label>
+            <textarea class="form-textarea" id="new-key" rows="3" placeholder="決定購買的主要效益與期待..."></textarea>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">1. 使用者背景</label>
-            <textarea class="form-textarea" id="new-background" rows="3" placeholder="AI 分析後自動填入..."></textarea>
+            <label class="form-label">5. 驚喜亮點 (Delighter)</label>
+            <textarea class="form-textarea" id="new-delight" rows="3" placeholder="超乎預期的附加價值與亮點..."></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">2. 情境任務</label>
-            <textarea class="form-textarea" id="new-situation" rows="3" placeholder="AI 分析後自動填入..."></textarea>
+            <label class="form-label">6. 避坑地雷 (Pitfalls)</label>
+            <textarea class="form-textarea" id="new-pitfall" rows="3" placeholder="使用阻力、令人扣分與流失的體驗..."></textarea>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">3. 深層痛點與阻礙</label>
-            <textarea class="form-textarea" id="new-painpoint" rows="3" placeholder="AI 分析後自動填入..."></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">4. 目標與需求</label>
-            <textarea class="form-textarea" id="new-goal" rows="3" placeholder="AI 分析後自動填入..."></textarea>
-          </div>
+
+        <div class="kano-header">🎯 7~8. 行銷與定位策略</div>
+        <div class="form-group">
+          <label class="form-label">7. 行銷切入策略</label>
+          <textarea class="form-textarea" id="new-marketing" rows="3" placeholder="AI 分析後自動帶入..."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">5. 期望成果與價值</label>
-          <textarea class="form-textarea" id="new-outcome" rows="3" placeholder="AI 分析後自動填入..."></textarea>
+          <label class="form-label">8. TA標籤與SEO</label>
+          <input class="form-input" id="new-tags-seo" placeholder="例：TA: 寵物飼主, 老屋屋主 | SEO: 除蟲推薦, 寵物友善蟑螂藥">
         </div>
-        <div class="form-group">
-          <label class="form-label">TA 標籤（AI 自動產生，可手動修改）</label>
-          <input class="form-input" id="new-tags" placeholder="例：寵物飼主、老屋屋主、價格敏感">
-        </div>
-        <div class="form-group">
-          <label class="form-label">行銷重點方向</label>
-          <textarea class="form-textarea" id="new-marketing" rows="3" placeholder="AI 分析後自動填入..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">關鍵字 SEO</label>
-          <textarea class="form-textarea" id="new-seo" rows="3" placeholder="AI 分析後自動填入..."></textarea>
-        </div>
-        <div class="form-group">
+
+        <div class="form-group" style="margin-top:1rem;">
           <label class="form-label">訪談類型</label>
           <select class="form-select" id="new-type">
             <option value="真實訪談">真實訪談</option>
@@ -166,6 +166,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           </select>
         </div>
       </div>
+
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn btn-ghost" onclick="clearAddForm()">清除</button>
         <button class="btn btn-primary" id="btn-save" onclick="saveInterview()">儲存至 Airtable</button>
@@ -178,13 +179,12 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="page-sub">所有訪談記錄，來自 Airtable 即時同步</div>
       <div class="card">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
-          <input class="form-input" style="max-width:220px;" id="search-input" placeholder="搜尋姓名或產品概念..." oninput="filterSessions()">
+          <input class="form-input" style="max-width:220px;" id="search-input" placeholder="搜尋姓名或產品主題..." oninput="filterSessions()">
           <select class="form-select" style="max-width:130px;" id="filter-type" onchange="filterSessions()">
             <option value="">所有類型</option>
             <option value="真實訪談">真實訪談</option>
             <option value="AI模擬">AI模擬</option>
           </select>
-          <input class="form-input" style="max-width:160px;" id="filter-tags" placeholder="篩選 TA 標籤..." oninput="filterSessions()">
           <div style="flex:1"></div>
           <button class="btn btn-ghost btn-sm" onclick="loadAllRecords()">🔄 重新整理</button>
           <button class="btn btn-ghost btn-sm" onclick="exportCSV()">匯出 CSV</button>
@@ -200,31 +200,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="card">
         <div class="card-title">Claude API 設定</div>
         <div class="form-group"><label class="form-label">API Key</label><input class="form-input" id="api-key-setting" type="password" placeholder="sk-ant-..."></div>
-        <button class="btn btn-primary btn-sm" onclick="saveApiKey()">儲存</button>
-        <div style="font-size:12px;color:var(--text2);margin-top:8px;">金鑰儲存於瀏覽器本機，不會上傳至任何伺服器</div>
-      </div>
-      <div class="card">
-        <div class="card-title">密碼管理</div>
-        <div class="tip">💡 修改後立即生效，所有人下次登入時會使用新密碼</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">員工密碼</label>
-            <input class="form-input" id="new-staff-pw" type="text" placeholder="載入中...">
-          </div>
-          <div class="form-group">
-            <label class="form-label">管理員密碼</label>
-            <input class="form-input" id="new-admin-pw" type="text" placeholder="載入中...">
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="savePasswords()">更新密碼</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Airtable 連線資訊</div>
-        <div style="font-size:13px;color:var(--text2);line-height:2;">
-          <div>Base ID：<span style="font-family:'DM Mono',monospace;color:var(--accent);">app4GP2bJKQSCLutF</span></div>
-          <div>Table ID：<span style="font-family:'DM Mono',monospace;color:var(--accent);">tblKhNAw16jvsQ97K</span></div>
-          <div style="margin-top:8px;font-size:12px;color:var(--text3);">如需更換 Token 請直接修改 HTML 檔案中的 AT_TOKEN 變數</div>
-        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveApiKey()">儲存 Key</button>
       </div>
     </div>
 
@@ -234,7 +210,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal-box">
-    <div class="modal-title">編輯訪談紀錄</div>
+    <div class="modal-title">編輯訪談紀錄 (8 大欄位)</div>
     <input type="hidden" id="edit-record-id">
     <div class="form-row-3">
       <div class="form-group"><label class="form-label">受訪者姓名</label><input class="form-input" id="edit-name"></div>
@@ -242,32 +218,34 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       <div class="form-group"><label class="form-label">訪談日期</label><input class="form-input" id="edit-date" type="date"></div>
     </div>
     <div class="form-group"><label class="form-label">產品主題</label><input class="form-input" id="edit-concept"></div>
-    <div class="form-group"><label class="form-label">訪談內容摘要</label><textarea class="form-textarea" id="edit-content" rows="4"></textarea></div>
-    <div class="form-group"><label class="form-label">原始逐字稿</label><textarea class="form-textarea" id="edit-transcript" rows="8" placeholder="貼上完整原始逐字稿..."></textarea></div>
+    <div class="form-group"><label class="form-label">原始逐字稿</label><textarea class="form-textarea" id="edit-transcript" rows="6"></textarea></div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-      <button class="btn btn-primary btn-sm" id="btn-analyze-edit" onclick="analyzeEditTranscript()">✨ AI 自動分析</button>
+      <button class="btn btn-primary btn-sm" id="btn-analyze-edit" onclick="analyzeEditTranscript()">✨ AI 自動分析 (8欄位)</button>
     </div>
 
+    <div class="form-group"><label class="form-label">1. 一句話總結</label><input class="form-input" id="edit-summary"></div>
+    <div class="form-group"><label class="form-label">2. 受訪者與情境</label><textarea class="form-textarea" id="edit-background" rows="2"></textarea></div>
+
     <div class="form-row">
-      <div class="form-group"><label class="form-label">1. 使用者背景</label><textarea class="form-textarea" id="edit-background" rows="3"></textarea></div>
-      <div class="form-group"><label class="form-label">2. 情境任務</label><textarea class="form-textarea" id="edit-situation" rows="3"></textarea></div>
+      <div class="form-group"><label class="form-label">3. 底線與痛點</label><textarea class="form-textarea" id="edit-must" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">4. 核心賣點</label><textarea class="form-textarea" id="edit-key" rows="2"></textarea></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">3. 深層痛點與阻礙</label><textarea class="form-textarea" id="edit-painpoint" rows="3"></textarea></div>
-      <div class="form-group"><label class="form-label">4. 目標與需求</label><textarea class="form-textarea" id="edit-goal" rows="3"></textarea></div>
+      <div class="form-group"><label class="form-label">5. 驚喜亮點</label><textarea class="form-textarea" id="edit-delight" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">6. 避坑地雷</label><textarea class="form-textarea" id="edit-pitfall" rows="2"></textarea></div>
     </div>
-    <div class="form-group"><label class="form-label">5. 期望成果與價值</label><textarea class="form-textarea" id="edit-outcome" rows="3"></textarea></div>
-    <div class="form-group"><label class="form-label">TA 標籤（AI 自動產生，可手動修改）</label><input class="form-input" id="edit-tags" placeholder="例：寵物飼主、老屋屋主、價格敏感"></div>
-    <div class="form-group"><label class="form-label">行銷重點方向</label><textarea class="form-textarea" id="edit-marketing" rows="3"></textarea></div>
-    <div class="form-group"><label class="form-label">關鍵字 SEO</label><textarea class="form-textarea" id="edit-seo" rows="3"></textarea></div>
+
+    <div class="form-group"><label class="form-label">7. 行銷切入策略</label><textarea class="form-textarea" id="edit-marketing" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">8. TA標籤與SEO</label><input class="form-input" id="edit-tags-seo"></div>
+
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="saveEditRecord()">儲存</button>
+      <button class="btn btn-primary" onclick="saveEditRecord()">儲存更新</button>
       <button class="btn btn-ghost" onclick="closeModal('edit-modal')">取消</button>
     </div>
   </div>
 </div>
 
-<!-- SESSION DETAIL MODAL -->
+<!-- VIEW MODAL -->
 <div class="modal-overlay" id="session-modal">
   <div class="modal-box">
     <div class="modal-title" id="session-modal-title"></div>
@@ -284,32 +262,22 @@ const AT_TOKEN = 'patL5putpmiU8T7pm.8a70ea20b01940477b622b6abbaa8e2878f54c91e10f
 const AT_BASE = 'app4GP2bJKQSCLutF';
 const AT_TABLE = 'tblKhNAw16jvsQ97K';
 const AT_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_TABLE}`;
-const AT_SETTINGS_TABLE = 'tblP2xgrN3sewUgOr';
-const AT_SETTINGS_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_SETTINGS_TABLE}`;
 const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
 
 let allRecords = [];
-let settingsRecords = {};
 
-const analyzeSystem3 = `你是一位擁有 10 年資歷的專業消費者洞察與產品行銷專家（Consumer Insight & Product Marketing Lead）。
+const promptSystem = `你是一位高階消費者洞察與行銷策略專家。
+請嚴格將逐字稿拆解為以下 8 個標準欄位：
+1. 一句話總結 (summary)
+2. 受訪者與情境 (persona_context)
+3. 底線與痛點 (must_have)
+4. 核心賣點 (key_selling_points)
+5. 驚喜亮點 (delighter)
+6. 避坑地雷 (pitfalls)
+7. 行銷切入策略 (marketing_strategy)
+8. TA標籤與SEO (tags_and_seo)
 
-在分析逐字稿時，你必須嚴格遵循以下 4 大分析原則，確保每次產出具備高度的一致性與商業價值：
-
-1.【精準歸納，拒絕廢話】
-  - 避免重複逐字稿的表面描述，直接提取「動機、痛點、顧慮與決策邏輯」。
-  - 所有欄位語言必須精煉、扎實、具備商業可執行性。
-
-2.【Kano 模型白話轉化】
-  - 底線痛點 (must_have)：顧客視為「理所當然」的基礎條件。未滿足會引發極大不滿或直接放棄購買。
-  - 核心賣點 (key_selling_points)：影響買單意願的核心效益。表現越好，顧客滿意度越高。
-  - 驚喜亮點 (delighter)：超乎預期的附加價值或貼心體驗，能引發衝動購物與口碑推薦。
-  - 避坑地雷 (pitfalls)：使用流程中的阻力、麻煩感或負面體驗，會直接降低回購率或導致負評。
-
-3.【視角轉換】
-  - 行銷策略必須緊扣訪談中揭露的「心理阻力」，給出具體可用的銷售頁 (LP) 主打訴求與廣告 Hook。
-
-4.【輸出一致性】
-  - 嚴格遵守要求的 JSON 結構，不得遺漏任何欄位，不得加入任何 JSON 格式以外的字詞。`;
+只回傳 JSON 格式，不可包含任何額外說明或 markdown 標籤。`;
 
 function showPage(pageId, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -318,9 +286,7 @@ function showPage(pageId, el){
   if(el) el.classList.add('active');
 }
 
-function closeModal(id){
-  document.getElementById(id).style.display = 'none';
-}
+function closeModal(id){ document.getElementById(id).style.display = 'none'; }
 
 function saveApiKey(){
   const key = document.getElementById('api-key-setting').value.trim();
@@ -329,62 +295,29 @@ function saveApiKey(){
   alert('✓ API Key 已儲存');
 }
 
-async function loadPasswords(){
-  try{
-    const res = await fetch(AT_SETTINGS_URL, { headers: AT_HEADERS });
-    const data = await res.json();
-    (data.records||[]).forEach(r=>{
-      settingsRecords[r.fields['設定項目']] = { id: r.id, value: r.fields['設定值'] };
-    });
-    document.getElementById('new-staff-pw').value = settingsRecords['staff_password']?.value || '';
-    document.getElementById('new-admin-pw').value = settingsRecords['admin_password']?.value || '';
-  } catch(e){}
-}
-
-async function savePasswords(){
-  const staffPw = document.getElementById('new-staff-pw').value.trim();
-  const adminPw = document.getElementById('new-admin-pw').value.trim();
-  if(!staffPw||!adminPw){ alert('密碼不能為空'); return; }
-  try{
-    const updates = [];
-    if(settingsRecords['staff_password']?.id) updates.push({ id: settingsRecords['staff_password'].id, fields: { '設定值': staffPw } });
-    if(settingsRecords['admin_password']?.id) updates.push({ id: settingsRecords['admin_password'].id, fields: { '設定值': adminPw } });
-    if(updates.length){
-      await fetch(AT_SETTINGS_URL, { method:'PATCH', headers: AT_HEADERS, body: JSON.stringify({ records: updates }) });
-    }
-    alert('✓ 密碼已更新！');
-    await loadPasswords();
-  } catch(e){ alert('更新失敗，請確認網路連線'); }
-}
-
-async function analyzeEditTranscript(){
-  const transcript = document.getElementById('edit-transcript').value.trim();
-  if(!transcript){ alert('請先填入逐字稿'); return; }
+async function analyzeTranscript(){
+  const transcript = document.getElementById('new-transcript').value.trim();
+  if(!transcript){ alert('請先填入原始逐字稿'); return; }
   const apiKey = localStorage.getItem('hk_api_key')||'';
   if(!apiKey){ alert('請先在系統設定填入 Claude API Key'); return; }
-  const btn = document.getElementById('btn-analyze-edit');
-  btn.textContent = '分析中...'; btn.disabled = true;
+  const btn = document.getElementById('btn-analyze');
+  btn.textContent = '分析 8 大欄位中...'; btn.disabled = true;
+
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = `請對以下訪談逐字稿進行深度的商業邏輯拆解，並嚴格按照 JSON 格式輸出：
-
+    const userPrompt = `請對以下逐字稿進行分析，嚴格輸出 JSON：
 {
-  "summary": "【一句話總結】限制 30 字以內。公式：對象 + 核心衝突/痛點 + 決策關鍵。",
-  "persona_context": "【受訪者與情境】限制 80 字以內。明確交代：1. 身份屬性 2. 觸發需求的具體生活場景 3. 當時面臨的核心困境。",
-  "product_positioning": {
-    "must_have": "【底線痛點】沒做到直接拒買的門檻。",
-    "key_selling_points": "【核心賣點】決定購買的主要效益與理由。",
-    "delighter": "【驚喜亮點】超越期待的貼心細節或亮點。",
-    "pitfalls": "【避坑地雷】令人感到麻煩、討厭或扣分的體驗。"
-  },
-  "marketing_strategy": "【行銷切入策略】給出 2-3 個具體可用的切入點。",
-  "tags_and_seo": {
-    "ta_tags": "3-5 個精準 TA 標籤，以逗號分隔",
-    "seo_keywords": "8-12 個高轉換搜尋關鍵字，以逗號分隔"
-  }
+  "summary": "一句話總結",
+  "persona_context": "受訪者與情境",
+  "must_have": "底線與痛點",
+  "key_selling_points": "核心賣點",
+  "delighter": "驚喜亮點",
+  "pitfalls": "避坑地雷",
+  "marketing_strategy": "行銷切入策略",
+  "tags_and_seo": "TA標籤與SEO (例如: TA: 飼主 | SEO: 除蟲推薦)"
 }
 
-【待分析逐字稿】：
+【逐字稿】：
 ${cleanTranscript}`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -399,33 +332,123 @@ ${cleanTranscript}`;
         model: 'claude-3-5-sonnet-20241022',
         max_tokens: 2500,
         temperature: 0.1,
-        system: analyzeSystem3,
+        system: promptSystem,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
 
     const data = await res.json();
     if(data.error){ alert('分析失敗：'+data.error.message); return; }
-    const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g,'').trim();
-    const result = JSON.parse(clean);
+    const result = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
 
-    if(document.getElementById('edit-content')) document.getElementById('edit-content').value = result.summary || '';
-    if(document.getElementById('edit-background')) document.getElementById('edit-background').value = result.persona_context || '';
-    if(document.getElementById('edit-situation')) document.getElementById('edit-situation').value = result.product_positioning?.must_have || '';
-    if(document.getElementById('edit-painpoint')) document.getElementById('edit-painpoint').value = result.product_positioning?.pitfalls || '';
-    if(document.getElementById('edit-goal')) document.getElementById('edit-goal').value = result.product_positioning?.key_selling_points || '';
-    if(document.getElementById('edit-outcome')) document.getElementById('edit-outcome').value = result.product_positioning?.delighter || '';
-    if(document.getElementById('edit-marketing')) document.getElementById('edit-marketing').value = result.marketing_strategy || '';
-    if(document.getElementById('edit-tags')) document.getElementById('edit-tags').value = result.tags_and_seo?.ta_tags || '';
-    if(document.getElementById('edit-seo')) document.getElementById('edit-seo').value = result.tags_and_seo?.seo_keywords || '';
+    document.getElementById('new-summary').value = result.summary || '';
+    document.getElementById('new-background').value = result.persona_context || '';
+    document.getElementById('new-must').value = result.must_have || '';
+    document.getElementById('new-key').value = result.key_selling_points || '';
+    document.getElementById('new-delight').value = result.delighter || '';
+    document.getElementById('new-pitfall').value = result.pitfalls || '';
+    document.getElementById('new-marketing').value = result.marketing_strategy || '';
+    document.getElementById('new-tags-seo').value = result.tags_and_seo || '';
 
-    alert('✓ 分析完成！請確認內容後儲存');
-  } catch(e){
-    alert('分析失敗：'+e.message);
-  } finally {
-    btn.textContent = '✨ AI 自動分析'; btn.disabled = false;
-  }
+    alert('✓ 8 大欄位分析成功帶入！');
+  } catch(e){ alert('分析失敗：'+e.message); }
+  finally { btn.textContent = '✨ AI 自動分析 (拆解 8 大欄位)'; btn.disabled = false; }
+}
+
+async function analyzeEditTranscript(){
+  const transcript = document.getElementById('edit-transcript').value.trim();
+  if(!transcript){ alert('請填寫逐字稿'); return; }
+  const apiKey = localStorage.getItem('hk_api_key')||'';
+  if(!apiKey){ alert('請填寫 API Key'); return; }
+  const btn = document.getElementById('btn-analyze-edit');
+  btn.textContent = '分析中...'; btn.disabled = true;
+
+  try{
+    const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
+    const userPrompt = `請分析以下逐字稿並輸出 JSON：
+{
+  "summary": "一句話總結",
+  "persona_context": "受訪者與情境",
+  "must_have": "底線與痛點",
+  "key_selling_points": "核心賣點",
+  "delighter": "驚喜亮點",
+  "pitfalls": "避坑地雷",
+  "marketing_strategy": "行銷切入策略",
+  "tags_and_seo": "TA標籤與SEO"
+}
+【逐字稿】：${cleanTranscript}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 2500,
+        system: promptSystem,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await res.json();
+    const result = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+
+    document.getElementById('edit-summary').value = result.summary || '';
+    document.getElementById('edit-background').value = result.persona_context || '';
+    document.getElementById('edit-must').value = result.must_have || '';
+    document.getElementById('edit-key').value = result.key_selling_points || '';
+    document.getElementById('edit-delight').value = result.delighter || '';
+    document.getElementById('edit-pitfall').value = result.pitfalls || '';
+    document.getElementById('edit-marketing').value = result.marketing_strategy || '';
+    document.getElementById('edit-tags-seo').value = result.tags_and_seo || '';
+
+    alert('✓ 分析完成！');
+  } catch(e){ alert('分析失敗：'+e.message); }
+  finally { btn.textContent = '✨ AI 自動分析 (8欄位)'; btn.disabled = false; }
+}
+
+async function saveInterview(){
+  const name = document.getElementById('new-name').value.trim();
+  const date = document.getElementById('new-date').value;
+  const concept = document.getElementById('new-concept').value.trim();
+  const transcript = document.getElementById('new-transcript').value.trim();
+
+  if(!name || !date || !concept || !transcript){ alert('請填寫必填欄位！'); return; }
+
+  const fields = {
+    '受訪者': name,
+    '職業身分': document.getElementById('new-job').value.trim(),
+    '訪談日期': date,
+    '產品主題': concept,
+    '原始逐字稿': transcript,
+    '訪談內容': document.getElementById('new-summary').value.trim(),
+    '使用者背景': document.getElementById('new-background').value.trim(),
+    '情境任務': document.getElementById('new-must').value.trim(),
+    '目標需求': document.getElementById('new-key').value.trim(),
+    '期望成果': document.getElementById('new-delight').value.trim(),
+    '深層痛點': document.getElementById('new-pitfall').value.trim(),
+    '行銷重點方向': document.getElementById('new-marketing').value.trim(),
+    'TA標籤': document.getElementById('new-tags-seo').value.trim(),
+    '訪談類型': document.getElementById('new-type').value
+  };
+
+  const btn = document.getElementById('btn-save');
+  btn.textContent = '儲存中...'; btn.disabled = true;
+
+  try{
+    const res = await fetch(AT_URL, { method: 'POST', headers: AT_HEADERS, body: JSON.stringify({ fields }) });
+    const data = await res.json();
+    if(data.error){ alert('儲存失敗：'+data.error.message); return; }
+    alert('✓ 已成功儲存 8 大欄位訪談紀錄！');
+    clearAddForm();
+    await loadAllRecords();
+    showPage('sessions');
+  } catch(e){ alert('連線失敗'); }
+  finally { btn.textContent = '儲存至 Airtable'; btn.disabled = false; }
 }
 
 function editRecord(id){
@@ -436,16 +459,15 @@ function editRecord(id){
   document.getElementById('edit-job').value = r.job||'';
   document.getElementById('edit-date').value = r.date||'';
   document.getElementById('edit-concept').value = r.concept||'';
-  document.getElementById('edit-content').value = r.content||'';
   document.getElementById('edit-transcript').value = r.transcript||'';
+  document.getElementById('edit-summary').value = r.content||'';
   document.getElementById('edit-background').value = r.background||'';
-  document.getElementById('edit-situation').value = r.situation||'';
-  document.getElementById('edit-painpoint').value = r.painpoint||'';
-  document.getElementById('edit-goal').value = r.goal||'';
-  document.getElementById('edit-outcome').value = r.outcome||'';
-  document.getElementById('edit-tags').value = r.tags||'';
-  if(document.getElementById('edit-marketing')) document.getElementById('edit-marketing').value = r.marketing||'';
-  if(document.getElementById('edit-seo')) document.getElementById('edit-seo').value = r.seo||'';
+  document.getElementById('edit-must').value = r.must||'';
+  document.getElementById('edit-key').value = r.key||'';
+  document.getElementById('edit-delight').value = r.delight||'';
+  document.getElementById('edit-pitfall').value = r.pitfall||'';
+  document.getElementById('edit-marketing').value = r.marketing||'';
+  document.getElementById('edit-tags-seo').value = r.tags_seo||'';
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -456,25 +478,22 @@ async function saveEditRecord(){
     '職業身分': document.getElementById('edit-job').value.trim(),
     '訪談日期': document.getElementById('edit-date').value,
     '產品主題': document.getElementById('edit-concept').value.trim(),
-    '訪談內容': document.getElementById('edit-content').value.trim(),
     '原始逐字稿': document.getElementById('edit-transcript').value.trim(),
+    '訪談內容': document.getElementById('edit-summary').value.trim(),
     '使用者背景': document.getElementById('edit-background').value.trim(),
-    '情境任務': document.getElementById('edit-situation').value.trim(),
-    '深層痛點': document.getElementById('edit-painpoint').value.trim(),
-    '目標需求': document.getElementById('edit-goal').value.trim(),
-    '期望成果': document.getElementById('edit-outcome').value.trim(),
-    'TA標籤': document.getElementById('edit-tags').value.trim(),
-    '行銷重點方向': document.getElementById('edit-marketing') ? document.getElementById('edit-marketing').value.trim() : '',
-    '關鍵字SEO': document.getElementById('edit-seo') ? document.getElementById('edit-seo').value.trim() : '',
+    '情境任務': document.getElementById('edit-must').value.trim(),
+    '目標需求': document.getElementById('edit-key').value.trim(),
+    '期望成果': document.getElementById('edit-delight').value.trim(),
+    '深層痛點': document.getElementById('edit-pitfall').value.trim(),
+    '行銷重點方向': document.getElementById('edit-marketing').value.trim(),
+    'TA標籤': document.getElementById('edit-tags-seo').value.trim()
   };
+
   try{
-    const res = await fetch(`${AT_URL}/${id}`, {
-      method: 'PATCH', headers: AT_HEADERS,
-      body: JSON.stringify({ fields })
-    });
+    const res = await fetch(`${AT_URL}/${id}`, { method: 'PATCH', headers: AT_HEADERS, body: JSON.stringify({ fields }) });
     const data = await res.json();
     if(data.error){ alert('儲存失敗：'+data.error.message); return; }
-    alert('✓ 已儲存！');
+    alert('✓ 已更新紀錄！');
     closeModal('edit-modal');
     await loadAllRecords();
   } catch(e){ alert('連線失敗'); }
@@ -492,22 +511,18 @@ async function loadAllRecords(){
       date: r.fields['訪談日期']||'',
       type: r.fields['訪談類型']||'',
       content: r.fields['訪談內容']||'',
-      insight: r.fields['關鍵洞察']||'',
       transcript: r.fields['原始逐字稿']||'',
       background: r.fields['使用者背景']||'',
-      situation: r.fields['情境任務']||'',
-      painpoint: r.fields['深層痛點']||'',
-      goal: r.fields['目標需求']||'',
-      outcome: r.fields['期望成果']||'',
-      tags: r.fields['TA標籤']||'',
+      must: r.fields['情境任務']||'',
+      key: r.fields['目標需求']||'',
+      delight: r.fields['期望成果']||'',
+      pitfall: r.fields['深層痛點']||'',
       marketing: r.fields['行銷重點方向']||'',
-      seo: r.fields['關鍵字SEO']||''
+      tags_seo: r.fields['TA標籤']||''
     }));
     renderDashboard();
     renderSessionsTable(allRecords);
-  } catch(e){
-    document.getElementById('recent-tbody').innerHTML='<tr><td colspan="5" style="color:var(--red);text-align:center;padding:2rem;">載入失敗，請確認網路連線</td></tr>';
-  }
+  } catch(e){}
 }
 
 function renderDashboard(){
@@ -536,12 +551,10 @@ function renderDashboard(){
 function filterSessions(){
   const search = document.getElementById('search-input').value.toLowerCase();
   const type = document.getElementById('filter-type').value;
-  const tagsFilter = document.getElementById('filter-tags').value.toLowerCase();
   const filtered = allRecords.filter(r=>{
     const matchSearch = !search || r.name.toLowerCase().includes(search) || r.concept.toLowerCase().includes(search);
     const matchType = !type || r.type === type;
-    const matchTags = !tagsFilter || (r.tags && r.tags.toLowerCase().includes(tagsFilter));
-    return matchSearch && matchType && matchTags;
+    return matchSearch && matchType;
   });
   renderSessionsTable(filtered);
 }
@@ -554,7 +567,6 @@ function renderSessionsTable(records){
       <td><span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type||'訪談'}</span></td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td>
-        ${r.tags?`<div style="font-size:11px;color:var(--accent2);margin-bottom:4px;">${r.tags}</div>`:''}
         <div style="display:flex;gap:4px;">
           <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
           <button class="btn btn-ghost btn-sm" onclick="editRecord('${r.id}')">編輯</button>
@@ -571,11 +583,27 @@ function viewRecord(id){
   document.getElementById('session-modal-title').textContent = `${r.name} ${r.concept}`;
   document.getElementById('session-modal-body').innerHTML = `
     <div style="font-size:12px;color:var(--text2);margin-bottom:1rem;">
-      ${r.job} ／ ${r.date}
-      <span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}" style="margin-left:6px">${r.type}</span>
+      ${r.job} ／ ${r.date} <span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type}</span>
     </div>
-    ${r.content ? `<div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;white-space:pre-wrap;max-height:300px;overflow-y:auto;">${r.content}</div>` : ''}
-    ${r.insight ? `<div style="margin-top:12px;background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);"><span style="color:var(--accent);font-size:10px;font-family:DM Mono,monospace;display:block;margin-bottom:4px;">關鍵洞察</span>${r.insight}</div>` : ''}
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
+      <strong>【1. 一句話總結】</strong><br>${r.content||'無'}
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
+      <strong>【2. 受訪者與情境】</strong><br>${r.background||'無'}
+    </div>
+    <div style="background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:1rem;font-size:12px;line-height:1.8;margin-bottom:12px;">
+      <div style="color:var(--accent);font-weight:bold;margin-bottom:6px;">📊 Kano 模型拆解：</div>
+      <div>• <strong>3. 底線與痛點：</strong>${r.must||'無'}</div>
+      <div>• <strong>4. 核心賣點：</strong>${r.key||'無'}</div>
+      <div>• <strong>5. 驚喜亮點：</strong>${r.delight||'無'}</div>
+      <div>• <strong>6. 避坑地雷：</strong>${r.pitfall||'無'}</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;margin-bottom:12px;">
+      <strong>【7. 行銷切入策略】</strong><br>${r.marketing||'無'}
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;font-size:13px;line-height:1.8;">
+      <strong>【8. TA標籤與SEO】</strong><br>${r.tags_seo||'無'}
+    </div>
   `;
   document.getElementById('btn-delete-session').onclick = ()=>{ deleteRecord(id); closeModal('session-modal'); };
   document.getElementById('session-modal').style.display = 'flex';
@@ -589,158 +617,32 @@ async function deleteRecord(id){
   filterSessions();
 }
 
-// ── ADD FORM ──
-function initAddForm(){
-  document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
-}
+function initAddForm(){ document.getElementById('new-date').value = new Date().toISOString().slice(0,10); }
 
 function clearAddForm(){
-  document.getElementById('new-name').value = '';
-  document.getElementById('new-job').value = '';
-  document.getElementById('new-concept').value = '';
-  document.getElementById('new-transcript').value = '';
-  document.getElementById('new-background').value = '';
-  document.getElementById('new-situation').value = '';
-  document.getElementById('new-painpoint').value = '';
-  document.getElementById('new-goal').value = '';
-  document.getElementById('new-outcome').value = '';
-  document.getElementById('new-tags').value = '';
-  document.getElementById('new-marketing').value = '';
-  document.getElementById('new-seo').value = '';
+  ['new-name','new-job','new-concept','new-transcript','new-summary','new-background','new-must','new-key','new-delight','new-pitfall','new-marketing','new-tags-seo'].forEach(id=>{
+    if(document.getElementById(id)) document.getElementById(id).value = '';
+  });
   initAddForm();
-}
-
-async function analyzeTranscript(){
-  const transcript = document.getElementById('new-transcript').value.trim();
-  if(!transcript){ alert('請先填入原始逐字稿'); return; }
-  const apiKey = localStorage.getItem('hk_api_key')||'';
-  if(!apiKey){ alert('請先在系統設定填入 Claude API Key'); return; }
-  const btn = document.getElementById('btn-analyze');
-  btn.textContent = '分析中...'; btn.disabled = true;
-  try{
-    const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = `請對以下訪談逐字稿進行深度的商業邏輯拆解，並嚴格按照 JSON 格式輸出：
-
-{
-  "summary": "【一句話總結】限制 30 字以內。",
-  "persona_context": "【受訪者與情境】限制 80 字以內。",
-  "product_positioning": {
-    "must_have": "【底線痛點】沒做到直接拒買的門檻。",
-    "key_selling_points": "【核心賣點】決定購買的主要效益與理由。",
-    "delighter": "【驚喜亮點】超越期待的貼心細節或亮點。",
-    "pitfalls": "【避坑地雷】令人感到麻煩、討厭或扣分的體驗。"
-  },
-  "marketing_strategy": "【行銷切入策略】給出 2-3 個具體可用的切入點。",
-  "tags_and_seo": {
-    "ta_tags": "3-5 個精準 TA 標籤，以逗號分隔",
-    "seo_keywords": "8-12 個高轉換搜尋關鍵字，以逗號分隔"
-  }
-}
-
-【待分析逐字稿】：
-${cleanTranscript}`;
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 2500,
-        temperature: 0.1,
-        system: analyzeSystem3,
-        messages: [{ role: 'user', content: userPrompt }]
-      })
-    });
-
-    const data = await res.json();
-    if(data.error){ alert('分析失敗：'+data.error.message); return; }
-    const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g,'').trim();
-    const result = JSON.parse(clean);
-
-    document.getElementById('new-background').value = result.persona_context || '';
-    document.getElementById('new-situation').value = result.product_positioning?.must_have || '';
-    document.getElementById('new-painpoint').value = result.product_positioning?.pitfalls || '';
-    document.getElementById('new-goal').value = result.product_positioning?.key_selling_points || '';
-    document.getElementById('new-outcome').value = result.product_positioning?.delighter || '';
-    document.getElementById('new-tags').value = result.tags_and_seo?.ta_tags || '';
-    document.getElementById('new-marketing').value = result.marketing_strategy || '';
-    document.getElementById('new-seo').value = result.tags_and_seo?.seo_keywords || '';
-
-    alert('✓ 分析完成！請檢查並完善表單後點選「儲存至 Airtable」');
-  } catch(e){
-    alert('分析失敗：'+e.message);
-  } finally {
-    btn.textContent = '✨ AI 自動分析'; btn.disabled = false;
-  }
-}
-
-async function saveInterview(){
-  const name = document.getElementById('new-name').value.trim();
-  const date = document.getElementById('new-date').value;
-  const concept = document.getElementById('new-concept').value.trim();
-  const transcript = document.getElementById('new-transcript').value.trim();
-
-  if(!name || !date || !concept || !transcript){
-    alert('請填寫受訪者姓名、日期、產品主題與原始逐字稿！');
-    return;
-  }
-
-  const fields = {
-    '受訪者': name,
-    '職業身分': document.getElementById('new-job').value.trim(),
-    '訪談日期': date,
-    '產品主題': concept,
-    '原始逐字稿': transcript,
-    '使用者背景': document.getElementById('new-background').value.trim(),
-    '情境任務': document.getElementById('new-situation').value.trim(),
-    '深層痛點': document.getElementById('new-painpoint').value.trim(),
-    '目標需求': document.getElementById('new-goal').value.trim(),
-    '期望成果': document.getElementById('new-outcome').value.trim(),
-    'TA標籤': document.getElementById('new-tags').value.trim(),
-    '行銷重點方向': document.getElementById('new-marketing').value.trim(),
-    '關鍵字SEO': document.getElementById('new-seo').value.trim(),
-    '訪談類型': document.getElementById('new-type').value
-  };
-
-  const btn = document.getElementById('btn-save');
-  btn.textContent = '儲存中...'; btn.disabled = true;
-
-  try{
-    const res = await fetch(AT_URL, {
-      method: 'POST',
-      headers: AT_HEADERS,
-      body: JSON.stringify({ fields })
-    });
-    const data = await res.json();
-    if(data.error){ alert('儲存失敗：'+data.error.message); return; }
-    alert('✓ 新增訪談成功！');
-    clearAddForm();
-    await loadAllRecords();
-    showPage('sessions');
-  } catch(e){
-    alert('連線失敗，請檢查網路');
-  } finally {
-    btn.textContent = '儲存至 Airtable'; btn.disabled = false;
-  }
 }
 
 function exportCSV(){
   if(!allRecords.length){ alert('目前沒有可匯出的紀錄'); return; }
-  const headers = ['受訪者','職業身分','訪談日期','產品主題','訪談類型','TA標籤','關鍵洞察'];
+  const headers = ['受訪者','職業身分','訪談日期','產品主題','訪談類型','1.一句話總結','2.受訪者與情境','3.底線與痛點','4.核心賣點','5.驚喜亮點','6.避坑地雷','7.行銷切入策略','8.TA標籤與SEO'];
   const rows = allRecords.map(r=>[
     `"${(r.name||'').replace(/"/g,'""')}"`,
     `"${(r.job||'').replace(/"/g,'""')}"`,
     `"${r.date||''}"`,
     `"${(r.concept||'').replace(/"/g,'""')}"`,
     `"${r.type||''}"`,
-    `"${(r.tags||'').replace(/"/g,'""')}"`,
-    `"${(r.insight||'').replace(/"/g,'""')}"`
+    `"${(r.content||'').replace(/"/g,'""')}"`,
+    `"${(r.background||'').replace(/"/g,'""')}"`,
+    `"${(r.must||'').replace(/"/g,'""')}"`,
+    `"${(r.key||'').replace(/"/g,'""')}"`,
+    `"${(r.delight||'').replace(/"/g,'""')}"`,
+    `"${(r.pitfall||'').replace(/"/g,'""')}"`,
+    `"${(r.marketing||'').replace(/"/g,'""')}"`,
+    `"${(r.tags_seo||'').replace(/"/g,'""')}"`
   ]);
   const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e=>e.join(','))].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -753,13 +655,11 @@ function exportCSV(){
   document.body.removeChild(link);
 }
 
-// 初始化執行
 window.addEventListener('DOMContentLoaded', () => {
   const savedKey = localStorage.getItem('hk_api_key');
   if(savedKey) document.getElementById('api-key-setting').value = savedKey;
   initAddForm();
   loadAllRecords();
-  loadPasswords();
 });
 </script>
 </body>
