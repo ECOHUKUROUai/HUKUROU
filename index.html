@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-frontend-15fields-synced -->
+<!-- v20260728-frontend-15fields-with-url-reader -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -206,15 +206,13 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 
       <!-- FOCUS GROUP TAB -->
       <div class="tab-content" id="tab-focus" style="display:none;flex-direction:column;gap:6px;">
-        <!-- STEP 1: Product -->
         <div id="focus-step1">
           <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第一步：選擇產品主題</div>
           <div id="focus-product-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-          <input id="focus-custom-product" class="concept-input" placeholder="或輸入自訂產品主題..." style="margin-top:6px;display:none;">
+          <input id="focus-custom-product" class="concept-input" placeholder="或輸入自訂主題 / 網址..." style="margin-top:6px;display:none;">
           <button onclick="confirmFocusProduct()" style="margin-top:8px;padding:8px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;width:100%;">下一步：選擇用戶 →</button>
         </div>
 
-        <!-- STEP 2: Users -->
         <div id="focus-step2" style="display:none;flex-direction:column;gap:6px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <button onclick="backToStep1()" style="padding:4px 10px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">← 返回</button>
@@ -249,7 +247,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       </div>
       <div class="chat-input-area" id="chat-input-area">
         <div class="concept-row" id="concept-row" style="display:none">
-          <input class="concept-input" id="concept-input" placeholder="輸入產品概念...">
+          <input class="concept-input" id="concept-input" placeholder="輸入想測試的產品概念或貼上網址...">
           <label for="concept-img-upload" style="padding:10px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s;">📷</label>
           <input type="file" id="concept-img-upload" accept="image/*" multiple style="display:none" onchange="handleImageUpload(event);">
           <button class="btn-send" id="btn-start" onclick="startInterview()">開始訪談</button>
@@ -270,8 +268,8 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
             <span id="img-filename" style="font-size:11px;color:var(--text3);"></span>
             <button id="btn-send-msg" onclick="if(currentPath===4)sendFocusMessage();else sendMessage();" style="padding:6px 14px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;">送出</button>
           </div>
-          <textarea class="msg-input" id="msg-input" rows="2" placeholder="繼續追問，或上傳圖片詢問受訪者的看法..." onkeydown="handleKey(event)"></textarea>
-          <div class="input-hint">連按兩次 Enter 送出 或點右側送出鍵 📷 可上傳圖片或文件</div>
+          <textarea class="msg-input" id="msg-input" rows="2" placeholder="繼續追問，或貼上網址 / 上傳圖片詢問受訪者看法..." onkeydown="handleKey(event)"></textarea>
+          <div class="input-hint">連按兩次 Enter 送出 或點右側送出鍵 📷 支援圖片/文件，或直接貼上網址讓系統自動讀取</div>
         </div>
       </div>
     </div>
@@ -292,6 +290,26 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <script>
+// ── URL FETCH HELPER ──
+// 🌐 自動抓取外部網址內容的 Helper 函式
+async function fetchUrlContent(url) {
+  try {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl);
+    if (!res.ok) return null;
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    // 移除不必要的標籤
+    doc.querySelectorAll('script, style, nav, footer, header, iframe, noscript').forEach(el => el.remove());
+    const cleanText = (doc.body.textContent || doc.body.innerText || '').replace(/\s+/g, ' ').trim();
+    return cleanText.slice(0, 4000); // 截取精華，避免超過 Token 限制
+  } catch (e) {
+    console.error('網址內容抓取失敗:', e);
+    return null;
+  }
+}
+
 // ── CONFIG ──
 const AT_SETTINGS_TABLE = 'tblP2xgrN3sewUgOr';
 let STAFF_PASSWORD = 'hukurou2026';
@@ -553,7 +571,7 @@ async function loadRoles(){
   } catch(e){ console.log('loadRoles error', e); }
 }
 
-// ── LOAD CASES FROM AIRTABLE (100% 精準 15 個欄位映射) ──
+// ── LOAD CASES FROM AIRTABLE ──
 async function loadCases(){
   document.getElementById('cases-loading').style.display = 'block';
   const records = await atFetch();
@@ -649,10 +667,10 @@ function selectRole(code, name, job, bugs){
   document.getElementById('chat-messages').innerHTML = `<div class="chat-empty"><div class="chat-empty-icon">${name[0]}</div><div style="font-size:14px;">輸入產品概念，開始訪談 ${name}</div></div>`;
   document.getElementById('concept-row').style.display = 'flex';
   document.getElementById('chat-controls').style.display = 'none';
-  document.getElementById('concept-input').placeholder = `輸入想測試的產品概念...`;
+  document.getElementById('concept-input').placeholder = `輸入想測試的產品概念或貼上網址...`;
 }
 
-// ── CASE SELECT (顯示 8 大分析欄位) ──
+// ── CASE SELECT ──
 function selectCase(id){
   const c = allCases.find(x => x.id === id);
   if(!c) return;
@@ -671,7 +689,6 @@ function selectCase(id){
   const msgs = document.getElementById('chat-messages');
   msgs.innerHTML = '';
 
-  // 1. 訪談內容／總結
   if(c.summary || c.content){
     const bubble = document.createElement('div');
     bubble.className = 'msg ai';
@@ -680,7 +697,6 @@ function selectCase(id){
     msgs.appendChild(bubble);
   }
 
-  // 2. 8 大欄位結構化卡片展示
   const dims = [
     {key:'background', label:'2. 受訪者與情境'},
     {key:'must', label:'3. 底線與痛點'},
@@ -704,7 +720,6 @@ function selectCase(id){
     msgs.appendChild(dimBlock);
   }
 
-  // 3. 原始逐字稿
   if(c.transcript){
     const tr = document.createElement('div');
     tr.style.cssText = 'margin-top:8px;';
@@ -721,7 +736,6 @@ function selectCase(id){
     if(tbody){ tbody.textContent = c.transcript; tbody.style.maxHeight = 'none'; }
   }
 
-  // 4. 路線 2 延續對話邏輯
   if(currentPath===2){
     const transcriptContext = c.transcript ? `\n\n【完整原始逐字稿】\n${c.transcript}` : '';
     conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.summary || c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
@@ -781,16 +795,50 @@ function removeTyping(){ document.getElementById('typing-indicator')?.remove(); 
 async function startInterview(){
   if(!currentRole) return;
   const concept = document.getElementById('concept-input').value.trim();
-  if(!concept){ document.getElementById('concept-input').focus(); return; }
+  if(!concept && currentImages.length === 0){ document.getElementById('concept-input').focus(); return; }
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
+
   conversationHistory = []; interviewStarted = true;
   document.getElementById('concept-row').style.display = 'none';
   document.getElementById('chat-controls').style.display = 'block';
   document.getElementById('msg-input').placeholder = `繼續追問 ${currentRoleName}...`;
-  const userMsg = structuredMode ? `請以結構化格式評估這個產品概念：${concept}` : `我想問你關於這個產品的看法：${concept}`;
-  appendBubble('user', `📦 ${concept}`);
-  conversationHistory.push({ role:'user', content:userMsg });
+
+  // 🌐 偵測網址並讀取
+  let urlTextContext = '';
+  const urlMatch = concept ? concept.match(/(https?:\/\/[^\s]+)/g) : null;
+  if (urlMatch && urlMatch.length > 0) {
+    showTyping(); 
+    const pageText = await fetchUrlContent(urlMatch[0]);
+    removeTyping();
+    if (pageText) {
+      urlTextContext = `\n\n【系統自動讀取網頁內容 (${urlMatch[0]})】：\n${pageText}`;
+    }
+  }
+
+  let userContent;
+  let displayMsg = concept || '📦 [產品概念]';
+  if(currentImages.length > 0 || urlTextContext){
+    const parts = [];
+    currentImages.forEach(img => {
+      parts.push({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.base64 } });
+    });
+    let textContent = concept || '';
+    if(urlTextContext) textContent += urlTextContext;
+    if(!textContent) textContent = '請評估這個產品概念。';
+    const finalPrompt = structuredMode ? `請以結構化格式評估這個產品概念：\n${textContent}` : `我想問你關於這個產品的看法：\n${textContent}`;
+    parts.push({ type: 'text', text: finalPrompt });
+    userContent = parts;
+    displayMsg = (concept || '📦 [產品概念]') + (urlTextContext ? ' 🌐 [已讀取網頁內容]' : '') + (currentImages.length>0?' 📷 ['+currentImages.length+'張圖片]':'');
+    clearImage();
+  } else {
+    const userMsg = structuredMode ? `請以結構化格式評估這個產品概念：${concept}` : `我想問你關於這個產品的看法：${concept}`;
+    userContent = userMsg;
+  }
+
+  appendBubble('user', displayMsg.replace(/\n/g,'<br>'));
+  conversationHistory.push({ role:'user', content:userContent });
+  
   showTyping();
   const reply = await callClaude(currentRole, conversationHistory, structuredMode, webSearchMode);
   removeTyping();
@@ -807,21 +855,36 @@ async function sendMessage(){
   if(!msg && currentImages.length === 0 && !currentDocText) return;
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
+  
   input.value = ''; input.disabled = true;
+
+  // 🌐 偵測網址並讀取
+  let urlTextContext = '';
+  const urlMatch = msg ? msg.match(/(https?:\/\/[^\s]+)/g) : null;
+  if (urlMatch && urlMatch.length > 0) {
+    showTyping(); 
+    const pageText = await fetchUrlContent(urlMatch[0]);
+    removeTyping();
+    if (pageText) {
+      urlTextContext = `\n\n【系統自動讀取網頁內容 (${urlMatch[0]})】：\n${pageText}`;
+    }
+  }
 
   let userContent;
   let displayMsg = msg || '';
-  if(currentImages.length > 0 || currentDocText){
+  if(currentImages.length > 0 || currentDocText || urlTextContext){
     const parts = [];
     currentImages.forEach(img => {
       parts.push({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.base64 } });
     });
     let textContent = msg || '';
     if(currentDocText) textContent += (textContent?'\n\n':'') + '【文件內容】\n' + currentDocText.substring(0, 8000);
-    if(!textContent) textContent = '請問你對這些內容的看法如何？你願意購買嗎？';
+    if(urlTextContext) textContent += urlTextContext;
+    if(!textContent) textContent = '請問你對這個網頁/內容的看法如何？你會考慮購買嗎？';
+    
     parts.push({ type: 'text', text: textContent });
     userContent = parts;
-    displayMsg = (msg || '') + (currentImages.length>0?' 📷 ['+currentImages.length+'張圖片]':'') + (currentDocText?' 📄 ['+currentDocName+']':'');
+    displayMsg = (msg || '') + (urlTextContext ? ' 🌐 [已讀取網頁內容]' : '') + (currentImages.length>0?' 📷 ['+currentImages.length+'張圖片]':'') + (currentDocText?' 📄 ['+currentDocName+']':'');
     clearImage();
   } else {
     userContent = msg;
@@ -829,17 +892,19 @@ async function sendMessage(){
 
   appendBubble('user', displayMsg.replace(/\n/g,'<br>'));
   conversationHistory.push({ role:'user', content: userContent });
+  
   showTyping();
   const reply = await callClaude(currentRole, conversationHistory, structuredMode, webSearchMode);
   removeTyping();
   appendBubble('ai', formatReply(reply, structuredMode));
   conversationHistory.push({ role:'assistant', content:reply });
+  
   input.disabled = false; input.focus();
   updateAirtableContent();
 }
 
 async function saveToAirtable(concept, firstReply){
-  const fullContent = conversationHistory.map(m => (m.role==='user'?'訪談員：':'受訪者：') + m.content).join('\n\n');
+  const fullContent = conversationHistory.map(m => (m.role==='user'?'訪談員：':'受訪者：') + (typeof m.content === 'string' ? m.content : JSON.stringify(m.content))).join('\n\n');
   const result = await atCreate({
     '受訪者': currentRoleName,
     '職業身分': currentRoleJob,
@@ -863,7 +928,7 @@ async function saveToAirtable(concept, firstReply){
 
 async function updateAirtableContent(){
   if(!currentAtRecordId) return;
-  const fullContent = conversationHistory.map(m => (m.role==='user'?'訪談員：':'受訪者：') + m.content).join('\n\n');
+  const fullContent = conversationHistory.map(m => (m.role==='user'?'訪談員：':'受訪者：') + (typeof m.content === 'string' ? m.content : JSON.stringify(m.content))).join('\n\n');
   try{
     await fetch(`${AT_URL}/${currentAtRecordId}`, {
       method: 'PATCH', headers: AT_HEADERS,
@@ -1093,7 +1158,7 @@ function startFocusGroup(){
   document.getElementById('chat-messages').innerHTML = `<div class="chat-empty"><div class="chat-empty-icon">👥</div><div style="font-size:14px;">輸入討論主題開始座談</div><div style="font-size:12px;color:var(--text3);">每位參與者都會針對你的問題自由發言</div></div>`;
   document.getElementById('concept-row').style.display = 'flex';
   const pLabel = document.getElementById('focus-product-label')?.textContent?.replace('📦 ','') || '';
-  document.getElementById('concept-input').placeholder = pLabel ? `針對「${pLabel}」，你想問參與者什麼？` : '輸入討論主題，例如：這個產品你會買嗎？原因是什麼？';
+  document.getElementById('concept-input').placeholder = pLabel ? `針對「${pLabel}」，你想問參與者什麼？支援貼入外部網址...` : '輸入討論主題/網址，例如：你會買嗎？原因是什麼？';
   document.getElementById('btn-start').textContent = '開始討論';
   document.getElementById('btn-start').onclick = startFocusDiscussion;
   document.getElementById('chat-controls').style.display = 'none';
@@ -1105,7 +1170,7 @@ let focusHistory = [];
 
 async function startFocusDiscussion(){
   const topic = document.getElementById('concept-input').value.trim();
-  if(!topic) return;
+  if(!topic && currentImages.length === 0 && !currentDocText) return;
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
 
@@ -1115,19 +1180,38 @@ async function startFocusDiscussion(){
   interviewStarted = true;
   focusHistory = [];
 
-  let displayMsg = '📋 ' + topic;
+  // 🌐 偵測網址並讀取
+  let urlTextContext = '';
+  const urlMatch = topic ? topic.match(/(https?:\/\/[^\s]+)/g) : null;
+  if (urlMatch && urlMatch.length > 0) {
+    showTyping(); 
+    const pageText = await fetchUrlContent(urlMatch[0]);
+    removeTyping();
+    if (pageText) {
+      urlTextContext = `\n\n【系統自動讀取網頁內容 (${urlMatch[0]})】：\n${pageText}`;
+    }
+  }
+
+  let displayMsg = '📋 ' + (topic || '[討論主題]');
   let fullTopic = topic;
+  if (urlTextContext) {
+    displayMsg += ' 🌐 [已讀取網頁內容]';
+    fullTopic += urlTextContext;
+  }
   if(currentImages.length > 0){
     displayMsg += ' 📷 [' + currentImages.length + '張圖片]';
-    fullTopic = topic + ' [含' + currentImages.length + '張圖片，請根據圖片內容一起回應]';
+    fullTopic += '\n[含' + currentImages.length + '張圖片，請根據圖片內容一起回應]';
   }
   if(currentDocText){
     displayMsg += ' 📄 [' + currentDocName + ']';
-    fullTopic = fullTopic + '\n\n【文件內容】\n' + currentDocText.substring(0, 4000);
+    fullTopic += '\n\n【文件內容】\n' + currentDocText.substring(0, 4000);
   }
+  
   appendBubble('user', displayMsg);
-  await runFocusRound(topic, apiKey, currentImages.slice(), currentDocText);
+  const imgs = currentImages.slice();
+  const doc = currentDocText ? currentDocText : null;
   clearImage();
+  await runFocusRound(fullTopic, apiKey, imgs, doc);
 }
 
 async function runFocusRound(userMsg, apiKey, images=[], docText=null){
@@ -1216,15 +1300,36 @@ async function sendFocusMessage(){
   if(!msg && currentImages.length === 0 && !currentDocText) return;
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
+  
   input.value = ''; input.disabled = true;
+
+  // 🌐 偵測網址並讀取
+  let urlTextContext = '';
+  const urlMatch = msg ? msg.match(/(https?:\/\/[^\s]+)/g) : null;
+  if (urlMatch && urlMatch.length > 0) {
+    showTyping(); 
+    const pageText = await fetchUrlContent(urlMatch[0]);
+    removeTyping();
+    if (pageText) {
+      urlTextContext = `\n\n【系統自動讀取網頁內容 (${urlMatch[0]})】：\n${pageText}`;
+    }
+  }
+
   let displayMsg = msg;
+  let fullMsg = msg;
+  if (urlTextContext) {
+    displayMsg += ' 🌐 [已讀取網頁內容]';
+    fullMsg += urlTextContext;
+  }
   if(currentImages.length > 0) displayMsg += ' 📷 [' + currentImages.length + '張圖片]';
   if(currentDocText) displayMsg += ' 📄 [' + currentDocName + ']';
+  
   appendBubble('user', displayMsg || '📷');
   const imgs = currentImages.slice();
   const doc = currentDocText;
   clearImage();
-  await runFocusRound(msg, apiKey, imgs, doc);
+  await runFocusRound(fullMsg, apiKey, imgs, doc);
+  
   input.disabled = false; input.focus();
 }
 
