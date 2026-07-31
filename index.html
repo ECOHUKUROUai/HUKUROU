@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- v20260728-frontend-15fields-synced -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -111,12 +112,6 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 .msg-input::placeholder{color:var(--text3);}
 .input-hint{font-size:11px;color:var(--text3);margin-top:5px;}
 
-.structured-card{background:var(--bg3);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:14px 16px;font-size:13px;}
-.structured-row{display:flex;gap:8px;margin-bottom:8px;}
-.structured-row:last-child{margin-bottom:0;}
-.structured-key{color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;min-width:120px;padding-top:2px;}
-.structured-val{color:var(--text);line-height:1.6;}
-
 .loading-bar{font-size:12px;color:var(--text3);padding:6px 0;}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -178,30 +173,30 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 
       <div class="tab-content" id="tab-roles">
         <div class="group-label">居家屋主</div>
-        <div class="role-card" onclick="selectRole('H-01','佳穎','租屋上班族 ／ 25歲','🐾 跳蚤　🪲 塵蟎')"><div class="role-code">H-01</div><div class="role-name">佳穎</div><div class="role-job">租屋上班族 ／ 25歲</div><div class="role-bugs">🐾 跳蚤　🪲 塵蟎</div></div>
+        <div class="role-card" onclick="selectRole('H-01','佳穎','租屋上班族 ／ 25歲','🐾 跳蚤 🪲 塵蟎')"><div class="role-code">H-01</div><div class="role-name">佳穎</div><div class="role-job">租屋上班族 ／ 25歲</div><div class="role-bugs">🐾 跳蚤 🪲 塵蟎</div></div>
         <div class="role-card" onclick="selectRole('H-02','承翰','工程師 ／ 29歲','🐭 老鼠')"><div class="role-code">H-02</div><div class="role-name">承翰</div><div class="role-job">工程師 ／ 29歲</div><div class="role-bugs">🐭 老鼠</div></div>
-        <div class="role-card" onclick="selectRole('H-03','美玲','全職媽媽 ／ 36歲','🪳 蟑螂　🐜 螞蟻')"><div class="role-code">H-03</div><div class="role-name">美玲</div><div class="role-job">全職媽媽 ／ 36歲</div><div class="role-bugs">🪳 蟑螂　🐜 螞蟻</div></div>
+        <div class="role-card" onclick="selectRole('H-03','美玲','全職媽媽 ／ 36歲','🪳 蟑螂 🐜 螞蟻')"><div class="role-code">H-03</div><div class="role-name">美玲</div><div class="role-job">全職媽媽 ／ 36歲</div><div class="role-bugs">🪳 蟑螂 🐜 螞蟻</div></div>
         <div class="role-card" onclick="selectRole('H-04','素珍','家庭主婦 ／ 55歲','🪳 蟑螂')"><div class="role-code">H-04</div><div class="role-name">素珍</div><div class="role-job">家庭主婦 ／ 55歲</div><div class="role-bugs">🪳 蟑螂</div></div>
-        <div class="role-card" onclick="selectRole('H-05','秀英','透天厝屋主 ／ 47歲','🐜 螞蟻　🪲 白蟻')"><div class="role-code">H-05</div><div class="role-name">秀英</div><div class="role-job">透天厝屋主 ／ 47歲</div><div class="role-bugs">🐜 螞蟻　🪲 白蟻</div></div>
+        <div class="role-card" onclick="selectRole('H-05','秀英','透天厝屋主 ／ 47歲','🐜 螞蟻 🪲 白蟻')"><div class="role-code">H-05</div><div class="role-name">秀英</div><div class="role-job">透天厝屋主 ／ 47歲</div><div class="role-bugs">🐜 螞蟻 🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-06','玉蘭','老屋翻修 ／ 63歲','🪲 白蟻')"><div class="role-code">H-06</div><div class="role-name">玉蘭</div><div class="role-job">老屋翻修 ／ 63歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">專業施工</div>
-        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻　🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻　🪰 果蠅</div></div>
+        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
         <div class="role-card" onclick="selectRole('H-08','志豪','水電師傅 ／ 36歲','🐀 老鼠')"><div class="role-code">H-08</div><div class="role-name">志豪</div><div class="role-job">水電師傅 ／ 36歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="role-card" onclick="selectRole('H-09','阿明','木工師傅 ／ 42歲','🪲 白蟻')"><div class="role-code">H-09</div><div class="role-name">阿明</div><div class="role-job">木工師傅 ／ 42歲</div><div class="role-bugs">🪲 白蟻</div></div>
-        <div class="role-card" onclick="selectRole('H-10','阿龍','泥作師傅 ／ 49歲','🪲 白蟻　🪳 蟑螂')"><div class="role-code">H-10</div><div class="role-name">阿龍</div><div class="role-job">泥作師傅 ／ 49歲</div><div class="role-bugs">🪲 白蟻　🪳 蟑螂</div></div>
+        <div class="role-card" onclick="selectRole('H-10','阿龍','泥作師傅 ／ 49歲','🪲 白蟻 🪳 蟑螂')"><div class="role-code">H-10</div><div class="role-name">阿龍</div><div class="role-job">泥作師傅 ／ 49歲</div><div class="role-bugs">🪲 白蟻 🪳 蟑螂</div></div>
         <div class="role-card" onclick="selectRole('H-11','文彬','古蹟修復工程師 ／ 58歲','🪲 白蟻')"><div class="role-code">H-11</div><div class="role-name">文彬</div><div class="role-job">古蹟修復工程師 ／ 58歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">商業空間</div>
-        <div class="role-card" onclick="selectRole('H-12','雅芳','小吃店老闆 ／ 46歲','🪳 蟑螂　🪰 果蠅')"><div class="role-code">H-12</div><div class="role-name">雅芳</div><div class="role-job">小吃店老闆 ／ 46歲</div><div class="role-bugs">🪳 蟑螂　🪰 果蠅</div></div>
-        <div class="role-card" onclick="selectRole('H-13','麗娟','辦公室租賃業主 ／ 51歲','🐭 老鼠　🪳 蟑螂')"><div class="role-code">H-13</div><div class="role-name">麗娟</div><div class="role-job">辦公室租賃業主 ／ 51歲</div><div class="role-bugs">🐭 老鼠　🪳 蟑螂</div></div>
-        <div class="role-card" onclick="selectRole('H-14','國華','倉儲物流主管 ／ 44歲','🐀 老鼠　🪲 白蟻')"><div class="role-code">H-14</div><div class="role-name">國華</div><div class="role-job">倉儲物流主管 ／ 44歲</div><div class="role-bugs">🐀 老鼠　🪲 白蟻</div></div>
-        <div class="role-card" onclick="selectRole('H-15','淑美','幼兒園園長 ／ 48歲','🦟 蚊子　🐜 螞蟻')"><div class="role-code">H-15</div><div class="role-name">淑美</div><div class="role-job">幼兒園園長 ／ 48歲</div><div class="role-bugs">🦟 蚊子　🐜 螞蟻</div></div>
+        <div class="role-card" onclick="selectRole('H-12','雅芳','小吃店老闆 ／ 46歲','🪳 蟑螂 🪰 果蠅')"><div class="role-code">H-12</div><div class="role-name">雅芳</div><div class="role-job">小吃店老闆 ／ 46歲</div><div class="role-bugs">🪳 蟑螂 🪰 果蠅</div></div>
+        <div class="role-card" onclick="selectRole('H-13','麗娟','辦公室租賃業主 ／ 51歲','🐭 老鼠 🪳 蟑螂')"><div class="role-code">H-13</div><div class="role-name">麗娟</div><div class="role-job">辦公室租賃業主 ／ 51歲</div><div class="role-bugs">🐭 老鼠假 🪳 蟑螂</div></div>
+        <div class="role-card" onclick="selectRole('H-14','國華','倉儲物流主管 ／ 44歲','🐀 老鼠 🪲 白蟻')"><div class="role-code">H-14</div><div class="role-name">國華</div><div class="role-job">倉儲物流主管 ／ 44歲</div><div class="role-bugs">🐀 老鼠 🪲 白蟻</div></div>
+        <div class="role-card" onclick="selectRole('H-15','淑美','幼兒園園長 ／ 48歲','🦟 蚊子 🐜 螞蟻')"><div class="role-code">H-15</div><div class="role-name">淑美</div><div class="role-job">幼兒園園長 ／ 48歲</div><div class="role-bugs">🦟 蚊子 🐜 螞蟻</div></div>
         <div class="group-label">農業園藝</div>
-        <div class="role-card" onclick="selectRole('H-16','政偉','果樹農 ／ 61歲','🪲 白蟻　🐜 螞蟻')"><div class="role-code">H-16</div><div class="role-name">政偉</div><div class="role-job">果樹農 ／ 61歲</div><div class="role-bugs">🪲 白蟻　🐜 螞蟻</div></div>
-        <div class="role-card" onclick="selectRole('H-17','嘉玲','有機花卉業者 ／ 39歲','🦟 蚊子　🪲 塵蟎')"><div class="role-code">H-17</div><div class="role-name">嘉玲</div><div class="role-job">有機花卉業者 ／ 39歲</div><div class="role-bugs">🦟 蚊子　🪲 塵蟎</div></div>
+        <div class="role-card" onclick="selectRole('H-16','政偉','果樹農 ／ 61歲','🪲 白蟻 🐜 螞蟻')"><div class="role-code">H-16</div><div class="role-name">政偉</div><div class="role-job">果樹農 ／ 61歲</div><div class="role-bugs">🪲 白蟻 🐜 螞蟻</div></div>
+        <div class="role-card" onclick="selectRole('H-17','嘉玲','有機花卉業者 ／ 39歲','🦟 蚊子 🪲 塵蟎')"><div class="role-code">H-17</div><div class="role-name">嘉玲</div><div class="role-job">有機花卉業者 ／ 39歲</div><div class="role-bugs">🦟 蚊子 🪲 塵蟎</div></div>
         <div class="role-card" onclick="selectRole('H-18','炎松','檳榔農 ／ 70歲','🐀 老鼠')"><div class="role-code">H-18</div><div class="role-name">炎松</div><div class="role-job">檳榔農 ／ 70歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="group-label">物業社區</div>
-        <div class="role-card" onclick="selectRole('H-19','雯雯','社區主委 ／ 65歲','🪳 蟑螂　🐀 老鼠')"><div class="role-code">H-19</div><div class="role-name">雯雯</div><div class="role-job">社區主委 ／ 65歲</div><div class="role-bugs">🪳 蟑螂　🐀 老鼠</div></div>
-        <div class="role-card" onclick="selectRole('H-20','阿財','社區清潔員 ／ 52歲','🐜 螞蟻　🪰 果蠅')"><div class="role-code">H-20</div><div class="role-name">阿財</div><div class="role-job">社區清潔員 ／ 52歲</div><div class="role-bugs">🐜 螞蟻　🪰 果蠅</div></div>
+        <div class="role-card" onclick="selectRole('H-19','雯雯','社區主委 ／ 65歲','🪳 蟑螂 🐀 老鼠')"><div class="role-code">H-19</div><div class="role-name">雯雯</div><div class="role-job">社區主委 ／ 65歲</div><div class="role-bugs">🪳 蟑螂 🐀 老鼠</div></div>
+        <div class="role-card" onclick="selectRole('H-20','阿財','社區清潔員 ／ 52歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-20</div><div class="role-name">阿財</div><div class="role-job">社區清潔員 ／ 52歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
       </div>
 
       <div class="tab-content" id="tab-cases">
@@ -211,7 +206,6 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 
       <!-- FOCUS GROUP TAB -->
       <div class="tab-content" id="tab-focus" style="display:none;flex-direction:column;gap:6px;">
-
         <!-- STEP 1: Product -->
         <div id="focus-step1">
           <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第一步：選擇產品主題</div>
@@ -277,7 +271,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
             <button id="btn-send-msg" onclick="if(currentPath===4)sendFocusMessage();else sendMessage();" style="padding:6px 14px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;">送出</button>
           </div>
           <textarea class="msg-input" id="msg-input" rows="2" placeholder="繼續追問，或上傳圖片詢問受訪者的看法..." onkeydown="handleKey(event)"></textarea>
-          <div class="input-hint">連按兩次 Enter 送出　或點右側送出鍵　📷 可上傳圖片或文件</div>
+          <div class="input-hint">連按兩次 Enter 送出 或點右側送出鍵 📷 可上傳圖片或文件</div>
         </div>
       </div>
     </div>
@@ -324,7 +318,7 @@ const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'app
 // ── AIRTABLE ──
 async function atFetch(records){
   try{
-    const res = await fetch(AT_URL+'?pageSize=100', { headers: AT_HEADERS });
+    const res = await fetch(AT_URL+'?pageSize=100&sort[0][field]=訪談日期&sort[0][direction]=desc', { headers: AT_HEADERS });
     const data = await res.json();
     return data.records || [];
   } catch(e){ return []; }
@@ -378,23 +372,29 @@ const STRUCTURED_PROMPT = `請以以下格式進行消費者輪廓分析（如�
 核心抗拒點: [具體說明]
 吸引文案關鍵字: [2-3個最有效的詞]
 
-【1. 使用者背景／身分】
-清楚描述這個人的樣貌（年齡、職業、生活狀態、個性特質）
+【1. 一句話總結】
+清楚說明該受訪者的核心態度與重點總結
 
-【2. 情境任務】
-他在什麼情況下遇到這個問題？當時在做什麼？
+【2. 受訪者與情境】
+描述這個人的背景樣貌（年齡、職業、生活狀態、個性特質與遭遇情境）
 
-【3. 深層痛點與阻礙】
-表面問題背後真正的恐懼、焦慮或不便是什麼？
+【3. 底線與痛點】
+未滿足引發極大不滿、直接拒買的門檻
 
-【4. 目標與需求】
-他想透過產品完成什麼事？功能需求與情感需求各是什麼？
+【4. 核心賣點】
+決定購買的主要效益與期待
 
-【5. 期望成果與價值】
-使用產品後希望生活有什麼改變？最終想得到的結果是什麼？
+【5. 驚喜亮點】
+超乎預期的附加價值與亮點
 
-補充建議: [一句產品或訊息改善建議]
-與現有產品比較: [比較心得]`;
+【6. 避坑地雷】
+使用阻力與扣分體驗
+
+【7. 行銷切入策略】
+建議的行銷包裝與溝通方向
+
+【8. TA標籤與SEO】
+建議標籤與關鍵字`;
 
 // ── IMAGE & DOC STATE ──
 let currentImages = []; // [{base64, type, name}]
@@ -404,7 +404,6 @@ let currentDocName = null;
 function handleImageUpload(event){
   const files = Array.from(event.target.files);
   if(!files.length) return;
-  // Show in both chat-controls wrap and concept-img-preview
   const wrap = document.getElementById('img-preview-wrap');
   const conceptPreview = document.getElementById('concept-img-preview');
   if(wrap) wrap.style.display = 'flex';
@@ -416,7 +415,6 @@ function handleImageUpload(event){
       const base64 = dataUrl.split(',')[1];
       const imgIdx = currentImages.length;
       currentImages.push({base64, type:file.type, name:file.name});
-      // Create preview container
       const makePreview = (targetWrap) => {
         if(!targetWrap) return;
         const container = document.createElement('div');
@@ -555,25 +553,27 @@ async function loadRoles(){
   } catch(e){ console.log('loadRoles error', e); }
 }
 
-// ── LOAD CASES FROM AIRTABLE ──
+// ── LOAD CASES FROM AIRTABLE (100% 精準 15 個欄位映射) ──
 async function loadCases(){
   document.getElementById('cases-loading').style.display = 'block';
   const records = await atFetch();
   allCases = records.map(r => ({
     id: r.id,
-    roleName: r.fields['受訪者'] || '',
-    roleJob: r.fields['職業身分'] || '',
+    roleName: r.fields['受訪者'] || r.fields['受訪者姓名'] || '',
+    roleJob: r.fields['職業身分'] || r.fields['職業身份'] || '',
     concept: r.fields['產品主題'] || '',
     date: r.fields['訪談日期'] || '',
     type: r.fields['訪談類型'] || '',
     content: r.fields['訪談內容'] || '',
-    insight: r.fields['關鍵洞察'] || '',
     transcript: r.fields['原始逐字稿'] || '',
-    background: r.fields['使用者背景'] || '',
-    situation: r.fields['情境任務'] || '',
-    painpoint: r.fields['深層痛點'] || '',
-    goal: r.fields['目標需求'] || '',
-    outcome: r.fields['期望成果'] || ''
+    summary: r.fields['一句話總結'] || '',
+    background: r.fields['受訪者與情境'] || r.fields['使用者背景'] || '',
+    must: r.fields['底線痛點'] || r.fields['情境任務'] || '',
+    key: r.fields['核心賣點'] || r.fields['目標需求'] || '',
+    delight: r.fields['驚喜亮點'] || r.fields['期望成果'] || '',
+    pitfall: r.fields['避坑地雷'] || r.fields['深層痛點'] || '',
+    marketing: r.fields['行銷切入策略'] || '',
+    tagsSeo: r.fields['TA標籤與SEO'] || r.fields['TA標籤'] || ''
   }));
   document.getElementById('cases-loading').style.display = 'none';
   renderCasesList();
@@ -623,7 +623,6 @@ function selectPath(n){
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     document.getElementById('tab-focus').classList.add('active');
     document.getElementById('tab-focus').style.display = 'flex';
-    // Reset to step 1
     document.getElementById('focus-step1').style.display = 'block';
     document.getElementById('focus-step2').style.display = 'none';
     focusParticipants = [];
@@ -653,7 +652,7 @@ function selectRole(code, name, job, bugs){
   document.getElementById('concept-input').placeholder = `輸入想測試的產品概念...`;
 }
 
-// ── CASE SELECT ──
+// ── CASE SELECT (顯示 8 大分析欄位) ──
 function selectCase(id){
   const c = allCases.find(x => x.id === id);
   if(!c) return;
@@ -671,24 +670,25 @@ function selectCase(id){
   `;
   const msgs = document.getElementById('chat-messages');
   msgs.innerHTML = '';
-  if(c.content){
+
+  // 1. 訪談內容／總結
+  if(c.summary || c.content){
     const bubble = document.createElement('div');
     bubble.className = 'msg ai';
-    bubble.innerHTML = `<div class="msg-dot">🦉</div><div class="msg-bubble" style="max-width:90%">${c.content.replace(/\n/g,'<br>')}</div>`;
+    const textToShow = c.summary || c.content;
+    bubble.innerHTML = `<div class="msg-dot">🦉</div><div class="msg-bubble" style="max-width:90%"><strong>【1. 一句話總結】</strong><br>${textToShow.replace(/\n/g,'<br>')}</div>`;
     msgs.appendChild(bubble);
   }
-  if(c.insight){
-    const ins = document.createElement('div');
-    ins.style.cssText = 'background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);margin-top:4px;';
-    ins.innerHTML = '<span style="color:var(--accent);font-size:10px;font-family:DM Mono,monospace;display:block;margin-bottom:4px;">關鍵洞察</span>'+c.insight.replace(/\n/g,'<br>');
-    msgs.appendChild(ins);
-  }
+
+  // 2. 8 大欄位結構化卡片展示
   const dims = [
-    {key:'background', label:'1. 使用者背景'},
-    {key:'situation', label:'2. 情境任務'},
-    {key:'painpoint', label:'3. 深層痛點'},
-    {key:'goal', label:'4. 目標與需求'},
-    {key:'outcome', label:'5. 期望成果'},
+    {key:'background', label:'2. 受訪者與情境'},
+    {key:'must', label:'3. 底線與痛點'},
+    {key:'key', label:'4. 核心賣點'},
+    {key:'delight', label:'5. 驚喜亮點'},
+    {key:'pitfall', label:'6. 避坑地雷'},
+    {key:'marketing', label:'7. 行銷切入策略'},
+    {key:'tagsSeo', label:'8. TA標籤與SEO'}
   ];
   const hasAnyDim = dims.some(d => c[d.key]);
   if(hasAnyDim){
@@ -703,6 +703,8 @@ function selectCase(id){
     });
     msgs.appendChild(dimBlock);
   }
+
+  // 3. 原始逐字稿
   if(c.transcript){
     const tr = document.createElement('div');
     tr.style.cssText = 'margin-top:8px;';
@@ -715,13 +717,14 @@ function selectCase(id){
       <div id="transcript-body" style="display:none;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;overflow-y:auto;"></div>
     `;
     msgs.appendChild(tr);
-    // Set transcript text safely
     const tbody = document.getElementById('transcript-body');
     if(tbody){ tbody.textContent = c.transcript; tbody.style.maxHeight = 'none'; }
   }
+
+  // 4. 路線 2 延續對話邏輯
   if(currentPath===2){
     const transcriptContext = c.transcript ? `\n\n【完整原始逐字稿】\n${c.transcript}` : '';
-    conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
+    conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.summary || c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
     interviewStarted = true;
     document.getElementById('concept-row').style.display = 'none';
     document.getElementById('chat-controls').style.display = 'block';
@@ -801,12 +804,11 @@ async function sendMessage(){
   if(!interviewStarted||!currentRole) return;
   const input = document.getElementById('msg-input');
   const msg = input.value.trim();
-  if(!msg && !currentImageBase64) return;
+  if(!msg && currentImages.length === 0 && !currentDocText) return;
   const apiKey = getApiKey();
   if(!apiKey){ openApiSetting(); return; }
   input.value = ''; input.disabled = true;
 
-  // Build user message content
   let userContent;
   let displayMsg = msg || '';
   if(currentImages.length > 0 || currentDocText){
@@ -839,12 +841,13 @@ async function sendMessage(){
 async function saveToAirtable(concept, firstReply){
   const fullContent = conversationHistory.map(m => (m.role==='user'?'訪談員：':'受訪者：') + m.content).join('\n\n');
   const result = await atCreate({
-    '受訪者姓名': currentRoleName,
-    '職業身份': currentRoleJob,
+    '受訪者': currentRoleName,
+    '職業身分': currentRoleJob,
     '產品主題': concept,
     '訪談日期': new Date().toISOString().slice(0,10),
     '訪談類型': 'AI模擬',
-    '訪談內容': fullContent
+    '訪談內容': fullContent,
+    '一句話總結': fullContent.slice(0, 200)
   });
   if(result && result.records && result.records[0]){
     currentAtRecordId = result.records[0].id;
@@ -852,7 +855,7 @@ async function saveToAirtable(concept, firstReply){
       id: currentAtRecordId,
       roleName: currentRoleName, roleJob: currentRoleJob,
       concept, date: new Date().toISOString().slice(0,10),
-      type: 'AI模擬', content: fullContent
+      type: 'AI模擬', content: fullContent, summary: fullContent.slice(0, 200)
     });
     renderCasesList();
   }
@@ -871,13 +874,14 @@ async function updateAirtableContent(){
 
 async function callClaude(roleCode, history, structured, useWebSearch=false){
   const apiKey = getApiKey();
+  const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
   const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
   const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n'+STRUCTURED_PROMPT:''}`;
 
   const body = {
-    model: 'claude-sonnet-4-5',
-    max_tokens: 1000,
+    model: model,
+    max_tokens: 2500,
     system: systemPrompt,
     messages: history
   };
@@ -894,7 +898,6 @@ async function callClaude(roleCode, history, structured, useWebSearch=false){
     });
     const data = await res.json();
     if(data.error) return `[錯誤] ${data.error.message}`;
-    // Extract text from potentially mixed content blocks
     const text = data.content
       .filter(b => b.type === 'text')
       .map(b => b.text)
@@ -919,19 +922,17 @@ function handleKey(e){
   if(e.key==='Enter'&&!e.shiftKey){
     const now = Date.now();
     if(now - lastEnterTime < 500){
-      // Double Enter within 500ms - send
       e.preventDefault();
       lastEnterTime = 0;
       if(currentPath===4) sendFocusMessage(); else sendMessage();
     } else {
       lastEnterTime = now;
-      // First Enter - just newline, show hint
     }
   }
 }
 
 // ── FOCUS GROUP ──
-let focusParticipants = []; // {id, name, job, type, prompt, transcript}
+let focusParticipants = []; 
 let focusSubTab = 'real';
 
 function switchFocusTab(tab, btn){
@@ -942,7 +943,6 @@ function switchFocusTab(tab, btn){
   btn.classList.add('active');
 }
 
-// Product categories for focus group
 const FOCUS_PRODUCTS = [
   { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','塵蟎'] },
   { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻'] },
@@ -1009,11 +1009,10 @@ function backToStep1(){
 }
 
 function renderFocusLists(bugFilter){
-  // Real users
   const realList = document.getElementById('focus-real-list');
   realList.innerHTML = '';
   const filteredCases = (bugFilter && bugFilter.length > 0)
-    ? allCases.filter(c => bugFilter.some(b => (c.concept||'').includes(b) || (c.roleJob||'').includes(b) || (c.tags||'').includes(b)))
+    ? allCases.filter(c => bugFilter.some(b => (c.concept||'').includes(b) || (c.roleJob||'').includes(b)))
     : allCases;
   const casesToShow = filteredCases.length > 0 ? filteredCases : allCases;
   if(!casesToShow.length){
@@ -1033,7 +1032,7 @@ function renderFocusLists(bugFilter){
       realList.appendChild(div);
     });
   }
-  // Virtual roles
+
   const virtualList = document.getElementById('focus-virtual-list');
   virtualList.innerHTML = '';
   const cards = document.querySelectorAll('#tab-roles .role-card');
@@ -1095,7 +1094,6 @@ function startFocusGroup(){
   document.getElementById('concept-row').style.display = 'flex';
   const pLabel = document.getElementById('focus-product-label')?.textContent?.replace('📦 ','') || '';
   document.getElementById('concept-input').placeholder = pLabel ? `針對「${pLabel}」，你想問參與者什麼？` : '輸入討論主題，例如：這個產品你會買嗎？原因是什麼？';
-  document.getElementById('concept-input').value = pLabel ? '' : '';
   document.getElementById('btn-start').textContent = '開始討論';
   document.getElementById('btn-start').onclick = startFocusDiscussion;
   document.getElementById('chat-controls').style.display = 'none';
@@ -1103,7 +1101,7 @@ function startFocusGroup(){
   conversationHistory = [];
 }
 
-let focusHistory = []; // shared conversation history
+let focusHistory = [];
 
 async function startFocusDiscussion(){
   const topic = document.getElementById('concept-input').value.trim();
@@ -1140,7 +1138,6 @@ async function runFocusRound(userMsg, apiKey, images=[], docText=null){
     appendFocusBubble(p, reply);
     focusHistory.push({participant: p.name, message: reply});
   }
-  // Save to Airtable
   if(currentAtRecordId){
     updateAirtableContent();
   } else {
@@ -1174,6 +1171,7 @@ function appendFocusBubble(p, text){
 }
 
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
+  const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
     ? '\n\n【其他參與者的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
     : '';
@@ -1204,7 +1202,7 @@ ${participant.transcript || '（無逐字稿）'}
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:300, system:systemPrompt, messages })
+      body:JSON.stringify({ model: model, max_tokens: 1000, system:systemPrompt, messages })
     });
     const data = await res.json();
     if(data.error) return `[錯誤] ${data.error.message}`;
@@ -1241,7 +1239,8 @@ async function saveFocusToAirtable(concept){
     '產品主題': concept,
     '訪談日期': new Date().toISOString().slice(0,10),
     '訪談類型': 'AI模擬',
-    '訪談內容': fullContent
+    '訪談內容': fullContent,
+    '一句話總結': fullContent.slice(0, 200)
   });
   if(result && result.records && result.records[0]){
     currentAtRecordId = result.records[0].id;
