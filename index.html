@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-frontend-15fields-continue-chat -->
+<!-- v20260731-frontend-fix-focus-tab-leak -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -180,7 +180,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-05','秀英','透天厝屋主 ／ 47歲','🐜 螞蟻 🪲 白蟻')"><div class="role-code">H-05</div><div class="role-name">秀英</div><div class="role-job">透天厝屋主 ／ 47歲</div><div class="role-bugs">🐜 螞蟻 🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-06','玉蘭','老屋翻修 ／ 63歲','🪲 白蟻')"><div class="role-code">H-06</div><div class="role-name">玉蘭</div><div class="role-job">老屋翻修 ／ 63歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">專業施工</div>
-        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
+        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻指令 🪰 果蠅</div></div>
         <div class="role-card" onclick="selectRole('H-08','志豪','水電師傅 ／ 36歲','🐀 老鼠')"><div class="role-code">H-08</div><div class="role-name">志豪</div><div class="role-job">水電師傅 ／ 36歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="role-card" onclick="selectRole('H-09','阿明','木工師傅 ／ 42歲','🪲 白蟻')"><div class="role-code">H-09</div><div class="role-name">阿明</div><div class="role-job">木工師傅 ／ 42歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-10','阿龍','泥作師傅 ／ 49歲','🪲 白蟻 🪳 蟑螂')"><div class="role-code">H-10</div><div class="role-name">阿龍</div><div class="role-job">泥作師傅 ／ 49歲</div><div class="role-bugs">🪲 白蟻 🪳 蟑螂</div></div>
@@ -590,7 +590,8 @@ async function loadCases(){
     pitfall: r.fields['避坑地雷'] || r.fields['深層痛點'] || '',
     marketing: r.fields['行銷切入策略'] || '',
     tagsSeo: r.fields['TA標籤與SEO'] || r.fields['TA標籤'] || ''
-  }));
+  })).filter(c => !c.roleName.includes('多人討論'));
+
   document.getElementById('cases-loading').style.display = 'none';
   renderCasesList();
   if(document.getElementById('focus-real-list')) renderFocusLists();
@@ -599,7 +600,7 @@ async function loadCases(){
 function renderCasesList(){
   const list = document.getElementById('cases-list');
   if(!allCases.length){
-    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:1rem 0;text-align:center;">尚無訪談記錄<br>請至後台新增</div>';
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:1rem 0;text-align:center;">尚無個人訪談記錄<br>請至後台新增</div>';
     return;
   }
   list.innerHTML = allCases.map(c => `
@@ -623,9 +624,16 @@ function renderCasesList(){
 // ── TABS ──
 function switchTab(name, btn){
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.remove('active');
+    if(c.id === 'tab-focus') c.style.display = 'none'; // 🎯 關鍵：切換頁籤時關閉多人討論 display
+  });
+  if(btn) btn.classList.add('active');
+  const target = document.getElementById('tab-'+name);
+  if(target) {
+    target.classList.add('active');
+    if(name === 'focus') target.style.display = 'flex';
+  }
 }
 
 // ── PATH ──
@@ -633,12 +641,22 @@ function selectPath(n){
   currentPath = n;
   document.querySelectorAll('.path-card').forEach((c,i) => c.classList.toggle('active', i+1===n));
   resetChat();
+
+  // 🎯 關鍵修復：切換任何路線時，強制關閉多人討論區塊的顯示
+  const focusTab = document.getElementById('tab-focus');
+  if(focusTab) {
+    focusTab.style.display = 'none';
+    focusTab.classList.remove('active');
+  }
+
   if(n===1||n===2){ switchTab('cases', document.querySelectorAll('.tab-btn')[2]); }
   else if(n===4){
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    document.getElementById('tab-focus').classList.add('active');
-    document.getElementById('tab-focus').style.display = 'flex';
+    if(focusTab){
+      focusTab.classList.add('active');
+      focusTab.style.display = 'flex';
+    }
     document.getElementById('focus-step1').style.display = 'block';
     document.getElementById('focus-step2').style.display = 'none';
     focusParticipants = [];
@@ -650,10 +668,9 @@ function selectPath(n){
   else { switchTab('roles', document.querySelectorAll('.tab-btn')[1]); }
 }
 
-// 捷徑：直接從案例庫重啟對話
 function continueCaseDiscussion(id) {
-  selectPath(2); // 自動切換為「路線 02：依案例繼續模擬」
-  selectCase(id); // 載入該案例並打開聊天輸入框
+  selectPath(2);
+  selectCase(id);
 }
 
 // ── ROLE ──
@@ -693,7 +710,6 @@ function selectCase(id){
   const msgs = document.getElementById('chat-messages');
   msgs.innerHTML = '';
 
-  // 1. 訪談內容／總結
   if(c.summary || c.content){
     const bubble = document.createElement('div');
     bubble.className = 'msg ai';
@@ -702,7 +718,6 @@ function selectCase(id){
     msgs.appendChild(bubble);
   }
 
-  // 2. 8 大欄位結構化卡片展示
   const dims = [
     {key:'background', label:'2. 受訪者與情境'},
     {key:'must', label:'3. 底線與痛點'},
@@ -726,7 +741,6 @@ function selectCase(id){
     msgs.appendChild(dimBlock);
   }
 
-  // 3. 原始逐字稿
   if(c.transcript){
     const tr = document.createElement('div');
     tr.style.cssText = 'margin-top:8px;';
@@ -743,7 +757,6 @@ function selectCase(id){
     if(tbody){ tbody.textContent = c.transcript; tbody.style.maxHeight = 'none'; }
   }
 
-  // 4. 新增「一鍵重啟對話」按鈕
   if(currentPath !== 2) {
     const continueBtn = document.createElement('button');
     continueBtn.className = 'btn-send';
@@ -753,7 +766,6 @@ function selectCase(id){
     msgs.appendChild(continueBtn);
   }
 
-  // 5. 路線 2 延續對話邏輯
   if(currentPath===2){
     const transcriptContext = c.transcript ? `\n\n【完整原始逐字稿】\n${c.transcript}` : '';
     conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.summary || c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
