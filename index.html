@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260728-frontend-15fields-with-url-reader -->
+<!-- v20260728-frontend-15fields-continue-chat -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -291,7 +291,6 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 
 <script>
 // ── URL FETCH HELPER ──
-// 🌐 自動抓取外部網址內容的 Helper 函式
 async function fetchUrlContent(url) {
   try {
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
@@ -300,10 +299,9 @@ async function fetchUrlContent(url) {
     const html = await res.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    // 移除不必要的標籤
     doc.querySelectorAll('script, style, nav, footer, header, iframe, noscript').forEach(el => el.remove());
     const cleanText = (doc.body.textContent || doc.body.innerText || '').replace(/\s+/g, ' ').trim();
-    return cleanText.slice(0, 4000); // 截取精華，避免超過 Token 限制
+    return cleanText.slice(0, 4000);
   } catch (e) {
     console.error('網址內容抓取失敗:', e);
     return null;
@@ -415,7 +413,7 @@ const STRUCTURED_PROMPT = `請以以下格式進行消費者輪廓分析（如�
 建議標籤與關鍵字`;
 
 // ── IMAGE & DOC STATE ──
-let currentImages = []; // [{base64, type, name}]
+let currentImages = []; 
 let currentDocText = null;
 let currentDocName = null;
 
@@ -652,6 +650,12 @@ function selectPath(n){
   else { switchTab('roles', document.querySelectorAll('.tab-btn')[1]); }
 }
 
+// 捷徑：直接從案例庫重啟對話
+function continueCaseDiscussion(id) {
+  selectPath(2); // 自動切換為「路線 02：依案例繼續模擬」
+  selectCase(id); // 載入該案例並打開聊天輸入框
+}
+
 // ── ROLE ──
 function selectRole(code, name, job, bugs){
   document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
@@ -689,6 +693,7 @@ function selectCase(id){
   const msgs = document.getElementById('chat-messages');
   msgs.innerHTML = '';
 
+  // 1. 訪談內容／總結
   if(c.summary || c.content){
     const bubble = document.createElement('div');
     bubble.className = 'msg ai';
@@ -697,6 +702,7 @@ function selectCase(id){
     msgs.appendChild(bubble);
   }
 
+  // 2. 8 大欄位結構化卡片展示
   const dims = [
     {key:'background', label:'2. 受訪者與情境'},
     {key:'must', label:'3. 底線與痛點'},
@@ -720,6 +726,7 @@ function selectCase(id){
     msgs.appendChild(dimBlock);
   }
 
+  // 3. 原始逐字稿
   if(c.transcript){
     const tr = document.createElement('div');
     tr.style.cssText = 'margin-top:8px;';
@@ -736,6 +743,17 @@ function selectCase(id){
     if(tbody){ tbody.textContent = c.transcript; tbody.style.maxHeight = 'none'; }
   }
 
+  // 4. 新增「一鍵重啟對話」按鈕
+  if(currentPath !== 2) {
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'btn-send';
+    continueBtn.style.cssText = 'margin-top:1rem;width:100%;padding:12px;font-size:13px;';
+    continueBtn.innerHTML = `💬 依此案例重啟對話 / 繼續追問 ${c.roleName}`;
+    continueBtn.onclick = () => continueCaseDiscussion(id);
+    msgs.appendChild(continueBtn);
+  }
+
+  // 5. 路線 2 延續對話邏輯
   if(currentPath===2){
     const transcriptContext = c.transcript ? `\n\n【完整原始逐字稿】\n${c.transcript}` : '';
     conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.summary || c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
@@ -804,7 +822,6 @@ async function startInterview(){
   document.getElementById('chat-controls').style.display = 'block';
   document.getElementById('msg-input').placeholder = `繼續追問 ${currentRoleName}...`;
 
-  // 🌐 偵測網址並讀取
   let urlTextContext = '';
   const urlMatch = concept ? concept.match(/(https?:\/\/[^\s]+)/g) : null;
   if (urlMatch && urlMatch.length > 0) {
@@ -858,7 +875,6 @@ async function sendMessage(){
   
   input.value = ''; input.disabled = true;
 
-  // 🌐 偵測網址並讀取
   let urlTextContext = '';
   const urlMatch = msg ? msg.match(/(https?:\/\/[^\s]+)/g) : null;
   if (urlMatch && urlMatch.length > 0) {
@@ -1180,7 +1196,6 @@ async function startFocusDiscussion(){
   interviewStarted = true;
   focusHistory = [];
 
-  // 🌐 偵測網址並讀取
   let urlTextContext = '';
   const urlMatch = topic ? topic.match(/(https?:\/\/[^\s]+)/g) : null;
   if (urlMatch && urlMatch.length > 0) {
@@ -1303,7 +1318,6 @@ async function sendFocusMessage(){
   
   input.value = ''; input.disabled = true;
 
-  // 🌐 偵測網址並讀取
   let urlTextContext = '';
   const urlMatch = msg ? msg.match(/(https?:\/\/[^\s]+)/g) : null;
   if (urlMatch && urlMatch.length > 0) {
