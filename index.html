@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260731-frontend-fixed-model-lock -->
+<!-- v20260731-frontend-fixed-focus-haiku-leak -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -281,7 +281,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <!-- API KEY MODAL -->
-<div id="api-modal" style="display:none;position fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
+<div id="api-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;">
     <div style="font-size:16px;font-weight:500;margin-bottom:8px;">Claude API 設定</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6;">前往 <a href="https://platform.anthropic.com" target="_blank" style="color:var(--accent)">platform.anthropic.com</a> 申請 API Key，貼入下方。</div>
@@ -294,10 +294,8 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <script>
-// 自動修正舊快取中的 404 模型名稱
-if (localStorage.getItem('hk_model') !== 'claude-sonnet-5') {
-  localStorage.setItem('hk_model', 'claude-sonnet-5');
-}
+// 強制鎖定為通暢的模型
+localStorage.setItem('hk_model', 'claude-sonnet-5');
 
 // ── URL FETCH HELPER ──
 async function fetchUrlContent(url) {
@@ -671,7 +669,6 @@ function selectPath(n){
     updateFocusBar();
     renderFocusProductList();
   } else {
-    // 🎯 關鍵修復：路線 01, 02, 03 強制徹底關閉多人討論選單
     if(focusContainer) focusContainer.style.display = 'none';
 
     if(n === 1 || n === 2) {
@@ -981,7 +978,6 @@ async function updateAirtableContent(){
 
 async function callClaude(roleCode, history, structured, useWebSearch=false){
   const apiKey = getApiKey();
-  // 強制鎖定為通暢的模型
   const model = 'claude-sonnet-5';
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
   const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
@@ -1297,7 +1293,7 @@ function appendFocusBubble(p, text){
 }
 
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
-  // 強制鎖定為通暢的模型
+  // 🎯 關鍵修復：多人討論發送時，模型強制鎖定為通暢的 claude-sonnet-5
   const model = 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
     ? '\n\n【其他參與者的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
