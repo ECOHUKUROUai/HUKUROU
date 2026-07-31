@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260731-frontend-fix-focus-tab-leak -->
+<!-- v20260731-frontend-fixed-model-lock -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -148,6 +148,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <button class="tab-btn" onclick="switchTab('cases',this)">案例庫</button>
       </div>
 
+      <!-- 訪談路線頁籤 -->
       <div class="tab-content active" id="tab-routes">
         <div class="path-card active" id="path-1" onclick="selectPath(1)">
           <div class="path-num">路線 01</div>
@@ -169,8 +170,38 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <div class="path-name">多人討論</div>
           <div class="path-desc">先選產品主題，再選 2–5 位相關用戶同時討論</div>
         </div>
+
+        <!-- 多人討論區域 -->
+        <div id="tab-focus" style="display:none;flex-direction:column;gap:6px;margin-top:12px;border-top:0.5px solid var(--border);padding-top:12px;">
+          <div id="focus-step1">
+            <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第一步：選擇產品主題</div>
+            <div id="focus-product-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+            <input id="focus-custom-product" class="concept-input" placeholder="或輸入自訂主題 / 網址..." style="margin-top:6px;display:none;">
+            <button onclick="confirmFocusProduct()" style="margin-top:8px;padding:8px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;width:100%;">下一步：選擇用戶 →</button>
+          </div>
+
+          <div id="focus-step2" style="display:none;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <button onclick="backToStep1()" style="padding:4px 10px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">← 返回</button>
+              <div id="focus-product-label" style="font-size:12px;color:var(--accent);font-weight:500;"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第二步：選擇 2–5 位參與者</div>
+            <div style="display:flex;gap:6px;margin-bottom:4px;">
+              <button class="tab-btn active" id="focus-tab-real" onclick="switchFocusTab('real',this)" style="flex:1;padding:6px;border-radius:99px;font-size:11px;">真實訪談用戶</button>
+              <button class="tab-btn" id="focus-tab-virtual" onclick="switchFocusTab('virtual',this)" style="flex:1;padding:6px;border-radius:99px;font-size:11px;">虛擬 AI 角色</button>
+            </div>
+            <div id="focus-real-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+            <div id="focus-virtual-list" style="display:none;flex-direction:column;gap:6px;"></div>
+            <div id="focus-selected-bar" style="display:none;background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 12px;margin-top:4px;">
+              <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:6px;">已選參與者（<span id="focus-count">0</span>/5）</div>
+              <div id="focus-selected-names" style="font-size:12px;color:var(--text2);"></div>
+            </div>
+            <button id="btn-start-focus" onclick="startFocusGroup()" style="display:none;padding:10px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;">開始多人討論 →</button>
+          </div>
+        </div>
       </div>
 
+      <!-- 角色庫頁籤 -->
       <div class="tab-content" id="tab-roles">
         <div class="group-label">居家屋主</div>
         <div class="role-card" onclick="selectRole('H-01','佳穎','租屋上班族 ／ 25歲','🐾 跳蚤 🪲 塵蟎')"><div class="role-code">H-01</div><div class="role-name">佳穎</div><div class="role-job">租屋上班族 ／ 25歲</div><div class="role-bugs">🐾 跳蚤 🪲 塵蟎</div></div>
@@ -180,7 +211,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-05','秀英','透天厝屋主 ／ 47歲','🐜 螞蟻 🪲 白蟻')"><div class="role-code">H-05</div><div class="role-name">秀英</div><div class="role-job">透天厝屋主 ／ 47歲</div><div class="role-bugs">🐜 螞蟻 🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-06','玉蘭','老屋翻修 ／ 63歲','🪲 白蟻')"><div class="role-code">H-06</div><div class="role-name">玉蘭</div><div class="role-job">老屋翻修 ／ 63歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">專業施工</div>
-        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻指令 🪰 果蠅</div></div>
+        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
         <div class="role-card" onclick="selectRole('H-08','志豪','水電師傅 ／ 36歲','🐀 老鼠')"><div class="role-code">H-08</div><div class="role-name">志豪</div><div class="role-job">水電師傅 ／ 36歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="role-card" onclick="selectRole('H-09','阿明','木工師傅 ／ 42歲','🪲 白蟻')"><div class="role-code">H-09</div><div class="role-name">阿明</div><div class="role-job">木工師傅 ／ 42歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-10','阿龍','泥作師傅 ／ 49歲','🪲 白蟻 🪳 蟑螂')"><div class="role-code">H-10</div><div class="role-name">阿龍</div><div class="role-job">泥作師傅 ／ 49歲</div><div class="role-bugs">🪲 白蟻 🪳 蟑螂</div></div>
@@ -199,39 +230,12 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-20','阿財','社區清潔員 ／ 52歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-20</div><div class="role-name">阿財</div><div class="role-job">社區清潔員 ／ 52歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
       </div>
 
+      <!-- 案例庫頁籤 -->
       <div class="tab-content" id="tab-cases">
         <div class="loading-bar" id="cases-loading">載入案例庫中...</div>
         <div id="cases-list"></div>
       </div>
 
-      <!-- FOCUS GROUP TAB -->
-      <div class="tab-content" id="tab-focus" style="display:none;flex-direction:column;gap:6px;">
-        <div id="focus-step1">
-          <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第一步：選擇產品主題</div>
-          <div id="focus-product-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-          <input id="focus-custom-product" class="concept-input" placeholder="或輸入自訂主題 / 網址..." style="margin-top:6px;display:none;">
-          <button onclick="confirmFocusProduct()" style="margin-top:8px;padding:8px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;width:100%;">下一步：選擇用戶 →</button>
-        </div>
-
-        <div id="focus-step2" style="display:none;flex-direction:column;gap:6px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <button onclick="backToStep1()" style="padding:4px 10px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">← 返回</button>
-            <div id="focus-product-label" style="font-size:12px;color:var(--accent);font-weight:500;"></div>
-          </div>
-          <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第二步：選擇 2–5 位參與者</div>
-          <div style="display:flex;gap:6px;margin-bottom:4px;">
-            <button class="tab-btn active" id="focus-tab-real" onclick="switchFocusTab('real',this)" style="flex:1;padding:6px;border-radius:99px;font-size:11px;">真實訪談用戶</button>
-            <button class="tab-btn" id="focus-tab-virtual" onclick="switchFocusTab('virtual',this)" style="flex:1;padding:6px;border-radius:99px;font-size:11px;">虛擬 AI 角色</button>
-          </div>
-          <div id="focus-real-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-          <div id="focus-virtual-list" style="display:none;flex-direction:column;gap:6px;"></div>
-          <div id="focus-selected-bar" style="display:none;background:var(--accent-bg);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:10px 12px;margin-top:4px;">
-            <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:6px;">已選參與者（<span id="focus-count">0</span>/5）</div>
-            <div id="focus-selected-names" style="font-size:12px;color:var(--text2);"></div>
-          </div>
-          <button id="btn-start-focus" onclick="startFocusGroup()" style="display:none;padding:10px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;">開始多人討論 →</button>
-        </div>
-      </div>
     </div>
 
     <div class="right-panel">
@@ -277,7 +281,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <!-- API KEY MODAL -->
-<div id="api-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
+<div id="api-modal" style="display:none;position fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;">
     <div style="font-size:16px;font-weight:500;margin-bottom:8px;">Claude API 設定</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6;">前往 <a href="https://platform.anthropic.com" target="_blank" style="color:var(--accent)">platform.anthropic.com</a> 申請 API Key，貼入下方。</div>
@@ -290,6 +294,11 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <script>
+// 自動修正舊快取中的 404 模型名稱
+if (localStorage.getItem('hk_model') !== 'claude-sonnet-5') {
+  localStorage.setItem('hk_model', 'claude-sonnet-5');
+}
+
 // ── URL FETCH HELPER ──
 async function fetchUrlContent(url) {
   try {
@@ -624,15 +633,19 @@ function renderCasesList(){
 // ── TABS ──
 function switchTab(name, btn){
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => {
-    c.classList.remove('active');
-    if(c.id === 'tab-focus') c.style.display = 'none'; // 🎯 關鍵：切換頁籤時關閉多人討論 display
-  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
   if(btn) btn.classList.add('active');
-  const target = document.getElementById('tab-'+name);
-  if(target) {
-    target.classList.add('active');
-    if(name === 'focus') target.style.display = 'flex';
+  const target = document.getElementById('tab-' + name);
+  if(target) target.classList.add('active');
+
+  const focusContainer = document.getElementById('tab-focus');
+  if(focusContainer) {
+    if(name === 'routes' && currentPath === 4) {
+      focusContainer.style.display = 'flex';
+    } else {
+      focusContainer.style.display = 'none';
+    }
   }
 }
 
@@ -642,30 +655,31 @@ function selectPath(n){
   document.querySelectorAll('.path-card').forEach((c,i) => c.classList.toggle('active', i+1===n));
   resetChat();
 
-  // 🎯 關鍵修復：切換任何路線時，強制關閉多人討論區塊的顯示
-  const focusTab = document.getElementById('tab-focus');
-  if(focusTab) {
-    focusTab.style.display = 'none';
-    focusTab.classList.remove('active');
-  }
+  const focusContainer = document.getElementById('tab-focus');
 
-  if(n===1||n===2){ switchTab('cases', document.querySelectorAll('.tab-btn')[2]); }
-  else if(n===4){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    if(focusTab){
-      focusTab.classList.add('active');
-      focusTab.style.display = 'flex';
-    }
+  if(n === 4) {
+    if(focusContainer) focusContainer.style.display = 'flex';
     document.getElementById('focus-step1').style.display = 'block';
     document.getElementById('focus-step2').style.display = 'none';
     focusParticipants = [];
     selectedFocusProduct = null;
-    document.querySelectorAll('.focus-participant-card').forEach(c=>{c.classList.remove('selected');const ch=c.querySelector('.focus-check');if(ch)ch.textContent='';});
+    document.querySelectorAll('.focus-participant-card').forEach(c=>{
+      c.classList.remove('selected');
+      const ch=c.querySelector('.focus-check');
+      if(ch) ch.textContent='';
+    });
     updateFocusBar();
     renderFocusProductList();
+  } else {
+    // 🎯 關鍵修復：路線 01, 02, 03 強制徹底關閉多人討論選單
+    if(focusContainer) focusContainer.style.display = 'none';
+
+    if(n === 1 || n === 2) {
+      switchTab('cases', document.querySelectorAll('.tab-btn')[2]);
+    } else if(n === 3) {
+      switchTab('roles', document.querySelectorAll('.tab-btn')[1]);
+    }
   }
-  else { switchTab('roles', document.querySelectorAll('.tab-btn')[1]); }
 }
 
 function continueCaseDiscussion(id) {
@@ -967,7 +981,8 @@ async function updateAirtableContent(){
 
 async function callClaude(roleCode, history, structured, useWebSearch=false){
   const apiKey = getApiKey();
-  const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
+  // 強制鎖定為通暢的模型
+  const model = 'claude-sonnet-5';
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
   const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
   const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n'+STRUCTURED_PROMPT:''}`;
@@ -1282,7 +1297,8 @@ function appendFocusBubble(p, text){
 }
 
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
-  const model = localStorage.getItem('hk_model') || 'claude-sonnet-5';
+  // 強制鎖定為通暢的模型
+  const model = 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
     ? '\n\n【其他參與者的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
     : '';
