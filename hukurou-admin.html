@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260803-admin-focus-group-analysis-and-continue -->
+<!-- v20260803-admin-enable-all-continue-buttons -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -330,7 +330,8 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     <div class="modal-title" id="session-modal-title"></div>
     <div id="session-modal-body"></div>
     <div class="modal-footer">
-      <button class="btn btn-primary btn-sm" id="btn-continue-focus" style="display:none;">💬 在前台重啟此座談</button>
+      <!-- 🎯 所有訪談與座談紀錄均開啟「在前台重啟」按鈕 -->
+      <button class="btn btn-primary btn-sm" id="btn-continue-session" style="display:none;">💬 在前台重啟此訪談</button>
       <button class="btn btn-danger btn-sm" id="btn-delete-session">刪除此紀錄</button>
       <button class="btn btn-ghost" onclick="closeModal('session-modal')">關閉</button>
     </div>
@@ -633,10 +634,7 @@ function renderSessionsTable(records){
   `).join('') : '<tr><td colspan="5"><div class="empty-state">沒有符合條件的紀錄</div></td></tr>';
 }
 
-function continueFocusFromAdmin(recordId) {
-  window.location.href = `index.html?focusId=${recordId}`;
-}
-
+// 🎯 全面支援「個人訪談」與「多人討論」的前台重啟按鈕
 function viewRecord(id){
   const r = allRecords.find(x=>x.id===id);
   if(!r) return;
@@ -645,12 +643,16 @@ function viewRecord(id){
   
   const isFocusGroup = r.name.includes('多人討論') || (r.content && r.content.includes('【多人討論】'));
 
-  const continueBtn = document.getElementById('btn-continue-focus');
-  if (isFocusGroup && continueBtn) {
+  const continueBtn = document.getElementById('btn-continue-session');
+  if (continueBtn) {
     continueBtn.style.display = 'inline-block';
-    continueBtn.onclick = () => continueFocusFromAdmin(r.id);
-  } else if (continueBtn) {
-    continueBtn.style.display = 'none';
+    if (isFocusGroup) {
+      continueBtn.textContent = '💬 在前台重啟此座談';
+      continueBtn.onclick = () => { window.location.href = `index.html?focusId=${r.id}`; };
+    } else {
+      continueBtn.textContent = '💬 在前台重啟此訪談';
+      continueBtn.onclick = () => { window.location.href = `index.html?caseId=${r.id}`; };
+    }
   }
 
   if (isFocusGroup) {
