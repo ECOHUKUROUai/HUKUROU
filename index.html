@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260731-frontend-fixed-focus-haiku-leak -->
+<!-- v20260803-frontend-vivid-persona-tones -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -294,8 +294,17 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <script>
-// 強制鎖定為通暢的模型
+// 強制鎖定模型
 localStorage.setItem('hk_model', 'claude-sonnet-5');
+
+// 🎯 口吻擬真度強效控制 Prompt
+const TONE_ENFORCER = `
+【極致說話擬真度要求】：
+1. 絕對禁止像 AI 或客服般禮貌（嚴禁使用「作為一個...」、「這是一個很有創意的產品」、「感謝您的分享」等官方套話）。
+2. 請完全沉浸在角色中，展現真實台灣消費者的說話習慣（使用真實語氣、情緒用語、俗語、台灣在地稱呼、不耐煩、猶豫、直白）。
+3. 必須展現您獨特的年齡、職業與個性說話風格（例如：媽媽關心小孩安全、年輕人愛用語氣詞、老一輩直白台口、工程師講數據）。
+4. 不要回答得太工整，禁止列點分析！請用天然口語的一至兩段生活化話語回應。
+`;
 
 // ── URL FETCH HELPER ──
 async function fetchUrlContent(url) {
@@ -387,7 +396,7 @@ const ROLE_PROMPTS = {
   'H-20':'你是阿財，52歲大樓公共區域清潔員，螞蟻果蠅問題。個性：基層勞工心態、最怕麻煩。核心痛點：沒預算、怕麻煩。抗拒點：超過NT$200就覺得貴。'
 };
 
-const BRAND_CONTEXT = '你是福來朗（HUKUROU）的模擬受訪者。福來朗是全台第一間居家環藥專賣店，主打居家除蟲專家，官網ecohukurou.com.tw，旗下有「和淨」清潔品牌，滿NT$850免運，提供B2B大宗採購。回答時請用口語化、有情緒、符合角色年齡職業語氣的方式，每次回應100-200字，可自然表達猶豫或抗拒。';
+const BRAND_CONTEXT = '你是福來朗（HUKUROU）的模擬受訪者。福來朗是全台第一間居家環藥專賣店，主打居家除蟲專家，官網ecohukurou.com.tw。請完全以真實消費者的說話方式回應，100-200字，可自然表達猶豫、疑慮或吐槽。';
 
 const STRUCTURED_PROMPT = `請以以下格式進行消費者輪廓分析（如實分析，不憑空增加內容）：
 
@@ -779,7 +788,7 @@ function selectCase(id){
 
   if(currentPath===2){
     const transcriptContext = c.transcript ? `\n\n【完整原始逐字稿】\n${c.transcript}` : '';
-    conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是這位受訪者的真實訪談紀錄，請仔細研讀後完整模擬他/她的說話方式、用詞習慣、語氣、情緒和立場。\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.summary || c.content}${transcriptContext}\n\n模擬時請注意：1.完全採用該受訪者的口吻和用詞 2.保持一致的個性和情緒 3.對類似問題給出符合其背景的回答 4.可以重現原始訪談中的特定說法或反應` }];
+    conversationHistory = [{ role:'user', content:`請扮演${c.roleName}（${c.roleJob}），以下是你的真實訪談紀錄。請完全以你在訪談中的真實用語、習慣口吻、思考邏輯與態度回應，切勿像AI或客服！\n\n【訪談主題】${c.concept}\n\n【訪談摘要】${c.summary || c.content}${transcriptContext}` }];
     interviewStarted = true;
     document.getElementById('concept-row').style.display = 'none';
     document.getElementById('chat-controls').style.display = 'block';
@@ -981,7 +990,9 @@ async function callClaude(roleCode, history, structured, useWebSearch=false){
   const model = 'claude-sonnet-5';
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
   const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
-  const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}${webSearchNote}${structured?'\n\n'+STRUCTURED_PROMPT:''}`;
+  
+  // 注入去 AI 化與口吻擬真提示詞
+  const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}\n\n${TONE_ENFORCER}${webSearchNote}${structured?'\n\n'+STRUCTURED_PROMPT:''}`;
 
   const body = {
     model: model,
@@ -1293,25 +1304,37 @@ function appendFocusBubble(p, text){
 }
 
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
-  // 🎯 關鍵修復：多人討論發送時，模型強制鎖定為通暢的 claude-sonnet-5
   const model = 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
-    ? '\n\n【其他參與者的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
+    ? '\n\n【座談會上其他消費者的剛才的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
     : '';
 
   let systemPrompt = '';
   if(participant.type === 'real'){
-    systemPrompt = `你是${participant.name}（${participant.job}），福來朗的真實消費者。
-以下是你之前的真實訪談逐字稿，請完全依據你的口氣、用詞習慣、個性和立場來回應，不要偏離你原有的特質：
+    systemPrompt = `你是真實受訪者 ${participant.name}（${participant.job}）。
+${TONE_ENFORCER}
+
+【你在過往訪談中的真實說話逐字稿與筆記】：
 ${participant.transcript || '（無逐字稿）'}
 
-現在你正在參加一個關於福來朗產品的多人討論。請用你自己的口吻自然發言，可以回應其他人說的話，保持你原有的說話方式。每次發言 50-120 字。`;
+【任務與指示】：
+1. 請仔細揣摩並複製你在上述逐字稿中的「用語習慣」、「說話語速」、「情感頓挫」與「核心疑慮」。
+2. 現在你在參加座談會，請以你的真實口吻回應主持人或對其他人的話發表看法（可以點名認同或反駁，例如：「我不覺得像${focusHistory.length>0?focusHistory[0].participant:'其他人'}說的那樣...」）。
+3. 每次發言 50-120 字，講話要像真實的台灣人！`;
   } else {
-    systemPrompt = `${BRAND_CONTEXT}\n\n${participant.prompt || ''}
-你現在正在參加一個多人討論，其他消費者也在場。請用你自己的口吻自然發言，可以回應或同意/反對其他人說的話。每次發言 50-120 字。`;
+    systemPrompt = `${BRAND_CONTEXT}
+
+${TONE_ENFORCER}
+
+【你的角色背景設定與個人習慣】：
+${participant.prompt || ''}
+
+【任務與指示】：
+你現在正在參加多人焦點座談會，身邊還有其他消費者。
+請完全用你這個角色的生活習慣、個性和口吻自然發言，可以點名回應其他人的看法。每次發言 50-120 字！`;
   }
 
-  const promptText = `主持人說：${userMsg}${prevDiscussion}\n\n請以${participant.name}的身份回應：` + (docText ? '\n\n【文件內容】\n'+docText.substring(0,3000) : '');
+  const promptText = `主持人說：${userMsg}${prevDiscussion}\n\n請以 ${participant.name} 的真實口吻回應（直接講話，不要寫角色名字）：` + (docText ? '\n\n【參考文件】\n'+docText.substring(0,3000) : '');
   let msgContent;
   if(images && images.length > 0){
     msgContent = images.map(img => ({ type: 'image', source: { type: 'base64', media_type: img.type, data: img.base64 } }));
