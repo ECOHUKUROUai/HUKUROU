@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260803-frontend-smooth-login-fix -->
+<!-- v20260803-frontend-focus-header-rename-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1313,13 +1313,10 @@ function startFocusGroup(){
   currentPath = 4;
   const names = focusParticipants.map(p=>p.name).join('、');
   const productLabel = document.getElementById('focus-product-label')?.textContent || '';
-  document.getElementById('chat-header').innerHTML = `
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-      ${focusParticipants.map(p=>`<div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);">${p.name[0]}</div>`).join('')}
-      <div><div class="chat-role-name">多人討論</div><div class="chat-role-sub">${productLabel} ／ ${names}</div></div>
-    </div>
-    <div class="chat-spacer"></div>
-  `;
+  const defaultTitle = '多人討論：' + names;
+  
+  renderFocusHeader(defaultTitle, productLabel, names);
+  
   document.getElementById('chat-messages').innerHTML = `<div class="chat-empty"><div class="chat-empty-icon">👥</div><div style="font-size:14px;">輸入討論主題開始座談</div><div style="font-size:12px;color:var(--text3);">每位參與者都會針對你的問題自由發言</div></div>`;
   document.getElementById('concept-row').style.display = 'flex';
   const pLabel = document.getElementById('focus-product-label')?.textContent?.replace('📦 ','') || '';
@@ -1329,6 +1326,47 @@ function startFocusGroup(){
   document.getElementById('chat-controls').style.display = 'none';
   interviewStarted = false;
   conversationHistory = [];
+}
+
+// 🎯 統一的抬頭渲染函式（100% 包含 [✏️ 重新命名] 按鈕）
+function renderFocusHeader(titleText, productLabel, namesText) {
+  document.getElementById('chat-header').innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <div class="chat-avatar">👥</div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="chat-role-name" id="focus-title-text">${titleText}</div>
+          <button onclick="renameFocusGroup()" style="font-size:10px;padding:2px 8px;background:transparent;border:0.5px solid var(--border2);border-radius:99px;color:var(--accent);cursor:pointer;">✏️ 重新命名</button>
+        </div>
+        <div class="chat-role-sub">${productLabel} ／ ${namesText}</div>
+      </div>
+    </div>
+    <div class="chat-spacer"></div>
+  `;
+}
+
+async function renameFocusGroup() {
+  if(!currentAtRecordId) { alert('請先開始討論或選擇一份歷史座談紀錄再進行命名。'); return; }
+  const currentTitle = document.getElementById('focus-title-text')?.textContent || '多人討論';
+  const newName = prompt('請輸入此座談會的新名稱（例：白蟻噴霧Q3業主訪談）：', currentTitle);
+  
+  if(!newName || !newName.trim()) return;
+  const cleanName = newName.trim();
+  
+  document.getElementById('focus-title-text').textContent = cleanName;
+
+  try {
+    await fetch(`${AT_URL}/${currentAtRecordId}`, {
+      method: 'PATCH',
+      headers: AT_HEADERS,
+      body: JSON.stringify({ fields: { '受訪者': cleanName } })
+    });
+    alert('✓ 座談會名稱已成功更新！');
+    const rec = rawAllRecords.find(r => r.id === currentAtRecordId);
+    if(rec && rec.fields) rec.fields['受訪者'] = cleanName;
+  } catch(e) {
+    alert('連線更新失敗，請再試一次。');
+  }
 }
 
 let focusHistory = [];
@@ -1514,8 +1552,10 @@ async function saveFocusToAirtable(concept){
   const fullContent = '【多人討論】\n主題：' + concept + '\n\n' +
     focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n\n');
   const names = focusParticipants.map(p=>p.name).join('、');
+  const focusTitle = '多人討論：' + names;
+
   const result = await atCreate({
-    '受訪者': '多人討論：'+names,
+    '受訪者': focusTitle,
     '職業身分': focusParticipants.map(p=>p.job||'').join('、'),
     '產品主題': concept,
     '訪談日期': new Date().toISOString().slice(0,10),
@@ -1530,7 +1570,6 @@ async function saveFocusToAirtable(concept){
   }
 }
 
-// 🎯 全面支援網址 focusId 與 caseId 自動開啟
 function checkUrlForParams() {
   const urlParams = new URLSearchParams(window.location.search);
   const focusId = urlParams.get('focusId');
@@ -1589,6 +1628,7 @@ function closeHistoryFocusModal() {
   document.getElementById('history-focus-modal').style.display = 'none';
 }
 
+// 🎯 核心修復：重啟座談時呼叫 renderFocusHeader，一律帶出 [✏️ 重新命名] 按鈕
 async function resumeFocusGroupRecord(recordId) {
   selectPath(4);
   let rec = rawAllRecords.find(r => r.id === recordId);
@@ -1604,7 +1644,8 @@ async function resumeFocusGroupRecord(recordId) {
 
   currentAtRecordId = recordId;
   const rawLog = fields['訪談內容'] || fields['原始逐字稿'] || '';
-  const names = (fields['受訪者']||'').replace('多人討論：','').split('、');
+  const focusTitle = fields['受訪者'] || '多人討論';
+  const names = focusTitle.replace('多人討論：','').split('、');
 
   focusParticipants = names.map(n => ({
     id: n,
@@ -1627,13 +1668,8 @@ async function resumeFocusGroupRecord(recordId) {
     }
   });
 
-  document.getElementById('chat-header').innerHTML = `
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-      <div class="chat-avatar">👥</div>
-      <div><div class="chat-role-name">多人討論（重啟座談）</div><div class="chat-role-sub">${fields['產品主題']||''} ／ ${names.join('、')}</div></div>
-    </div>
-    <div class="chat-spacer"></div>
-  `;
+  // 🎯 使用同一個標頭渲染函式，確保 ✏️ 重新命名 按鈕 100% 存在！
+  renderFocusHeader(focusTitle, fields['產品主題']||'', names.join('、'));
 
   const msgs = document.getElementById('chat-messages');
   msgs.innerHTML = '';
