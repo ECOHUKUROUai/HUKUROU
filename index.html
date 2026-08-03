@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260803-frontend-vivid-persona-tones -->
+<!-- v20260803-frontend-dynamic-product-series -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -294,16 +294,14 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 </div>
 
 <script>
-// 強制鎖定模型
 localStorage.setItem('hk_model', 'claude-sonnet-5');
 
-// 🎯 口吻擬真度強效控制 Prompt
 const TONE_ENFORCER = `
 【極致說話擬真度要求】：
 1. 絕對禁止像 AI 或客服般禮貌（嚴禁使用「作為一個...」、「這是一個很有創意的產品」、「感謝您的分享」等官方套話）。
 2. 請完全沉浸在角色中，展現真實台灣消費者的說話習慣（使用真實語氣、情緒用語、俗語、台灣在地稱呼、不耐煩、猶豫、直白）。
-3. 必須展現您獨特的年齡、職業與個性說話風格（例如：媽媽關心小孩安全、年輕人愛用語氣詞、老一輩直白台口、工程師講數據）。
-4. 不要回答得太工整，禁止列點分析！請用天然口語的一至兩段生活化話語回應。
+3. 必須展現您獨特的年齡、職業與個性說話風格。
+4. 不要回答得太工整，禁止列點分析！請用天然口語的話語回應。
 `;
 
 // ── URL FETCH HELPER ──
@@ -343,8 +341,10 @@ const AT_TOKEN = 'patL5putpmiU8T7pm.8a70ea20b01940477b622b6abbaa8e2878f54c91e10f
 const AT_BASE = 'app4GP2bJKQSCLutF';
 const AT_TABLE = 'tblKhNAw16jvsQ97K';
 const AT_ROLES_TABLE = 'tbl1gvBheoIMFanSo';
+const AT_PRODUCTS_TABLE = '產品系列';
 const AT_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_TABLE}`;
 const AT_ROLES_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_ROLES_TABLE}`;
+const AT_PRODUCTS_URL = `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(AT_PRODUCTS_TABLE)}`;
 const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
 
 // ── AIRTABLE ──
@@ -991,7 +991,6 @@ async function callClaude(roleCode, history, structured, useWebSearch=false){
   const rolePrompt = ROLE_PROMPTS[roleCode] || `你是${currentRoleName}，${currentRoleJob}，是福來朗的真實受訪者，請根據背景自然回應。`;
   const webSearchNote = useWebSearch ? '\n\n當使用者問到福來朗的活動、優惠、新品或官網內容時，請使用 web_search 工具搜尋 ecohukurou.com.tw 取得最新資訊，再以受訪者角色回應對該活動的看法和購買意願。' : '';
   
-  // 注入去 AI 化與口吻擬真提示詞
   const systemPrompt = `${BRAND_CONTEXT}\n\n${rolePrompt}\n\n${TONE_ENFORCER}${webSearchNote}${structured?'\n\n'+STRUCTURED_PROMPT:''}`;
 
   const body = {
@@ -1049,6 +1048,37 @@ function handleKey(e){
 // ── FOCUS GROUP ──
 let focusParticipants = []; 
 let focusSubTab = 'real';
+let dynamicFocusProducts = [];
+
+// 📦 預設產品系列 (備用)
+const DEFAULT_FOCUS_PRODUCTS = [
+  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','塵蟎'] },
+  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻'] },
+  { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠'] },
+  { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂'] },
+  { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻'] },
+  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子'] },
+  { id:'water', name:'水性除蟲噴霧', desc:'多蟲通用水性配方', bugs:['蟑螂','螞蟻','蚊子'] }
+];
+
+async function loadDynamicProducts() {
+  try {
+    const res = await fetch(AT_PRODUCTS_URL, { headers: AT_HEADERS });
+    const data = await res.json();
+    if(data.records && data.records.length > 0) {
+      dynamicFocusProducts = data.records.map(r => ({
+        id: r.id,
+        name: r.fields['系列名稱'] || '',
+        desc: r.fields['系列描述'] || '',
+        bugs: r.fields['害蟲標籤'] ? r.fields['害蟲標籤'].split(/[,，]/).map(b=>b.trim()) : []
+      }));
+    } else {
+      dynamicFocusProducts = DEFAULT_FOCUS_PRODUCTS;
+    }
+  } catch(e) {
+    dynamicFocusProducts = DEFAULT_FOCUS_PRODUCTS;
+  }
+}
 
 function switchFocusTab(tab, btn){
   focusSubTab = tab;
@@ -1058,24 +1088,21 @@ function switchFocusTab(tab, btn){
   btn.classList.add('active');
 }
 
-const FOCUS_PRODUCTS = [
-  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','塵蟎'] },
-  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻'] },
-  { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠'] },
-  { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂'] },
-  { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻'] },
-  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子'] },
-  { id:'water', name:'水性除蟲噴霧', desc:'多蟲通用水性配方', bugs:['蟑螂','螞蟻','蚊子'] },
-  { id:'custom', name:'自訂產品主題', desc:'輸入自訂主題', bugs:[] },
-];
-
 let selectedFocusProduct = null;
 
-function renderFocusProductList(){
+async function renderFocusProductList(){
   const list = document.getElementById('focus-product-list');
   if(!list) return;
+  list.innerHTML = '<div style="font-size:11px;color:var(--text3);">載入產品系列中...</div>';
+  
+  if(!dynamicFocusProducts.length) {
+    await loadDynamicProducts();
+  }
+
+  const productsToRender = [...dynamicFocusProducts, { id:'custom', name:'自訂產品主題', desc:'輸入自訂主題', bugs:[] }];
+
   list.innerHTML = '';
-  FOCUS_PRODUCTS.forEach(p => {
+  productsToRender.forEach(p => {
     const div = document.createElement('div');
     div.className = 'focus-participant-card';
     div.id = 'fp-'+p.id;
@@ -1304,6 +1331,7 @@ function appendFocusBubble(p, text){
 }
 
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
+  // 🎯 關鍵：模型鎖定 claude-sonnet-5
   const model = 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
     ? '\n\n【座談會上其他消費者的剛才的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
@@ -1319,7 +1347,7 @@ ${participant.transcript || '（無逐字稿）'}
 
 【任務與指示】：
 1. 請仔細揣摩並複製你在上述逐字稿中的「用語習慣」、「說話語速」、「情感頓挫」與「核心疑慮」。
-2. 現在你在參加座談會，請以你的真實口吻回應主持人或對其他人的話發表看法（可以點名認同或反駁，例如：「我不覺得像${focusHistory.length>0?focusHistory[0].participant:'其他人'}說的那樣...」）。
+2. 現在你在參加座談會，請以你的真實口吻回應主持人或對其他人的話發表看法。
 3. 每次發言 50-120 字，講話要像真實的台灣人！`;
   } else {
     systemPrompt = `${BRAND_CONTEXT}
