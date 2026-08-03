@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260803-admin-product-series-edit-feature -->
+<!-- v20260803-admin-fixed-focus-group-view -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -194,7 +194,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
       </div>
     </div>
 
-    <!-- PRODUCTS (產品系列管理頁面) -->
+    <!-- PRODUCTS -->
     <div class="page" id="page-products">
       <div class="page-title">產品系列管理</div>
       <div class="page-sub">管理前台「多人討論」使用的產品系列，即時同步至前台選單</div>
@@ -298,7 +298,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
   </div>
 </div>
 
-<!-- PRODUCT SERIES EDIT MODAL (新增的產品系列編輯彈窗) -->
+<!-- PRODUCT SERIES EDIT MODAL -->
 <div class="modal-overlay" id="edit-prod-modal">
   <div class="modal-box" style="max-width:500px;">
     <div class="modal-title">編輯產品系列</div>
@@ -512,6 +512,7 @@ async function saveInterview(){
     '訪談日期': date,
     '訪談類型': document.getElementById('new-type').value,
     '原始逐字稿': transcript,
+    '訪談內容': transcript,
     '一句話總結': document.getElementById('new-summary').value.trim(),
     '受訪者與情境': document.getElementById('new-background').value.trim(),
     '底線痛點': document.getElementById('new-must').value.trim(),
@@ -547,8 +548,9 @@ async function loadAllRecords(){
       concept: r.fields['產品主題']||'',
       date: r.fields['訪談日期']||'',
       type: r.fields['訪談類型']||'',
-      summary: r.fields['一句話總結'] || r.fields['訪談內容'] || '',
+      summary: r.fields['一句話總結']||'',
       transcript: r.fields['原始逐字稿']||'',
+      content: r.fields['訪談內容']||'', // 🎯 修正：讀取訪談內容
       background: r.fields['受訪者與情境']||'',
       must: r.fields['底線痛點']||'',
       key: r.fields['核心賣點']||'',
@@ -614,35 +616,52 @@ function renderSessionsTable(records){
   `).join('') : '<tr><td colspan="5"><div class="empty-state">沒有符合條件的紀錄</div></td></tr>';
 }
 
+// 🎯 核心修復：多人討論展示邏輯
 function viewRecord(id){
   const r = allRecords.find(x=>x.id===id);
   if(!r) return;
   document.getElementById('session-modal-title').textContent = `${r.name} — ${r.concept}`;
   let html = `<div style="display:flex;gap:8px;margin-bottom:1rem;"><span class="badge ${r.type==='真實訪談'?'badge-blue':'badge-green'}">${r.type||'訪談'}</span><span style="font-size:12px;color:var(--text2);">${r.date}</span><span style="font-size:12px;color:var(--text2);"> / ${r.job}</span></div>`;
   
-  if(r.summary) html += `<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:13px;"><strong style="color:var(--accent);">【1. 一句話總結】</strong><br><br>${r.summary.replace(/\n/g,'<br>')}</div>`;
-  
-  const dims = [
-    {key:'background', label:'2. 受訪者與情境'},
-    {key:'must', label:'3. 底線與痛點'},
-    {key:'key', label:'4. 核心賣點'},
-    {key:'delight', label:'5. 驚喜亮點'},
-    {key:'pitfall', label:'6. 避坑地雷'},
-    {key:'marketing', label:'7. 行銷切入策略'},
-    {key:'tags_seo', label:'8. TA標籤與SEO'}
-  ];
-  const hasDim = dims.some(d => r[d.key]);
-  if(hasDim) {
-    html += `<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:13px;display:flex;flex-direction:column;gap:12px;">`;
-    dims.forEach(d => {
-      if(r[d.key]) {
-        html += `<div><strong style="color:var(--accent);">${d.label}</strong><br><span style="color:var(--text2);line-height:1.6;">${r[d.key].replace(/\n/g,'<br>')}</span></div>`;
-      }
-    });
-    html += `</div>`;
-  }
+  const isFocusGroup = r.name.includes('多人討論') || (r.content && r.content.includes('【多人討論】'));
 
-  if(r.transcript) html += `<div style="font-size:12px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace;">原始逐字稿</div><div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;max-height:400px;overflow-y:auto;">${r.transcript}</div>`;
+  if (isFocusGroup) {
+    // 多人討論專屬卡片與乾淨總結
+    const cleanSummary = (r.summary && !r.summary.includes('【多人討論】'))
+      ? r.summary
+      : `👥 多人焦點座談紀錄：包含 ${r.job || '數位參與者'} 針對「${r.concept}」主題之討論紀錄。`;
+
+    html += `<div style="background:var(--bg3);border:0.5px solid var(--accent-border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:13px;"><strong style="color:var(--accent);">【座談主題與摘要】</strong><br><br>${cleanSummary.replace(/\n/g,'<br>')}</div>`;
+
+    const fullLog = r.content || r.transcript || '（無討論記錄）';
+    html += `<div style="font-size:12px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace;">👥 多人討論完整對話紀錄</div><div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;max-height:450px;overflow-y:auto;">${fullLog}</div>`;
+  } else {
+    // 單人訪談展示
+    if(r.summary) html += `<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:13px;"><strong style="color:var(--accent);">【1. 一句話總結】</strong><br><br>${r.summary.replace(/\n/g,'<br>')}</div>`;
+    
+    const dims = [
+      {key:'background', label:'2. 受訪者與情境'},
+      {key:'must', label:'3. 底線與痛點'},
+      {key:'key', label:'4. 核心賣點'},
+      {key:'delight', label:'5. 驚喜亮點'},
+      {key:'pitfall', label:'6. 避坑地雷'},
+      {key:'marketing', label:'7. 行銷切入策略'},
+      {key:'tags_seo', label:'8. TA標籤與SEO'}
+    ];
+    const hasDim = dims.some(d => r[d.key]);
+    if(hasDim) {
+      html += `<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:13px;display:flex;flex-direction:column;gap:12px;">`;
+      dims.forEach(d => {
+        if(r[d.key]) {
+          html += `<div><strong style="color:var(--accent);">${d.label}</strong><br><span style="color:var(--text2);line-height:1.6;">${r[d.key].replace(/\n/g,'<br>')}</span></div>`;
+        }
+      });
+      html += `</div>`;
+    }
+
+    const logToShow = r.transcript || r.content;
+    if(logToShow) html += `<div style="font-size:12px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace;">原始逐字稿 / 訪談內容</div><div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;max-height:400px;overflow-y:auto;">${logToShow}</div>`;
+  }
 
   document.getElementById('session-modal-body').innerHTML = html;
   document.getElementById('btn-delete-session').onclick = function(){ deleteRecord(r.id); closeModal('session-modal'); };
@@ -657,7 +676,7 @@ function editRecord(id){
   document.getElementById('edit-job').value = r.job;
   document.getElementById('edit-date').value = r.date;
   document.getElementById('edit-concept').value = r.concept;
-  document.getElementById('edit-transcript').value = r.transcript;
+  document.getElementById('edit-transcript').value = r.transcript || r.content;
   document.getElementById('edit-summary').value = r.summary;
   document.getElementById('edit-background').value = r.background;
   document.getElementById('edit-must').value = r.must;
@@ -717,6 +736,7 @@ async function saveEditRecord(){
     '訪談日期': document.getElementById('edit-date').value,
     '產品主題': document.getElementById('edit-concept').value.trim(),
     '原始逐字稿': document.getElementById('edit-transcript').value.trim(),
+    '訪談內容': document.getElementById('edit-transcript').value.trim(),
     '一句話總結': document.getElementById('edit-summary').value.trim(),
     '受訪者與情境': document.getElementById('edit-background').value.trim(),
     '底線痛點': document.getElementById('edit-must').value.trim(),
@@ -865,13 +885,13 @@ async function deleteProductSeries(id) {
 function exportCSV(){
   if(!allRecords.length){ alert('沒有可匯出的紀錄'); return; }
   let csv = '\uFEFF'; 
-  const cols = ['受訪者','職業身分','產品主題','訪談日期','訪談類型','一句話總結','受訪者與情境','底線痛點','核心賣點','驚喜亮點','避坑地雷','行銷切入策略','TA標籤與SEO','原始逐字稿'];
+  const cols = ['受訪者','職業身分','產品主題','訪談日期','訪談類型','一句話總結','受訪者與情境','底線痛點','核心賣點','驚喜亮點','避坑地雷','行銷切入策略','TA標籤與SEO','原始逐字稿','訪談內容'];
   csv += cols.join(',') + '\n';
   allRecords.forEach(r=>{
     const row = [
       r.name, r.job, r.concept, r.date, r.type,
       r.summary, r.background, r.must, r.key, r.delight, r.pitfall, r.marketing, r.tags_seo,
-      r.transcript
+      r.transcript, r.content
     ].map(v => '"' + (v||'').replace(/"/g, '""') + '"');
     csv += row.join(',') + '\n';
   });
