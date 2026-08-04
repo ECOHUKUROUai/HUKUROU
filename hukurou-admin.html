@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-admin-autofill-basic-info -->
+<!-- v20260804-admin-shared-apikey-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -341,15 +341,38 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 const AT_TOKEN = 'patL5putpmiU8T7pm.8a70ea20b01940477b622b6abbaa8e2878f54c91e10ffc1b46b939d726413acd';
 const AT_BASE = 'app4GP2bJKQSCLutF';
 const AT_TABLE = 'tblKhNAw16jvsQ97K';
+const AT_SETTINGS_TABLE = 'tblP2xgrN3sewUgOr';
 const AT_PRODUCTS_TABLE = '產品系列';
+
 const AT_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_TABLE}`;
+const AT_SETTINGS_URL = `https://api.airtable.com/v0/${AT_BASE}/${AT_SETTINGS_TABLE}`;
 const AT_PRODUCTS_URL = `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(AT_PRODUCTS_TABLE)}`;
 const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
 
 let allRecords = [];
 let allProducts = [];
+let SHARED_API_KEY = '';
 
-// 🎯 升級 Prompt：加上 4 個提取基本資料的欄位
+// 🎯 自動連線 Airtable 載入全公司共享的 API Key
+async function loadSharedSettings(){
+  try {
+    const res = await fetch(AT_SETTINGS_URL, { headers: AT_HEADERS });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.records) {
+      data.records.forEach(r => {
+        const key = (r.fields['設定項目'] || '').trim().toLowerCase();
+        const val = (r.fields['設定值'] || '').trim();
+        if (key === 'api_key' && val) SHARED_API_KEY = val;
+      });
+    }
+  } catch(e) {}
+}
+
+function getApiKey(){
+  return (localStorage.getItem('hk_api_key') || SHARED_API_KEY || '').trim();
+}
+
 const promptSystemSingle = `你是一位高階消費者洞察與行銷策略專家。
 請嚴格將單人訪談逐字稿拆解為以下標準欄位（包含基本資料與 8 大維度）：
 - extracted_name: 受訪者姓名或稱呼 (若無請推測或留空)
@@ -429,8 +452,8 @@ function extractRawTextFromResponse(data) {
 async function analyzeTranscript(){
   const transcript = document.getElementById('new-transcript').value.trim();
   if(!transcript){ alert('請先填入原始逐字稿'); return; }
-  const apiKey = (localStorage.getItem('hk_api_key')||'').trim();
-  if(!apiKey){ alert('請先至「系統設定」填寫 Claude API Key！'); return; }
+  const apiKey = getApiKey();
+  if(!apiKey){ alert('請先至「系統設定」或 Airtable 填寫 Claude API Key！'); return; }
   
   const model = 'claude-sonnet-5';
   const btn = document.getElementById('btn-analyze');
@@ -489,7 +512,6 @@ ${cleanTranscript}`;
 
     const result = JSON.parse(jsonMatch[0]);
 
-    // 🎯 自動填入基本資料（如果有解析出來的話）
     if (result.extracted_name && result.extracted_name !== '未知') {
       document.getElementById('new-name').value = result.extracted_name;
     }
@@ -503,7 +525,6 @@ ${cleanTranscript}`;
       document.getElementById('new-date').value = result.extracted_date;
     }
 
-    // 🎯 自動填寫 8 大欄位
     document.getElementById('new-summary').value = result.summary || '';
     document.getElementById('new-background').value = result.persona_context || '';
     document.getElementById('new-must').value = result.must_have || '';
@@ -766,8 +787,8 @@ function editRecord(id){
 async function analyzeEditTranscript(){
   const transcript = document.getElementById('edit-transcript').value.trim();
   if(!transcript){ alert('請填寫對話紀錄！'); return; }
-  const apiKey = (localStorage.getItem('hk_api_key')||'').trim();
-  if(!apiKey){ alert('請先至系統設定填寫 API Key'); return; }
+  const apiKey = getApiKey();
+  if(!apiKey){ alert('請先至系統設定或 Airtable 填寫 API Key'); return; }
 
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
@@ -793,7 +814,6 @@ async function analyzeEditTranscript(){
 
     const result = JSON.parse(jsonMatch[0]);
 
-    // 🎯 自動填入編輯表單的基本資料
     if (result.extracted_name && result.extracted_name !== '未知') {
       document.getElementById('edit-name').value = result.extracted_name;
     }
@@ -1003,8 +1023,9 @@ function clearAddForm(){
   initAddForm();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  const savedKey = localStorage.getItem('hk_api_key');
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadSharedSettings();
+  const savedKey = getApiKey();
   if(savedKey) document.getElementById('api-key-setting').value = savedKey;
   initAddForm();
   loadAllRecords();
