@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260803-admin-enable-all-continue-buttons -->
+<!-- v20260804-admin-autofill-basic-info -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -95,26 +95,26 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     <!-- ADD -->
     <div class="page" id="page-add">
       <div class="page-title">新增訪談紀錄</div>
-      <div class="page-sub">輸入真實訪談內容，儲存後所有人立即看到</div>
+      <div class="page-sub">貼上逐字稿，AI 將自動幫你填妥基本資料與分析 8 大欄位</div>
       <div class="card">
         <div class="card-title">基本資料</div>
         <div class="form-row-3">
-          <div class="form-group"><label class="form-label">受訪者姓名 *</label><input class="form-input" id="new-name" placeholder="例：王小姐"></div>
-          <div class="form-group"><label class="form-label">職業／身份</label><input class="form-input" id="new-job" placeholder="例：家庭主婦 ／ 45歲"></div>
+          <div class="form-group"><label class="form-label">受訪者姓名 *</label><input class="form-input" id="new-name" placeholder="貼上逐字稿後將自動分析..."></div>
+          <div class="form-group"><label class="form-label">職業／身份</label><input class="form-input" id="new-job" placeholder="貼上逐字稿後將自動分析..."></div>
           <div class="form-group"><label class="form-label">訪談日期 *</label><input class="form-input" id="new-date" type="date"></div>
         </div>
-        <div class="form-group"><label class="form-label">產品主題 *</label><input class="form-input" id="new-concept" placeholder="例：水性除蟲噴霧（蟑螂問題）"></div>
+        <div class="form-group"><label class="form-label">產品主題 *</label><input class="form-input" id="new-concept" placeholder="貼上逐字稿後將自動分析..."></div>
       </div>
 
       <div class="card">
         <div class="card-title">訪談內容與 8 大欄位分析</div>
-        <div class="tip">💡 貼上逐字稿後點擊「AI 自動分析」，系統將精準拆解帶入下方 8 個欄位。</div>
+        <div class="tip">💡 貼上逐字稿後點擊「AI 自動分析」，系統將精準抓取上方基本資料，並拆解帶入下方 8 個欄位。</div>
         <div class="form-group">
           <label class="form-label">原始逐字稿 *</label>
           <textarea class="form-textarea" id="new-transcript" rows="8" placeholder="貼上完整原始逐字稿..."></textarea>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:1.5rem;">
-          <button class="btn btn-primary" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析 (拆解 8 大欄位)</button>
+          <button class="btn btn-primary" id="btn-analyze" onclick="analyzeTranscript()">✨ AI 自動分析 (填寫基本資料 + 拆解 8 大欄位)</button>
         </div>
 
         <div class="kano-header">📌 1~2. 概觀與情境</div>
@@ -263,7 +263,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
 <!-- RECORD EDIT MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal-box">
-    <div class="modal-title">編輯訪談紀錄 (8 大欄位)</div>
+    <div class="modal-title">編輯訪談紀錄 (基本資料 + 8 大欄位)</div>
     <input type="hidden" id="edit-record-id">
     <div class="form-row-3">
       <div class="form-group"><label class="form-label">受訪者姓名</label><input class="form-input" id="edit-name"></div>
@@ -273,7 +273,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     <div class="form-group"><label class="form-label">產品主題</label><input class="form-input" id="edit-concept"></div>
     <div class="form-group"><label class="form-label">原始逐字稿 / 討論對話紀錄</label><textarea class="form-textarea" id="edit-transcript" rows="6"></textarea></div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-      <button class="btn btn-primary btn-sm" id="btn-analyze-edit" onclick="analyzeEditTranscript()">✨ AI 自動分析 (8欄位)</button>
+      <button class="btn btn-primary btn-sm" id="btn-analyze-edit" onclick="analyzeEditTranscript()">✨ AI 自動分析 (填寫上方與 8 大欄位)</button>
     </div>
 
     <div class="form-group"><label class="form-label">1. 一句話總結</label><input class="form-input" id="edit-summary"></div>
@@ -330,7 +330,6 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
     <div class="modal-title" id="session-modal-title"></div>
     <div id="session-modal-body"></div>
     <div class="modal-footer">
-      <!-- 🎯 所有訪談與座談紀錄均開啟「在前台重啟」按鈕 -->
       <button class="btn btn-primary btn-sm" id="btn-continue-session" style="display:none;">💬 在前台重啟此訪談</button>
       <button class="btn btn-danger btn-sm" id="btn-delete-session">刪除此紀錄</button>
       <button class="btn btn-ghost" onclick="closeModal('session-modal')">關閉</button>
@@ -350,29 +349,38 @@ const AT_HEADERS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'app
 let allRecords = [];
 let allProducts = [];
 
+// 🎯 升級 Prompt：加上 4 個提取基本資料的欄位
 const promptSystemSingle = `你是一位高階消費者洞察與行銷策略專家。
-請嚴格將單人訪談逐字稿拆解為以下 8 個標準欄位：
-1. 一句話總結 (summary)
-2. 受訪者與情境 (persona_context)
-3. 底線與痛點 (must_have)
-4. 核心賣點 (key_selling_points)
-5. 驚喜亮點 (delighter)
-6. 避坑地雷 (pitfalls)
-7. 行銷切入策略 (marketing_strategy)
-8. TA標籤與SEO (tags_and_seo)
+請嚴格將單人訪談逐字稿拆解為以下標準欄位（包含基本資料與 8 大維度）：
+- extracted_name: 受訪者姓名或稱呼 (若無請推測或留空)
+- extracted_job: 職業身分與年齡 (若無請留空)
+- extracted_concept: 討論的產品主題 (若無請留空)
+- extracted_date: 訪談日期 (格式YYYY-MM-DD，若無請留空)
+- summary: 一句話總結
+- persona_context: 受訪者與情境
+- must_have: 底線與痛點
+- key_selling_points: 核心賣點
+- delighter: 驚喜亮點
+- pitfalls: 避坑地雷
+- marketing_strategy: 行銷切入策略
+- tags_and_seo: TA標籤與SEO
 
 只回傳純 JSON 格式，不可包含任何額外說明或 markdown 標籤。`;
 
 const promptSystemFocus = `你是一位焦點座談會分析專家。
-請對這份「多人焦點座談對話紀錄」進行跨參與者綜合分析，嚴格將座談結論與洞察拆解為以下 8 個標準欄位：
-1. 一句話總結 (summary): 焦點座談會的核心共識與重點摘要
-2. 受訪者與情境 (persona_context): 參與者組成背景與各自遇到的環境問題
-3. 底線與痛點 (must_have): 多數參與者共同提及的硬傷、不可接受點
-4. 核心賣點 (key_selling_points): 最獲得座談會多數人認同或引發期待的賣點
-5. 驚喜亮點 (delighter): 討論中意外引發好評或超乎預期的亮點
-6. 避坑地雷 (pitfalls): 討論中被吐槽或引發爭議疑慮的負面體驗
-7. 行銷切入策略 (marketing_strategy): 綜合座談結果建議的溝通切入點
-8. TA標籤與SEO (tags_and_seo): 對應TA群體標籤與搜尋關鍵字
+請對這份「多人焦點座談對話紀錄」進行跨參與者綜合分析，嚴格將座談結論與洞察拆解為以下標準欄位：
+- extracted_name: 座談會名稱 (請直接命名為"多人討論：參與者A, B...")
+- extracted_job: 所有參與者的職業身分綜合
+- extracted_concept: 討論的產品主題
+- extracted_date: 訪談日期 (格式YYYY-MM-DD，若無請留空)
+- summary: 焦點座談會的核心共識與重點摘要
+- persona_context: 參與者組成背景與各自遇到的環境問題
+- must_have: 多數參與者共同提及的硬傷、不可接受點
+- key_selling_points: 最獲得座談會多數人認同或引發期待的賣點
+- delighter: 討論中意外引發好評或超乎預期的亮點
+- pitfalls: 討論中被吐槽或引發爭議疑慮的負面體驗
+- marketing_strategy: 綜合座談結果建議的溝通切入點
+- tags_and_seo: 對應TA群體標籤與搜尋關鍵字
 
 只回傳純 JSON 格式，不可包含任何額外說明或 markdown 標籤。`;
 
@@ -428,13 +436,17 @@ async function analyzeTranscript(){
   const btn = document.getElementById('btn-analyze');
   btn.textContent = `分析中...`; btn.disabled = true;
 
-  const isFocus = transcript.includes('【多人討論】') || (document.getElementById('new-name')?.value||'').includes('多人討論');
+  const isFocus = transcript.includes('【多人討論】') || transcript.includes('座談') || (document.getElementById('new-name')?.value||'').includes('多人討論');
   const promptSystem = isFocus ? promptSystemFocus : promptSystemSingle;
 
   try{
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
     const userPrompt = `請對以下對話對白紀錄進行分析，嚴格僅輸出 JSON 格式：
 {
+  "extracted_name": "受訪者姓名",
+  "extracted_job": "職業身分",
+  "extracted_concept": "產品主題",
+  "extracted_date": "YYYY-MM-DD",
   "summary": "一句話總結",
   "persona_context": "受訪者與情境",
   "must_have": "底線與痛點",
@@ -477,6 +489,21 @@ ${cleanTranscript}`;
 
     const result = JSON.parse(jsonMatch[0]);
 
+    // 🎯 自動填入基本資料（如果有解析出來的話）
+    if (result.extracted_name && result.extracted_name !== '未知') {
+      document.getElementById('new-name').value = result.extracted_name;
+    }
+    if (result.extracted_job) {
+      document.getElementById('new-job').value = result.extracted_job;
+    }
+    if (result.extracted_concept) {
+      document.getElementById('new-concept').value = result.extracted_concept;
+    }
+    if (result.extracted_date && /^\d{4}-\d{2}-\d{2}$/.test(result.extracted_date)) {
+      document.getElementById('new-date').value = result.extracted_date;
+    }
+
+    // 🎯 自動填寫 8 大欄位
     document.getElementById('new-summary').value = result.summary || '';
     document.getElementById('new-background').value = result.persona_context || '';
     document.getElementById('new-must').value = result.must_have || '';
@@ -486,12 +513,12 @@ ${cleanTranscript}`;
     document.getElementById('new-marketing').value = result.marketing_strategy || '';
     document.getElementById('new-tags-seo').value = result.tags_and_seo || '';
 
-    alert('✓ 8 大欄位分析成功帶入！');
+    alert('✓ 基本資料與 8 大欄位分析成功帶入！');
   } catch(e){ 
     alert('執行發生錯誤：' + e.message); 
   }
   finally { 
-    btn.textContent = '✨ AI 自動分析 (拆解 8 大欄位)'; 
+    btn.textContent = '✨ AI 自動分析 (填寫基本資料 + 拆解 8 大欄位)'; 
     btn.disabled = false; 
   }
 }
@@ -634,7 +661,6 @@ function renderSessionsTable(records){
   `).join('') : '<tr><td colspan="5"><div class="empty-state">沒有符合條件的紀錄</div></td></tr>';
 }
 
-// 🎯 全面支援「個人訪談」與「多人討論」的前台重啟按鈕
 function viewRecord(id){
   const r = allRecords.find(x=>x.id===id);
   if(!r) return;
@@ -746,12 +772,12 @@ async function analyzeEditTranscript(){
   const btn = document.getElementById('btn-analyze-edit');
   btn.textContent = '分析中...'; btn.disabled = true;
 
-  const isFocus = transcript.includes('【多人討論】') || (document.getElementById('edit-name')?.value||'').includes('多人討論');
+  const isFocus = transcript.includes('【多人討論】') || transcript.includes('座談') || (document.getElementById('edit-name')?.value||'').includes('多人討論');
   const promptSystem = isFocus ? promptSystemFocus : promptSystemSingle;
 
   try {
     const cleanTranscript = transcript.replace(/[\u0000-\u001F]/g, ' ');
-    const userPrompt = `請對以下對話對白紀錄進行分析，嚴格僅輸出 JSON 格式：\n{\n  "summary": "一句話總結",\n  "persona_context": "受訪者與情境",\n  "must_have": "底線與痛點",\n  "key_selling_points": "核心賣點",\n  "delighter": "驚喜亮點",\n  "pitfalls": "避坑地雷",\n  "marketing_strategy": "行銷切入策略",\n  "tags_and_seo": "TA標籤與SEO"\n}\n\n【紀錄內文】：\n${cleanTranscript}`;
+    const userPrompt = `請對以下對話對白紀錄進行分析，嚴格僅輸出 JSON 格式：\n{\n  "extracted_name": "受訪者姓名",\n  "extracted_job": "職業身分",\n  "extracted_concept": "產品主題",\n  "extracted_date": "YYYY-MM-DD",\n  "summary": "一句話總結",\n  "persona_context": "受訪者與情境",\n  "must_have": "底線與痛點",\n  "key_selling_points": "核心賣點",\n  "delighter": "驚喜亮點",\n  "pitfalls": "避坑地雷",\n  "marketing_strategy": "行銷切入策略",\n  "tags_and_seo": "TA標籤與SEO"\n}\n\n【紀錄內文】：\n${cleanTranscript}`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -766,6 +792,21 @@ async function analyzeEditTranscript(){
     if (!jsonMatch) throw new Error('無法解析 JSON');
 
     const result = JSON.parse(jsonMatch[0]);
+
+    // 🎯 自動填入編輯表單的基本資料
+    if (result.extracted_name && result.extracted_name !== '未知') {
+      document.getElementById('edit-name').value = result.extracted_name;
+    }
+    if (result.extracted_job) {
+      document.getElementById('edit-job').value = result.extracted_job;
+    }
+    if (result.extracted_concept) {
+      document.getElementById('edit-concept').value = result.extracted_concept;
+    }
+    if (result.extracted_date && /^\d{4}-\d{2}-\d{2}$/.test(result.extracted_date)) {
+      document.getElementById('edit-date').value = result.extracted_date;
+    }
+
     document.getElementById('edit-summary').value = result.summary || '';
     document.getElementById('edit-background').value = result.persona_context || '';
     document.getElementById('edit-must').value = result.must_have || '';
@@ -774,9 +815,9 @@ async function analyzeEditTranscript(){
     document.getElementById('edit-pitfall').value = result.pitfalls || '';
     document.getElementById('edit-marketing').value = result.marketing_strategy || '';
     document.getElementById('edit-tags-seo').value = result.tags_and_seo || '';
-    alert('✓ 8大欄位分析完成帶入！');
+    alert('✓ 基本資料與 8 大欄位分析完成帶入！');
   } catch(e){ alert('錯誤：'+e.message); }
-  finally { btn.textContent = '✨ AI 自動分析 (8欄位)'; btn.disabled = false; }
+  finally { btn.textContent = '✨ AI 自動分析 (填寫上方與 8 大欄位)'; btn.disabled = false; }
 }
 
 async function saveEditRecord(){
