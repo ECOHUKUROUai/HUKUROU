@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-bulletproof-login-fix -->
+<!-- v20260804-frontend-focus-pest-filter-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -564,22 +564,20 @@ async function autoCheckLogin() {
     sessionStorage.setItem('hk_logged_in', 'true');
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    loadPasswords(); // 背景靜默加載
+    loadPasswords();
     await loadCases();
     loadRoles();
     checkUrlForParams();
   } else {
-    loadPasswords(); // 背景預載密碼
+    loadPasswords();
   }
 }
 
-// 🎯 核心修復：即時本地比對，無需等待網路請求，大小寫不限！
 function doLogin(){
   const inputEl = document.getElementById('pw-input');
   const pw = (inputEl.value || '').trim();
   const pwLower = pw.toLowerCase();
 
-  // 100% 雙保險：預設密碼、Airtable 動態密碼、大小寫與空白全容錯
   const isValid = (
     pw === 'hukurou2026' ||
     pw === 'admin2026' ||
@@ -613,7 +611,7 @@ function doLogout(){
 
 // ── API ──
 function getApiKey(){ 
-  return localStorage.getItem('hk_api_key') || SHARED_API_KEY || ''; 
+  return (localStorage.getItem('hk_api_key') || SHARED_API_KEY || '').trim(); 
 }
 function openApiSetting(){ 
   document.getElementById('api-key-input').value = getApiKey(); 
@@ -1270,7 +1268,7 @@ function confirmFocusProduct(){
   document.getElementById('focus-step1').style.display = 'none';
   document.getElementById('focus-step2').style.display = 'flex';
   focusParticipants = [];
-  renderFocusLists();
+  renderFocusLists(selectedFocusProduct.bugs, productName);
 }
 
 function backToStep1(){
@@ -1280,14 +1278,33 @@ function backToStep1(){
   updateFocusBar();
 }
 
-function renderFocusLists(){
+// 🎯 依產品害蟲標籤精準過濾「真實受訪者」
+function renderFocusLists(bugFilter = [], productName = ''){
   const realList = document.getElementById('focus-real-list');
   realList.innerHTML = '';
 
-  if (!allCases || allCases.length === 0) {
-    realList.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px;">尚無真實訪談紀錄，可切換至「虛擬 AI 角色」選擇！</div>';
+  let keywords = [];
+  if (Array.isArray(bugFilter) && bugFilter.length > 0) {
+    keywords = [...bugFilter];
+  }
+  if (productName && productName !== '自訂產品主題') {
+    keywords.push(productName.replace('系列', '').replace('專用', ''));
+  }
+
+  keywords = keywords.map(k => k.trim()).filter(k => k.length > 0);
+
+  let filteredCases = allCases;
+  if (keywords.length > 0) {
+    filteredCases = allCases.filter(c => {
+      const fullText = `${c.concept} ${c.roleJob} ${c.summary} ${c.must} ${c.key} ${c.tagsSeo} ${c.transcript}`.toLowerCase();
+      return keywords.some(kw => fullText.includes(kw.toLowerCase()));
+    });
+  }
+
+  if (!filteredCases || filteredCases.length === 0) {
+    realList.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px;">尚無「${productName || '此害蟲'}」直接相關的真實訪談紀錄。<br>建議切換至「虛擬 AI 角色」進行測試！</div>`;
   } else {
-    allCases.forEach(c => {
+    filteredCases.forEach(c => {
       const div = document.createElement('div');
       div.className = 'focus-participant-card';
       div.id = 'focus-real-' + c.id;
