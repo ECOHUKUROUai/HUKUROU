@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-focus-strict-pest-matching-fix -->
+<!-- v20260804-frontend-water-and-mosquito-strict-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -229,7 +229,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-11','文彬','古蹟修復工程師 ／ 58歲','🪲 白蟻')"><div class="role-code">H-11</div><div class="role-name">文彬</div><div class="role-job">古蹟修復工程師 ／ 58歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">商業空間</div>
         <div class="role-card" onclick="selectRole('H-12','雅芳','小吃店老闆 ／ 46歲','🪳 蟑螂 🪰 果蠅')"><div class="role-code">H-12</div><div class="role-name">雅芳</div><div class="role-job">小吃店老闆 ／ 46歲</div><div class="role-bugs">🪳 蟑螂 🪰 果蠅</div></div>
-        <div class="role-card" onclick="selectRole('H-13','麗娟','辦公室租賃業主 ／ 51歲','🐭 老鼠假 🪳 蟑螂')"><div class="role-code">H-13</div><div class="role-name">麗娟</div><div class="role-job">辦公室租賃業主 ／ 51歲</div><div class="role-bugs">🐭 老鼠假 🪳 蟑螂</div></div>
+        <div class="role-card" onclick="selectRole('H-13','麗娟','辦公室租賃業主 ／ 51歲','🐭 老鼠 🪳 蟑螂')"><div class="role-code">H-13</div><div class="role-name">麗娟</div><div class="role-job">辦公室租賃業主 ／ 51歲</div><div class="role-bugs">🐭 老鼠 🪳 蟑螂</div></div>
         <div class="role-card" onclick="selectRole('H-14','國華','倉儲物流主管 ／ 44歲','🐀 老鼠 🪲 白蟻')"><div class="role-code">H-14</div><div class="role-name">國華</div><div class="role-job">倉儲物流主管 ／ 44歲</div><div class="role-bugs">🐀 老鼠 🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-15','淑美','幼兒園園長 ／ 48歲','🦟 蚊子 🐜 螞蟻')"><div class="role-code">H-15</div><div class="role-name">淑美</div><div class="role-job">幼兒園園長 ／ 48歲</div><div class="role-bugs">🦟 蚊子 🐜 螞蟻</div></div>
         <div class="group-label">農業園藝</div>
@@ -237,7 +237,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-17','嘉玲','有機花卉業者 ／ 39歲','🦟 蚊子 🪲 塵蟎')"><div class="role-code">H-17</div><div class="role-name">嘉玲</div><div class="role-job">有機花卉業者 ／ 39歲</div><div class="role-bugs">🦟 蚊子 🪲 塵蟎</div></div>
         <div class="role-card" onclick="selectRole('H-18','炎松','檳榔農 ／ 70歲','🐀 老鼠')"><div class="role-code">H-18</div><div class="role-name">炎松</div><div class="role-job">檳榔農 ／ 70歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="group-label">物業社區</div>
-        <div class="role-card" onclick="selectRole('H-19','雯雯','社區主委 ／ 65歲','🪳 蟑螂 🐀 老鼠')"><div class="role-code">H-19</div><div class="role-name">雯雯</div><div class="role-job">社區主委 ／ 65歲</div><div class="role-bugs">🪳 蟑螂 🐀 老鼠</div></div>
+        <div class="role-card" onclick="selectRole('H-19','雯雯','社區主委 ／ 65歲','🪳 蟑螂散 🐀 老鼠')"><div class="role-code">H-19</div><div class="role-name">雯雯</div><div class="role-job">社區主委 ／ 65歲</div><div class="role-bugs">🪳 蟑螂 🐀 老鼠</div></div>
         <div class="role-card" onclick="selectRole('H-20','阿財','社區清潔員 ／ 52歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-20</div><div class="role-name">阿財</div><div class="role-job">社區清潔員 ／ 52歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
       </div>
 
@@ -552,7 +552,7 @@ let currentAtRecordId = null;
 let allCases = [];
 let rawAllRecords = [];
 
-// 🎯 全域過濾狀態與強制顯示切換開關
+// 🎯 全域過濾狀態與開關
 let currentFocusBugFilter = [];
 let currentFocusProductName = '';
 window.focusForceShowAll = false;
@@ -1193,8 +1193,8 @@ const DEFAULT_FOCUS_PRODUCTS = [
   { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠'] },
   { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂'] },
   { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻'] },
-  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子'] },
-  { id:'water', name:'水性除蟲噴霧', desc:'多蟲通用水性配方', bugs:['蟑螂','螞蟻','蚊子'] }
+  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子','防蚊','驅蚊'] },
+  { id:'water', name:'水性除蟲噴霧', desc:'多蟲通用水性配方', bugs:['水性'] }
 ];
 
 async function loadDynamicProducts() {
@@ -1291,38 +1291,78 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 核心精準過濾：只比對【產品主題】與【受訪者姓名/身分】，零漏網之魚！
+// 🎯 水性獨立分流 + 防蚊同義詞支援 + 搜尋涵蓋 AI 分析特徵欄位（零誤抓、零遺漏）
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
   realList.innerHTML = '';
 
-  const PEST_LIST = ['跳蚤', '塵蟎', '白蟻', '老鼠', '蟑螂', '螞蟻', '蚊子', '果蠅', '蒼蠅'];
-  let targetPests = Array.isArray(currentFocusBugFilter) ? [...currentFocusBugFilter] : [];
-  
-  PEST_LIST.forEach(pest => {
-    if (currentFocusProductName && currentFocusProductName.includes(pest) && !targetPests.includes(pest)) {
-      targetPests.push(pest);
-    }
-  });
+  let productName = currentFocusProductName || '';
+  let isWaterProduct = productName.includes('水性');
 
-  targetPests = targetPests.map(k => k.trim()).filter(k => k.length > 0);
+  const PEST_SYNONYMS = {
+    '跳蚤': ['跳蚤', '蚤', '塵蟎', '蟎'],
+    '白蟻': ['白蟻', '木蟻'],
+    '老鼠': ['老鼠', '鼠', '滅鼠', '捕鼠'],
+    '蟑螂': ['蟑螂', '蟑'],
+    '螞蟻': ['螞蟻', '蟻'],
+    '蚊子': ['蚊', '防蚊', '驅蚊', '小黑蚊', '蚊子'],
+    '防蚊': ['蚊', '防蚊', '驅蚊', '小黑蚊', '蚊子'],
+    '果蠅': ['果蠅', '蒼蠅', '蠅'],
+    '水性': ['水性']
+  };
+
+  let keywords = [];
+  if (isWaterProduct) {
+    keywords = ['水性'];
+  } else {
+    (currentFocusBugFilter || []).forEach(b => {
+      if (PEST_SYNONYMS[b]) keywords.push(...PEST_SYNONYMS[b]);
+      else keywords.push(b);
+    });
+
+    Object.keys(PEST_SYNONYMS).forEach(pest => {
+      if (productName.includes(pest)) {
+        keywords.push(...PEST_SYNONYMS[pest]);
+      }
+    });
+  }
+
+  keywords = Array.from(new Set(keywords.map(k => k.trim()))).filter(k => k.length > 0);
 
   let filteredCases = allCases;
-  if (!window.focusForceShowAll && targetPests.length > 0) {
+  if (!window.focusForceShowAll && keywords.length > 0) {
     filteredCases = allCases.filter(c => {
-      // 🎯 純淨比對：避開包含 AI 標籤的語意欄位，只檢查最乾淨的核心主題與職業身分
-      const coreText = `${c.concept || ''} ${c.roleJob || ''} ${c.roleName || ''}`;
-      return targetPests.some(pest => pest && coreText.includes(pest));
+      const conceptText = (c.concept || '').toLowerCase();
+      const jobText = (c.roleJob || '').toLowerCase();
+      const nameText = (c.roleName || '').toLowerCase();
+      const summaryText = (c.summary || '').toLowerCase();
+      const mustText = (c.must || '').toLowerCase();
+      const keyText = (c.key || '').toLowerCase();
+      const tagsText = (c.tagsSeo || '').toLowerCase();
+
+      // 核心資料庫特徵彙整（包含主題、摘要、痛點、賣點、標籤，不包含容易產生雜訊的原始逐字稿對白）
+      const coreText = `${conceptText} ${jobText} ${nameText} ${summaryText} ${mustText} ${keyText} ${tagsText}`;
+
+      if (isWaterProduct) {
+        // 水性歸水性：只抓主題或摘要中明確提到「水性」的案例
+        return coreText.includes('水性');
+      } else {
+        // 一般害蟲系列：如果案例主題是純「水性除蟲」，自動排除（除非水性案例明確有該蟲害標籤）
+        if (conceptText === '水性除蟲噴霧' || conceptText === '水性除蟲') {
+          return keywords.some(kw => (mustText + keyText + tagsText).includes(kw.toLowerCase()));
+        }
+        return keywords.some(kw => coreText.includes(kw.toLowerCase()));
+      }
     });
   }
 
   let filterHint = '';
-  if (targetPests.length > 0 && !window.focusForceShowAll) {
+  if (keywords.length > 0 && !window.focusForceShowAll) {
     filterHint = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;margin-bottom:4px;">
-        <span style="font-size:11px;color:var(--accent);">🎯 已精準過濾「${targetPests.join('、')}」（${filteredCases.length} 位）</span>
-        <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;">切換顯示全部用戶</button>
+        <span style="font-size:11px;color:var(--accent);">🎯 已精準篩選「${keywords.join('、')}」（${filteredCases.length} 位）</span>
+        <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;">顯示全部用戶</button>
       </div>`;
   } else if (window.focusForceShowAll) {
     filterHint = `
@@ -1335,8 +1375,8 @@ function renderFocusLists(){
   if (!filteredCases || filteredCases.length === 0) {
     realList.innerHTML = filterHint + `
       <div style="color:var(--text3);font-size:12px;text-align:center;padding:14px;background:var(--bg3);border-radius:var(--radius);line-height:1.6;">
-        尚無「${targetPests.join('、') || currentFocusProductName}」直接相關的真實訪談紀錄。<br>
-        <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="margin-top:6px;font-size:11px;padding:3px 10px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:99px;color:var(--accent);cursor:pointer;">點此切換顯示所有真實受訪者</button>
+        資料庫中尚無「${currentFocusProductName}」專屬的真實訪談紀錄。<br>
+        <button onclick="switchFocusTab('virtual', document.getElementById('focus-tab-virtual'))" style="margin-top:6px;font-size:11px;padding:4px 12px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-weight:500;cursor:pointer;">👉 點此切換至「虛擬 AI 角色」進行討論</button>
       </div>`;
   } else {
     realList.innerHTML = filterHint;
@@ -1395,7 +1435,7 @@ function renderFocusLists(){
       <div class="focus-check">${isSelected ? '✓' : ''}</div>
       <div style="flex:1;">
         <div style="font-size:13px;font-weight:500;color:var(--text);">${code} ${name}</div>
-        <div style="font-size:11px;color:var(--text2);">${job}</div>
+        <div style="font-size:11px;color:var(--text2);">${job} ／ ${bugs}</div>
       </div>
     `;
     virtualList.appendChild(div);
@@ -1616,7 +1656,7 @@ ${participant.prompt || ''}
   } else {
     msgContent = promptText;
   }
-  const messages = [{ role: 'user', content: msgContent }];
+  const messages = [{ role: 'user', content: promptText }];
 
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages', {
