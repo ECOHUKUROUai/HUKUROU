@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-water-and-mosquito-strict-fix -->
+<!-- v20260804-frontend-focus-strict-concept-only-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -237,7 +237,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-17','嘉玲','有機花卉業者 ／ 39歲','🦟 蚊子 🪲 塵蟎')"><div class="role-code">H-17</div><div class="role-name">嘉玲</div><div class="role-job">有機花卉業者 ／ 39歲</div><div class="role-bugs">🦟 蚊子 🪲 塵蟎</div></div>
         <div class="role-card" onclick="selectRole('H-18','炎松','檳榔農 ／ 70歲','🐀 老鼠')"><div class="role-code">H-18</div><div class="role-name">炎松</div><div class="role-job">檳榔農 ／ 70歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="group-label">物業社區</div>
-        <div class="role-card" onclick="selectRole('H-19','雯雯','社區主委 ／ 65歲','🪳 蟑螂散 🐀 老鼠')"><div class="role-code">H-19</div><div class="role-name">雯雯</div><div class="role-job">社區主委 ／ 65歲</div><div class="role-bugs">🪳 蟑螂 🐀 老鼠</div></div>
+        <div class="role-card" onclick="selectRole('H-19','雯雯','社區主委 ／ 65歲','🪳 蟑螂 🐀 老鼠')"><div class="role-code">H-19</div><div class="role-name">雯雯</div><div class="role-job">社區主委 ／ 65歲</div><div class="role-bugs">🪳 蟑螂 🐀 老鼠</div></div>
         <div class="role-card" onclick="selectRole('H-20','阿財','社區清潔員 ／ 52歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-20</div><div class="role-name">阿財</div><div class="role-job">社區清潔員 ／ 52歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
       </div>
 
@@ -1291,7 +1291,7 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 水性獨立分流 + 防蚊同義詞支援 + 搜尋涵蓋 AI 分析特徵欄位（零誤抓、零遺漏）
+// 🎯 100% 隻看「產品主題 (concept)」極致比對，絕無漏網之魚！
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
@@ -1300,68 +1300,46 @@ function renderFocusLists(){
   let productName = currentFocusProductName || '';
   let isWaterProduct = productName.includes('水性');
 
-  const PEST_SYNONYMS = {
-    '跳蚤': ['跳蚤', '蚤', '塵蟎', '蟎'],
-    '白蟻': ['白蟻', '木蟻'],
-    '老鼠': ['老鼠', '鼠', '滅鼠', '捕鼠'],
-    '蟑螂': ['蟑螂', '蟑'],
-    '螞蟻': ['螞蟻', '蟻'],
-    '蚊子': ['蚊', '防蚊', '驅蚊', '小黑蚊', '蚊子'],
-    '防蚊': ['蚊', '防蚊', '驅蚊', '小黑蚊', '蚊子'],
-    '果蠅': ['果蠅', '蒼蠅', '蠅'],
-    '水性': ['水性']
-  };
-
-  let keywords = [];
+  const PEST_KEYWORDS = ['跳蚤', '塵蟎', '白蟻', '老鼠', '蟑螂', '螞蟻', '蚊', '防蚊', '驅蚊', '小黑蚊', '果蠅', '蒼蠅'];
+  
+  let targetKeywords = [];
   if (isWaterProduct) {
-    keywords = ['水性'];
+    targetKeywords = ['水性'];
   } else {
-    (currentFocusBugFilter || []).forEach(b => {
-      if (PEST_SYNONYMS[b]) keywords.push(...PEST_SYNONYMS[b]);
-      else keywords.push(b);
-    });
-
-    Object.keys(PEST_SYNONYMS).forEach(pest => {
-      if (productName.includes(pest)) {
-        keywords.push(...PEST_SYNONYMS[pest]);
+    if (Array.isArray(currentFocusBugFilter) && currentFocusBugFilter.length > 0) {
+      targetKeywords = [...currentFocusBugFilter];
+    }
+    PEST_KEYWORDS.forEach(pest => {
+      if (productName.includes(pest) && !targetKeywords.includes(pest)) {
+        targetKeywords.push(pest);
       }
     });
   }
 
-  keywords = Array.from(new Set(keywords.map(k => k.trim()))).filter(k => k.length > 0);
+  targetKeywords = Array.from(new Set(targetKeywords.map(k => k.trim()))).filter(k => k.length > 0);
 
   let filteredCases = allCases;
-  if (!window.focusForceShowAll && keywords.length > 0) {
+  if (!window.focusForceShowAll && targetKeywords.length > 0) {
     filteredCases = allCases.filter(c => {
-      const conceptText = (c.concept || '').toLowerCase();
-      const jobText = (c.roleJob || '').toLowerCase();
-      const nameText = (c.roleName || '').toLowerCase();
-      const summaryText = (c.summary || '').toLowerCase();
-      const mustText = (c.must || '').toLowerCase();
-      const keyText = (c.key || '').toLowerCase();
-      const tagsText = (c.tagsSeo || '').toLowerCase();
-
-      // 核心資料庫特徵彙整（包含主題、摘要、痛點、賣點、標籤，不包含容易產生雜訊的原始逐字稿對白）
-      const coreText = `${conceptText} ${jobText} ${nameText} ${summaryText} ${mustText} ${keyText} ${tagsText}`;
+      // 🎯 純淨：只檢查該案例的「產品主題 (concept)」！完全不檢查摘要、痛點、標籤與對白！
+      const caseConcept = (c.concept || '').trim().toLowerCase();
 
       if (isWaterProduct) {
-        // 水性歸水性：只抓主題或摘要中明確提到「水性」的案例
-        return coreText.includes('水性');
+        // 水性歸水性：只有產品主題明確含有「水性」才放行
+        return caseConcept.includes('水性');
       } else {
-        // 一般害蟲系列：如果案例主題是純「水性除蟲」，自動排除（除非水性案例明確有該蟲害標籤）
-        if (conceptText === '水性除蟲噴霧' || conceptText === '水性除蟲') {
-          return keywords.some(kw => (mustText + keyText + tagsText).includes(kw.toLowerCase()));
-        }
-        return keywords.some(kw => coreText.includes(kw.toLowerCase()));
+        // 一般害蟲系列：如果案例主題是純「水性除蟲」，自動排除，並確保產品主題「必須有寫到該害蟲」
+        if (caseConcept.includes('水性')) return false;
+        return targetKeywords.some(kw => caseConcept.includes(kw.toLowerCase()));
       }
     });
   }
 
   let filterHint = '';
-  if (keywords.length > 0 && !window.focusForceShowAll) {
+  if (targetKeywords.length > 0 && !window.focusForceShowAll) {
     filterHint = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;margin-bottom:4px;">
-        <span style="font-size:11px;color:var(--accent);">🎯 已精準篩選「${keywords.join('、')}」（${filteredCases.length} 位）</span>
+        <span style="font-size:11px;color:var(--accent);">🎯 精準鎖定產品主題寫有「${targetKeywords.join('、')}」（${filteredCases.length} 位）</span>
         <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;">顯示全部用戶</button>
       </div>`;
   } else if (window.focusForceShowAll) {
@@ -1375,7 +1353,7 @@ function renderFocusLists(){
   if (!filteredCases || filteredCases.length === 0) {
     realList.innerHTML = filterHint + `
       <div style="color:var(--text3);font-size:12px;text-align:center;padding:14px;background:var(--bg3);border-radius:var(--radius);line-height:1.6;">
-        資料庫中尚無「${currentFocusProductName}」專屬的真實訪談紀錄。<br>
+        資料庫無產品主題寫著「${targetKeywords.join('、') || currentFocusProductName}」的真實訪談。<br>
         <button onclick="switchFocusTab('virtual', document.getElementById('focus-tab-virtual'))" style="margin-top:6px;font-size:11px;padding:4px 12px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-weight:500;cursor:pointer;">👉 點此切換至「虛擬 AI 角色」進行討論</button>
       </div>`;
   } else {
