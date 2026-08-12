@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-focus-pest-filter-fix -->
+<!-- v20260804-frontend-focus-pest-filter-global-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -552,6 +552,10 @@ let currentAtRecordId = null;
 let allCases = [];
 let rawAllRecords = [];
 
+// 🎯 全域過濾狀態（確保不會被背景載入洗掉）
+let currentFocusBugFilter = [];
+let currentFocusProductName = '';
+
 // ── LOGIN & AUTO SESSION ──
 document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
@@ -749,6 +753,8 @@ function selectPath(n){
     document.getElementById('focus-step2').style.display = 'none';
     focusParticipants = [];
     selectedFocusProduct = null;
+    currentFocusBugFilter = [];
+    currentFocusProductName = '';
     document.querySelectorAll('.focus-participant-card').forEach(c=>{
       c.classList.remove('selected');
       const ch=c.querySelector('.focus-check');
@@ -1268,7 +1274,12 @@ function confirmFocusProduct(){
   document.getElementById('focus-step1').style.display = 'none';
   document.getElementById('focus-step2').style.display = 'flex';
   focusParticipants = [];
-  renderFocusLists(selectedFocusProduct.bugs, productName);
+
+  // 🎯 全域過濾條件紀錄（關鍵修復：防止被非同步更新沖掉）
+  currentFocusBugFilter = selectedFocusProduct.bugs || [];
+  currentFocusProductName = productName;
+
+  renderFocusLists();
 }
 
 function backToStep1(){
@@ -1278,17 +1289,16 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 依產品害蟲標籤精準過濾「真實受訪者」
-function renderFocusLists(bugFilter = [], productName = ''){
+// 🎯 核心修復：使用全域過濾變數 + 提示篩選狀態
+function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
+  if (!realList) return;
   realList.innerHTML = '';
 
-  let keywords = [];
-  if (Array.isArray(bugFilter) && bugFilter.length > 0) {
-    keywords = [...bugFilter];
-  }
-  if (productName && productName !== '自訂產品主題') {
-    keywords.push(productName.replace('系列', '').replace('專用', ''));
+  let keywords = Array.isArray(currentFocusBugFilter) ? [...currentFocusBugFilter] : [];
+  if (currentFocusProductName && currentFocusProductName !== '自訂產品主題') {
+    const cleanName = currentFocusProductName.replace('系列', '').replace('專用', '').trim();
+    if (cleanName) keywords.push(cleanName);
   }
 
   keywords = keywords.map(k => k.trim()).filter(k => k.length > 0);
@@ -1297,13 +1307,20 @@ function renderFocusLists(bugFilter = [], productName = ''){
   if (keywords.length > 0) {
     filteredCases = allCases.filter(c => {
       const fullText = `${c.concept} ${c.roleJob} ${c.summary} ${c.must} ${c.key} ${c.tagsSeo} ${c.transcript}`.toLowerCase();
-      return keywords.some(kw => fullText.includes(kw.toLowerCase()));
+      return keywords.some(kw => kw && fullText.includes(kw.toLowerCase()));
     });
   }
 
+  // 提示狀態列
+  let filterHint = '';
+  if (keywords.length > 0) {
+    filterHint = `<div style="font-size:11px;color:var(--accent);padding:2px 4px;margin-bottom:4px;">🔍 已依「${keywords.join('、')}」篩選（找到 ${filteredCases.length} 位）</div>`;
+  }
+
   if (!filteredCases || filteredCases.length === 0) {
-    realList.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px;">尚無「${productName || '此害蟲'}」直接相關的真實訪談紀錄。<br>建議切換至「虛擬 AI 角色」進行測試！</div>`;
+    realList.innerHTML = filterHint + `<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius);">尚無「${currentFocusProductName || '此主題'}」直接相關的真實訪談紀錄。<br>建議切換至「虛擬 AI 角色」進行測試！</div>`;
   } else {
+    realList.innerHTML = filterHint;
     filteredCases.forEach(c => {
       const div = document.createElement('div');
       div.className = 'focus-participant-card';
