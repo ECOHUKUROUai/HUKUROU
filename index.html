@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-focus-pest-filter-global-fix -->
+<!-- v20260804-frontend-focus-strict-core-field-filter -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -552,7 +552,7 @@ let currentAtRecordId = null;
 let allCases = [];
 let rawAllRecords = [];
 
-// 🎯 全域過濾狀態（確保不會被背景載入洗掉）
+// 🎯 全域過濾狀態（確保不被任何背景異步載入洗掉）
 let currentFocusBugFilter = [];
 let currentFocusProductName = '';
 
@@ -1275,7 +1275,7 @@ function confirmFocusProduct(){
   document.getElementById('focus-step2').style.display = 'flex';
   focusParticipants = [];
 
-  // 🎯 全域過濾條件紀錄（關鍵修復：防止被非同步更新沖掉）
+  // 全域鎖定過濾變數
   currentFocusBugFilter = selectedFocusProduct.bugs || [];
   currentFocusProductName = productName;
 
@@ -1289,7 +1289,7 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 核心修復：使用全域過濾變數 + 提示篩選狀態
+// 🎯 核心修復：只搜尋【產品主題】、【TA標籤與SEO】與【一句話總結】，絕不拿逐字稿湊數！
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
@@ -1306,15 +1306,15 @@ function renderFocusLists(){
   let filteredCases = allCases;
   if (keywords.length > 0) {
     filteredCases = allCases.filter(c => {
-      const fullText = `${c.concept} ${c.roleJob} ${c.summary} ${c.must} ${c.key} ${c.tagsSeo} ${c.transcript}`.toLowerCase();
-      return keywords.some(kw => kw && fullText.includes(kw.toLowerCase()));
+      // 🎯 只比對核心欄位，避開整篇原始對白（transcript）導致的錯抓
+      const coreText = `${c.concept} ${c.tagsSeo} ${c.summary} ${c.roleJob}`.toLowerCase();
+      return keywords.some(kw => kw && coreText.includes(kw.toLowerCase()));
     });
   }
 
-  // 提示狀態列
   let filterHint = '';
   if (keywords.length > 0) {
-    filterHint = `<div style="font-size:11px;color:var(--accent);padding:2px 4px;margin-bottom:4px;">🔍 已依「${keywords.join('、')}」篩選（找到 ${filteredCases.length} 位）</div>`;
+    filterHint = `<div style="font-size:11px;color:var(--accent);padding:2px 4px;margin-bottom:4px;">🔍 已精準篩選「${keywords.join('、')}」（找到 ${filteredCases.length} 位）</div>`;
   }
 
   if (!filteredCases || filteredCases.length === 0) {
