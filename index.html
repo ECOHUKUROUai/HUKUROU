@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-focus-strict-core-field-filter -->
+<!-- v20260804-frontend-focus-strict-pest-matching-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -229,7 +229,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-11','文彬','古蹟修復工程師 ／ 58歲','🪲 白蟻')"><div class="role-code">H-11</div><div class="role-name">文彬</div><div class="role-job">古蹟修復工程師 ／ 58歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">商業空間</div>
         <div class="role-card" onclick="selectRole('H-12','雅芳','小吃店老闆 ／ 46歲','🪳 蟑螂 🪰 果蠅')"><div class="role-code">H-12</div><div class="role-name">雅芳</div><div class="role-job">小吃店老闆 ／ 46歲</div><div class="role-bugs">🪳 蟑螂 🪰 果蠅</div></div>
-        <div class="role-card" onclick="selectRole('H-13','麗娟','辦公室租賃業主 ／ 51歲','🐭 老鼠 🪳 蟑螂')"><div class="role-code">H-13</div><div class="role-name">麗娟</div><div class="role-job">辦公室租賃業主 ／ 51歲</div><div class="role-bugs">🐭 老鼠假 🪳 蟑螂</div></div>
+        <div class="role-card" onclick="selectRole('H-13','麗娟','辦公室租賃業主 ／ 51歲','🐭 老鼠假 🪳 蟑螂')"><div class="role-code">H-13</div><div class="role-name">麗娟</div><div class="role-job">辦公室租賃業主 ／ 51歲</div><div class="role-bugs">🐭 老鼠假 🪳 蟑螂</div></div>
         <div class="role-card" onclick="selectRole('H-14','國華','倉儲物流主管 ／ 44歲','🐀 老鼠 🪲 白蟻')"><div class="role-code">H-14</div><div class="role-name">國華</div><div class="role-job">倉儲物流主管 ／ 44歲</div><div class="role-bugs">🐀 老鼠 🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-15','淑美','幼兒園園長 ／ 48歲','🦟 蚊子 🐜 螞蟻')"><div class="role-code">H-15</div><div class="role-name">淑美</div><div class="role-job">幼兒園園長 ／ 48歲</div><div class="role-bugs">🦟 蚊子 🐜 螞蟻</div></div>
         <div class="group-label">農業園藝</div>
@@ -552,9 +552,10 @@ let currentAtRecordId = null;
 let allCases = [];
 let rawAllRecords = [];
 
-// 🎯 全域過濾狀態（確保不被任何背景異步載入洗掉）
+// 🎯 全域過濾狀態與強制顯示切換開關
 let currentFocusBugFilter = [];
 let currentFocusProductName = '';
+window.focusForceShowAll = false;
 
 // ── LOGIN & AUTO SESSION ──
 document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
@@ -755,6 +756,7 @@ function selectPath(n){
     selectedFocusProduct = null;
     currentFocusBugFilter = [];
     currentFocusProductName = '';
+    window.focusForceShowAll = false;
     document.querySelectorAll('.focus-participant-card').forEach(c=>{
       c.classList.remove('selected');
       const ch=c.querySelector('.focus-check');
@@ -1275,9 +1277,9 @@ function confirmFocusProduct(){
   document.getElementById('focus-step2').style.display = 'flex';
   focusParticipants = [];
 
-  // 全域鎖定過濾變數
   currentFocusBugFilter = selectedFocusProduct.bugs || [];
   currentFocusProductName = productName;
+  window.focusForceShowAll = false;
 
   renderFocusLists();
 }
@@ -1289,36 +1291,53 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 核心修復：只搜尋【產品主題】、【TA標籤與SEO】與【一句話總結】，絕不拿逐字稿湊數！
+// 🎯 核心精準過濾：只比對【產品主題】與【受訪者姓名/身分】，零漏網之魚！
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
   realList.innerHTML = '';
 
-  let keywords = Array.isArray(currentFocusBugFilter) ? [...currentFocusBugFilter] : [];
-  if (currentFocusProductName && currentFocusProductName !== '自訂產品主題') {
-    const cleanName = currentFocusProductName.replace('系列', '').replace('專用', '').trim();
-    if (cleanName) keywords.push(cleanName);
-  }
+  const PEST_LIST = ['跳蚤', '塵蟎', '白蟻', '老鼠', '蟑螂', '螞蟻', '蚊子', '果蠅', '蒼蠅'];
+  let targetPests = Array.isArray(currentFocusBugFilter) ? [...currentFocusBugFilter] : [];
+  
+  PEST_LIST.forEach(pest => {
+    if (currentFocusProductName && currentFocusProductName.includes(pest) && !targetPests.includes(pest)) {
+      targetPests.push(pest);
+    }
+  });
 
-  keywords = keywords.map(k => k.trim()).filter(k => k.length > 0);
+  targetPests = targetPests.map(k => k.trim()).filter(k => k.length > 0);
 
   let filteredCases = allCases;
-  if (keywords.length > 0) {
+  if (!window.focusForceShowAll && targetPests.length > 0) {
     filteredCases = allCases.filter(c => {
-      // 🎯 只比對核心欄位，避開整篇原始對白（transcript）導致的錯抓
-      const coreText = `${c.concept} ${c.tagsSeo} ${c.summary} ${c.roleJob}`.toLowerCase();
-      return keywords.some(kw => kw && coreText.includes(kw.toLowerCase()));
+      // 🎯 純淨比對：避開包含 AI 標籤的語意欄位，只檢查最乾淨的核心主題與職業身分
+      const coreText = `${c.concept || ''} ${c.roleJob || ''} ${c.roleName || ''}`;
+      return targetPests.some(pest => pest && coreText.includes(pest));
     });
   }
 
   let filterHint = '';
-  if (keywords.length > 0) {
-    filterHint = `<div style="font-size:11px;color:var(--accent);padding:2px 4px;margin-bottom:4px;">🔍 已精準篩選「${keywords.join('、')}」（找到 ${filteredCases.length} 位）</div>`;
+  if (targetPests.length > 0 && !window.focusForceShowAll) {
+    filterHint = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--accent);">🎯 已精準過濾「${targetPests.join('、')}」（${filteredCases.length} 位）</span>
+        <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;">切換顯示全部用戶</button>
+      </div>`;
+  } else if (window.focusForceShowAll) {
+    filterHint = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--text2);">目前顯示全部真實用戶（共 ${allCases.length} 位）</span>
+        <button onclick="window.focusForceShowAll=false;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--accent);text-decoration:underline;cursor:pointer;">恢復精準篩選</button>
+      </div>`;
   }
 
   if (!filteredCases || filteredCases.length === 0) {
-    realList.innerHTML = filterHint + `<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius);">尚無「${currentFocusProductName || '此主題'}」直接相關的真實訪談紀錄。<br>建議切換至「虛擬 AI 角色」進行測試！</div>`;
+    realList.innerHTML = filterHint + `
+      <div style="color:var(--text3);font-size:12px;text-align:center;padding:14px;background:var(--bg3);border-radius:var(--radius);line-height:1.6;">
+        尚無「${targetPests.join('、') || currentFocusProductName}」直接相關的真實訪談紀錄。<br>
+        <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="margin-top:6px;font-size:11px;padding:3px 10px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:99px;color:var(--accent);cursor:pointer;">點此切換顯示所有真實受訪者</button>
+      </div>`;
   } else {
     realList.innerHTML = filterHint;
     filteredCases.forEach(c => {
