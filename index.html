@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260804-frontend-focus-strict-concept-only-fix -->
+<!-- v20260804-frontend-focus-full-pest-synonym-dictionary-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -222,7 +222,7 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
         <div class="role-card" onclick="selectRole('H-05','秀英','透天厝屋主 ／ 47歲','🐜 螞蟻 🪲 白蟻')"><div class="role-code">H-05</div><div class="role-name">秀英</div><div class="role-job">透天厝屋主 ／ 47歲</div><div class="role-bugs">🐜 螞蟻 🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-06','玉蘭','老屋翻修 ／ 63歲','🪲 白蟻')"><div class="role-code">H-06</div><div class="role-name">玉蘭</div><div class="role-job">老屋翻修 ／ 63歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="group-label">專業施工</div>
-        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻 🪰 果蠅</div></div>
+        <div class="role-card" onclick="selectRole('H-07','大偉','接案裝潢工 ／ 27歲','🐜 螞蟻 🪰 果蠅')"><div class="role-code">H-07</div><div class="role-name">大偉</div><div class="role-job">接案裝潢工 ／ 27歲</div><div class="role-bugs">🐜 螞蟻指令 🪰 果蠅</div></div>
         <div class="role-card" onclick="selectRole('H-08','志豪','水電師傅 ／ 36歲','🐀 老鼠')"><div class="role-code">H-08</div><div class="role-name">志豪</div><div class="role-job">水電師傅 ／ 36歲</div><div class="role-bugs">🐀 老鼠</div></div>
         <div class="role-card" onclick="selectRole('H-09','阿明','木工師傅 ／ 42歲','🪲 白蟻')"><div class="role-code">H-09</div><div class="role-name">阿明</div><div class="role-job">木工師傅 ／ 42歲</div><div class="role-bugs">🪲 白蟻</div></div>
         <div class="role-card" onclick="selectRole('H-10','阿龍','泥作師傅 ／ 49歲','🪲 白蟻 🪳 蟑螂')"><div class="role-code">H-10</div><div class="role-name">阿龍</div><div class="role-job">泥作師傅 ／ 49歲</div><div class="role-bugs">🪲 白蟻 🪳 蟑螂</div></div>
@@ -1188,12 +1188,12 @@ let focusSubTab = 'real';
 let dynamicFocusProducts = [];
 
 const DEFAULT_FOCUS_PRODUCTS = [
-  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','塵蟎'] },
-  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻'] },
-  { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠'] },
-  { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂'] },
-  { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻'] },
-  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子','防蚊','驅蚊'] },
+  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','除蚤','蚤','塵蟎'] },
+  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻','除白蟻'] },
+  { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠','除鼠','鼠'] },
+  { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂','除蟑','蟑'] },
+  { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻','除蟻','蟻'] },
+  { id:'mosquito', name:'防蚊系列', desc:'防蚊液、空間噴霧', bugs:['蚊子','防蚊','驅蚊','小黑蚊','蚊'] },
   { id:'water', name:'水性除蟲噴霧', desc:'多蟲通用水性配方', bugs:['水性'] }
 ];
 
@@ -1291,7 +1291,7 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 100% 隻看「產品主題 (concept)」極致比對，絕無漏網之魚！
+// 🎯 全害蟲同義詞大字典 + 純淨單一產品主題 (concept) 100% 精準匹配
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
@@ -1300,20 +1300,42 @@ function renderFocusLists(){
   let productName = currentFocusProductName || '';
   let isWaterProduct = productName.includes('水性');
 
-  const PEST_KEYWORDS = ['跳蚤', '塵蟎', '白蟻', '老鼠', '蟑螂', '螞蟻', '蚊', '防蚊', '驅蚊', '小黑蚊', '果蠅', '蒼蠅'];
-  
+  // 🎯 害蟲與產品同義詞擴充字典
+  const PEST_SYNONYMS = {
+    '跳蚤': ['跳蚤', '除蚤', '蚤', '塵蟎', '蟎', '防蚤', '滅蚤'],
+    '除蚤': ['跳蚤', '除蚤', '蚤', '塵蟎', '蟎', '防蚤', '滅蚤'],
+    '塵蟎': ['塵蟎', '蟎', '跳蚤', '除蚤', '蚤'],
+    '白蟻': ['白蟻', '除白蟻', '木蟻'],
+    '除白蟻': ['白蟻', '除白蟻', '木蟻'],
+    '老鼠': ['老鼠', '除鼠', '鼠', '滅鼠', '捕鼠', '防鼠'],
+    '除鼠': ['老鼠', '除鼠', '鼠', '滅鼠', '捕鼠', '防鼠'],
+    '蟑螂': ['蟑螂', '除蟑', '蟑', '滅蟑', '防蟑'],
+    '除蟑': ['蟑螂', '除蟑', '蟑', '滅蟑', '防蟑'],
+    '螞蟻': ['螞蟻', '除蟻', '蟻', '滅蟻', '防蟻'],
+    '除蟻': ['螞蟻', '除蟻', '蟻', '滅蟻', '防蟻'],
+    '蚊子': ['蚊子', '防蚊', '驅蚊', '小黑蚊', '蚊', '除蚊', '滅蚊'],
+    '防蚊': ['蚊子', '防蚊', '驅蚊', '小黑蚊', '蚊', '除蚊', '滅蚊'],
+    '果蠅': ['果蠅', '蒼蠅', '蠅', '除蠅', '滅蠅'],
+    '水性': ['水性']
+  };
+
   let targetKeywords = [];
   if (isWaterProduct) {
     targetKeywords = ['水性'];
   } else {
-    if (Array.isArray(currentFocusBugFilter) && currentFocusBugFilter.length > 0) {
-      targetKeywords = [...currentFocusBugFilter];
-    }
-    PEST_KEYWORDS.forEach(pest => {
-      if (productName.includes(pest) && !targetKeywords.includes(pest)) {
-        targetKeywords.push(pest);
+    (currentFocusBugFilter || []).forEach(b => {
+      if (PEST_SYNONYMS[b]) targetKeywords.push(...PEST_SYNONYMS[b]);
+      else targetKeywords.push(b);
+    });
+
+    Object.keys(PEST_SYNONYMS).forEach(pestKey => {
+      if (productName.includes(pestKey)) {
+        targetKeywords.push(...PEST_SYNONYMS[pestKey]);
       }
     });
+
+    const cleanProdName = productName.replace('系列', '').replace('專用', '').trim();
+    if (cleanProdName) targetKeywords.push(cleanProdName);
   }
 
   targetKeywords = Array.from(new Set(targetKeywords.map(k => k.trim()))).filter(k => k.length > 0);
@@ -1321,16 +1343,14 @@ function renderFocusLists(){
   let filteredCases = allCases;
   if (!window.focusForceShowAll && targetKeywords.length > 0) {
     filteredCases = allCases.filter(c => {
-      // 🎯 純淨：只檢查該案例的「產品主題 (concept)」！完全不檢查摘要、痛點、標籤與對白！
+      // 🎯 只比對產品主題 (c.concept)，乾淨精準，絕無漏網之魚
       const caseConcept = (c.concept || '').trim().toLowerCase();
 
       if (isWaterProduct) {
-        // 水性歸水性：只有產品主題明確含有「水性」才放行
         return caseConcept.includes('水性');
       } else {
-        // 一般害蟲系列：如果案例主題是純「水性除蟲」，自動排除，並確保產品主題「必須有寫到該害蟲」
         if (caseConcept.includes('水性')) return false;
-        return targetKeywords.some(kw => caseConcept.includes(kw.toLowerCase()));
+        return targetKeywords.some(kw => kw && caseConcept.includes(kw.toLowerCase()));
       }
     });
   }
@@ -1339,7 +1359,7 @@ function renderFocusLists(){
   if (targetKeywords.length > 0 && !window.focusForceShowAll) {
     filterHint = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;margin-bottom:4px;">
-        <span style="font-size:11px;color:var(--accent);">🎯 精準鎖定產品主題寫有「${targetKeywords.join('、')}」（${filteredCases.length} 位）</span>
+        <span style="font-size:11px;color:var(--accent);">🎯 已精準過濾相關案例（共 ${filteredCases.length} 位）</span>
         <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;">顯示全部用戶</button>
       </div>`;
   } else if (window.focusForceShowAll) {
@@ -1353,7 +1373,7 @@ function renderFocusLists(){
   if (!filteredCases || filteredCases.length === 0) {
     realList.innerHTML = filterHint + `
       <div style="color:var(--text3);font-size:12px;text-align:center;padding:14px;background:var(--bg3);border-radius:var(--radius);line-height:1.6;">
-        資料庫無產品主題寫著「${targetKeywords.join('、') || currentFocusProductName}」的真實訪談。<br>
+        資料庫無產品主題寫著「${targetKeywords.slice(0, 3).join('、') || currentFocusProductName}」的真實訪談。<br>
         <button onclick="switchFocusTab('virtual', document.getElementById('focus-tab-virtual'))" style="margin-top:6px;font-size:11px;padding:4px 12px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-weight:500;cursor:pointer;">👉 點此切換至「虛擬 AI 角色」進行討論</button>
       </div>`;
   } else {
