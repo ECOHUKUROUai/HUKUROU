@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260814-frontend-focus-clean-series-names-fix -->
+<!-- v20260814-frontend-focus-diversity-anti-homogeneity-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1187,7 +1187,7 @@ let focusParticipants = [];
 let focusSubTab = 'real';
 let dynamicFocusProducts = [];
 
-// 🎯 極簡卡片：移除贅詞描述，只保留系列名稱
+// 極簡產品卡片（無贅詞描述）
 const DEFAULT_FOCUS_PRODUCTS = [
   { id:'flea', name:'除蚤系列', desc:'', bugs:['蚤'] },
   { id:'mite', name:'塵蟎系列', desc:'', bugs:['蟎'] },
@@ -1245,7 +1245,6 @@ async function renderFocusProductList(){
     div.className = 'focus-participant-card';
     div.id = 'fp-'+p.id;
     div.onclick = () => selectFocusProduct(p);
-    // 🎯 移除品名贅詞渲染，極致簡潔
     div.innerHTML = `<div class="focus-check"></div>
       <div><div style="font-size:13px;font-weight:500;">${p.name}</div></div>`;
     list.appendChild(div);
@@ -1294,7 +1293,7 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 100% 隻比對【產品主題 (c.concept)】，杜絕一切 SEO / 摘要標籤洩漏
+// 🎯 100% 純淨「產品主題 (c.concept)」絕不讀取 tagsSeo 或 summary，零誤抓！
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
@@ -1306,6 +1305,7 @@ function renderFocusLists(){
 
   if (!window.focusForceShowAll && productName) {
     filteredCases = allCases.filter(c => {
+      // 🎯 只比對受訪者買的/測試的「產品主題 (concept)」
       const concept = (c.concept || '').trim().toLowerCase();
       if (!concept) return false;
 
@@ -1314,37 +1314,37 @@ function renderFocusLists(){
         return concept.includes('水性');
       }
 
-      // 2. 除蚤系列（產品主題包含「蚤」或「跳蚤」）
+      // 2. 除蚤系列（產品主題必須含有「蚤」或「跳蚤」）
       if (productName.includes('蚤')) {
         return concept.includes('蚤');
       }
 
-      // 3. 塵蟎系列（產品主題包含「蟎」或「塵蟎」）
+      // 3. 塵蟎系列（產品主題必須含有「蟎」或「塵蟎」）
       if (productName.includes('蟎')) {
         return concept.includes('蟎');
       }
 
-      // 4. 除白蟻系列（產品主題包含「白蟻」）
+      // 4. 除白蟻系列（產品主題必須含有「白蟻」）
       if (productName.includes('白蟻')) {
         return concept.includes('白蟻');
       }
 
-      // 5. 除蟻系列（產品主題包含「蟻」且絕非「白蟻」）
+      // 5. 除蟻系列（產品主題必須含有「蟻」且絕對不能有「白蟻」）
       if (productName.includes('蟻') && !productName.includes('白蟻')) {
         return concept.includes('蟻') && !concept.includes('白蟻');
       }
 
-      // 6. 除鼠系列
+      // 6. 除鼠系列（產品主題必須含有「鼠」）
       if (productName.includes('鼠')) {
         return concept.includes('鼠');
       }
 
-      // 7. 除蟑系列
+      // 7. 除蟑系列（產品主題必須含有「蟑」）
       if (productName.includes('蟑')) {
         return concept.includes('蟑');
       }
 
-      // 8. 防蚊系列
+      // 8. 防蚊系列（產品主題必須含有「蚊」）
       if (productName.includes('蚊')) {
         return concept.includes('蚊');
       }
@@ -1624,16 +1624,25 @@ function appendFocusBubble(p, text){
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
 }
 
+// 🎯 注入【強效抗同質化 Prompt】，強迫角色捍衛預算、經驗與獨特觀點
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
   const model = 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
     ? '\n\n【座談會上其他消費者的剛才的發言】\n' + focusHistory.map(h=>`${h.participant}：${h.message}`).join('\n')
     : '';
 
+  const antiHomogeneityPrompt = `
+【獨立立場與反同質化強效指令】：
+1. 堅守你自身角色的【口袋預算、家庭狀況、生活習慣與核心痛點】！
+2. 嚴禁無腦順著前幾位發言者的話講，嚴禁重複他人觀點或講相似套話！
+3. 如果其他人的說法與你的預算、習慣或價值觀不符，請直接表達不同意見、反駁、提出疑慮，或分享你完全不同的真實狀況。
+4. 展現強烈的個人說話風格與立場衝突，焦點座談會需要聽見真實且多元的聲音。`;
+
   let systemPrompt = '';
   if(participant.type === 'real'){
     systemPrompt = `你是真實受訪者 ${participant.name}（${participant.job}）。
 ${TONE_ENFORCER}
+${antiHomogeneityPrompt}
 
 【你在過往訪談中的真實說話逐字稿與筆記】：
 ${participant.transcript || '（無逐字稿）'}
@@ -1646,6 +1655,7 @@ ${participant.transcript || '（無逐字稿）'}
     systemPrompt = `${BRAND_CONTEXT}
 
 ${TONE_ENFORCER}
+${antiHomogeneityPrompt}
 
 【你的角色背景設定與個人習慣】：
 ${participant.prompt || ''}
@@ -1669,7 +1679,13 @@ ${participant.prompt || ''}
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({ model: model, max_tokens: 1000, system:systemPrompt, messages })
+      body:JSON.stringify({ 
+        model: model, 
+        max_tokens: 1000, 
+        temperature: 0.8, // 提高調溫提升角色用語獨立性
+        system:systemPrompt, 
+        messages 
+      })
     });
     const data = await res.json();
     if(data.error) return `[錯誤] ${data.error.message}`;
