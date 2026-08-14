@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260814-frontend-strict-taxonomy-split-fix -->
+<!-- v20260814-frontend-focus-strict-concept-only-zero-leak-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1187,10 +1187,9 @@ let focusParticipants = [];
 let focusSubTab = 'real';
 let dynamicFocusProducts = [];
 
-// 🎯 預設系列：除蚤與塵蟎 100% 獨立拆開！
 const DEFAULT_FOCUS_PRODUCTS = [
-  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','除蚤','蚤','防蚤','滅蚤','殺蚤'] },
-  { id:'mite', name:'塵蟎系列', desc:'塵蟎噴霧、除蟎防護', bugs:['塵蟎','除蟎','防蟎','殺蟎','蟎'] },
+  { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','除蚤','蚤'] },
+  { id:'mite', name:'塵蟎系列', desc:'塵蟎噴霧、除蟎防護', bugs:['塵蟎','除蟎','蟎'] },
   { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、白蟻防治', bugs:['白蟻','除白蟻'] },
   { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠','除鼠','鼠'] },
   { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂','除蟑','蟑'] },
@@ -1294,108 +1293,81 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 塵蟎與跳蚤完全解聯 + 白蟻與螞蟻切割 + 純淨分流比對
+// 🎯 100% 隻看『產品主題 (concept)』之純淨零漏網匹配過濾器
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
   realList.innerHTML = '';
 
-  let productName = currentFocusProductName || '';
-  let isWaterProduct = productName.includes('水性');
-  let isFleaProduct = productName.includes('蚤');
-  let isMiteProduct = productName.includes('蟎');
-  let isTermiteProduct = productName.includes('白蟻');
-  let isAntProduct = productName.includes('蟻') && !isTermiteProduct;
-
-  // 🎯 塵蟎與跳蚤 100% 獨立不重疊之字典
-  const PEST_SYNONYMS = {
-    '跳蚤': ['跳蚤', '除蚤', '蚤', '防蚤', '滅蚤', '殺蚤', '蚤藥'],
-    '除蚤': ['跳蚤', '除蚤', '蚤', '防蚤', '滅蚤', '殺蚤', '蚤藥'],
-    '塵蟎': ['塵蟎', '除蟎', '防蟎', '蟎', '殺蟎', '塵蟎噴霧'],
-    '除蟎': ['塵蟎', '除蟎', '防蟎', '蟎', '殺蟎', '塵蟎噴霧'],
-    '白蟻': ['白蟻', '除白蟻', '木蟻', '白蟻噴霧'],
-    '除白蟻': ['白蟻', '除白蟻', '木蟻', '白蟻噴霧'],
-    '老鼠': ['老鼠', '除鼠', '鼠', '滅鼠', '捕鼠', '防鼠', '鼠藥'],
-    '除鼠': ['老鼠', '除鼠', '鼠', '滅鼠', '捕鼠', '防鼠', '鼠藥'],
-    '蟑螂': ['蟑螂', '除蟑', '蟑', '滅蟑', '防蟑', '蟑螂藥'],
-    '除蟑': ['蟑螂', '除蟑', '蟑', '滅蟑', '防蟑', '蟑螂藥'],
-    '螞蟻': ['螞蟻', '除蟻', '蟻', '滅蟻', '防蟻', '螞蟻藥'],
-    '除蟻': ['螞蟻', '除蟻', '蟻', '滅蟻', '防蟻', '螞蟻藥'],
-    '蚊子': ['蚊子', '防蚊', '驅蚊', '小黑蚊', '蚊', '除蚊', '滅蚊', '防蚊液'],
-    '防蚊': ['蚊子', '防蚊', '驅蚊', '小黑蚊', '蚊', '除蚊', '滅蚊', '防蚊液'],
-    '果蠅': ['果蠅', '蒼蠅', '蠅', '除蠅', '滅蠅'],
-    '水性': ['水性']
-  };
-
-  let targetKeywords = [];
-  if (isWaterProduct) {
-    targetKeywords = ['水性'];
-  } else {
-    (currentFocusBugFilter || []).forEach(b => {
-      if (PEST_SYNONYMS[b]) targetKeywords.push(...PEST_SYNONYMS[b]);
-      else targetKeywords.push(b);
-    });
-
-    Object.keys(PEST_SYNONYMS).forEach(pestKey => {
-      if (productName.includes(pestKey)) {
-        targetKeywords.push(...PEST_SYNONYMS[pestKey]);
-      }
-    });
-
-    const cleanProdName = productName.replace('系列', '').replace('專用', '').trim();
-    if (cleanProdName && !targetKeywords.includes(cleanProdName)) {
-      targetKeywords.push(cleanProdName);
-    }
-  }
-
-  targetKeywords = Array.from(new Set(targetKeywords.map(k => k.trim()))).filter(k => k.length > 0);
+  let productName = (currentFocusProductName || '').trim();
 
   let filteredCases = allCases;
-  if (!window.focusForceShowAll && targetKeywords.length > 0) {
+
+  if (!window.focusForceShowAll && productName) {
     filteredCases = allCases.filter(c => {
-      const conceptText = (c.concept || '').toLowerCase();
-      const jobText = (c.roleJob || '').toLowerCase();
-      const nameText = (c.roleName || '').toLowerCase();
-      const summaryText = (c.summary || '').toLowerCase();
-      const tagsText = (c.tagsSeo || '').toLowerCase();
+      const concept = (c.concept || '').toLowerCase();
+      if (!concept) return false;
 
-      const coreText = `${conceptText} ${jobText} ${nameText} ${summaryText} ${tagsText}`;
-
-      // 嚴格互斥防誤抓規則：
-      if (isFleaProduct) {
-        // 選除蚤：文字裡沒有「蚤/跳蚤」的（純防蟎噴霧）直接擋掉
-        if (!['蚤', '跳蚤', '除蚤', '防蚤', '滅蚤', '殺蚤'].some(f => coreText.includes(f))) return false;
+      // 1. 水性除蟲噴霧（水性獨佔）
+      if (productName.includes('水性')) {
+        return concept.includes('水性');
       }
 
-      if (isMiteProduct) {
-        // 選塵蟎：文字裡沒有「蟎/塵蟎」的直接擋掉
-        if (!['蟎', '塵蟎', '除蟎', '防蟎', '殺蟎'].some(m => coreText.includes(m))) return false;
+      // 2. 除蚤系列（純除蚤，100% 絕不包含僅除蟎的案例）
+      if (productName.includes('蚤')) {
+        return concept.includes('蚤');
       }
 
-      if (isAntProduct && coreText.includes('白蟻') && !coreText.includes('螞蟻')) {
-        // 選螞蟻：純白蟻案例擋掉
-        return false;
+      // 3. 塵蟎系列（純塵蟎，100% 絕不包含僅除蚤的案例）
+      if (productName.includes('蟎')) {
+        return concept.includes('蟎');
       }
 
-      if (isTermiteProduct && coreText.includes('螞蟻') && !coreText.includes('白蟻')) {
-        // 選白蟻：純螞蟻案例擋掉
-        return false;
+      // 4. 除白蟻系列（純白蟻，100% 絕不包含普通螞蟻案例）
+      if (productName.includes('白蟻')) {
+        return concept.includes('白蟻');
       }
 
-      if (isWaterProduct) {
-        return coreText.includes('水性');
-      } else {
-        if (conceptText === '水性除蟲噴霧' || conceptText === '水性除蟲') return false;
-        return targetKeywords.some(kw => kw && coreText.includes(kw.toLowerCase()));
+      // 5. 除蟻系列（純螞蟻，100% 自動關閉白蟻案例）
+      if (productName.includes('蟻') && !productName.includes('白蟻')) {
+        return concept.includes('蟻') && !concept.includes('白蟻');
       }
+
+      // 6. 除鼠系列
+      if (productName.includes('鼠')) {
+        return concept.includes('鼠');
+      }
+
+      // 7. 除蟑系列
+      if (productName.includes('蟑')) {
+        return concept.includes('蟑');
+      }
+
+      // 8. 防蚊系列
+      if (productName.includes('蚊')) {
+        return concept.includes('蚊');
+      }
+
+      // 9. 果蠅 / 蒼蠅
+      if (productName.includes('蠅')) {
+        return concept.includes('蠅');
+      }
+
+      // 10. 自訂系列 (通用匹配)
+      const cleanCustom = productName.replace('系列','').replace('噴霧','').replace('專用','').trim().toLowerCase();
+      if (cleanCustom) {
+        return concept.includes(cleanCustom);
+      }
+
+      return false;
     });
   }
 
   let filterHint = '';
-  if (targetKeywords.length > 0 && !window.focusForceShowAll) {
+  if (productName && !window.focusForceShowAll) {
     filterHint = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;margin-bottom:4px;">
-        <span style="font-size:11px;color:var(--accent);">🎯 已精準對應相關受訪者（共 ${filteredCases.length} 位）</span>
+        <span style="font-size:11px;color:var(--accent);">🎯 專屬顯示「${productName}」之案例（共 ${filteredCases.length} 位）</span>
         <button onclick="window.focusForceShowAll=true;renderFocusLists();" style="font-size:10px;background:transparent;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;">顯示全部用戶</button>
       </div>`;
   } else if (window.focusForceShowAll) {
@@ -1409,7 +1381,7 @@ function renderFocusLists(){
   if (!filteredCases || filteredCases.length === 0) {
     realList.innerHTML = filterHint + `
       <div style="color:var(--text3);font-size:12px;text-align:center;padding:14px;background:var(--bg3);border-radius:var(--radius);line-height:1.6;">
-        資料庫無直接記錄「${currentFocusProductName}」的真實訪談。<br>
+        資料庫無產品主題寫著「${productName}」的真實訪談。<br>
         <button onclick="switchFocusTab('virtual', document.getElementById('focus-tab-virtual'))" style="margin-top:6px;font-size:11px;padding:4px 12px;background:var(--accent);border:none;border-radius:99px;color:#1a1200;font-weight:500;cursor:pointer;">👉 點此切換至「虛擬 AI 角色」進行討論</button>
       </div>`;
   } else {
