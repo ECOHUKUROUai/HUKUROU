@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260812-frontend-custom-topic-and-mite-flea-split-fix -->
+<!-- v20260814-frontend-strict-taxonomy-split-fix -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -187,7 +187,6 @@ html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg)
           <div id="focus-step1">
             <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px;letter-spacing:0.06em;">第一步：選擇產品主題</div>
             <div id="focus-product-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-            <!-- 🎯 補上 Enter 鍵觸發對應 handler -->
             <input id="focus-custom-product" class="concept-input" placeholder="輸入自訂主題按 Enter 或點下方按鈕..." style="margin-top:6px;display:none;" onkeydown="if(event.key==='Enter') confirmFocusProduct();">
             <button onclick="confirmFocusProduct()" style="margin-top:8px;padding:8px;background:var(--accent);border:none;border-radius:var(--radius);color:#1a1200;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;width:100%;">下一步：選擇用戶 →</button>
           </div>
@@ -1192,7 +1191,7 @@ let dynamicFocusProducts = [];
 const DEFAULT_FOCUS_PRODUCTS = [
   { id:'flea', name:'除蚤系列', desc:'除蚤噴霧、跳蚤防治', bugs:['跳蚤','除蚤','蚤','防蚤','滅蚤','殺蚤'] },
   { id:'mite', name:'塵蟎系列', desc:'塵蟎噴霧、除蟎防護', bugs:['塵蟎','除蟎','防蟎','殺蟎','蟎'] },
-  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、毒餌膠', bugs:['白蟻','除白蟻'] },
+  { id:'termite', name:'除白蟻系列', desc:'白蟻噴霧、白蟻防治', bugs:['白蟻','除白蟻'] },
   { id:'mouse', name:'除鼠系列', desc:'老鼠毒餌、捕鼠器', bugs:['老鼠','除鼠','鼠'] },
   { id:'cockroach', name:'除蟑系列', desc:'蟑螂藥膏、毒餌', bugs:['蟑螂','除蟑','蟑'] },
   { id:'ant', name:'除蟻系列', desc:'螞蟻藥、毒餌站', bugs:['螞蟻','除蟻','蟻'] },
@@ -1295,7 +1294,7 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 塵蟎與跳蚤完全解聯！嚴格同義詞精準分流匹配
+// 🎯 塵蟎與跳蚤完全解聯 + 白蟻與螞蟻切割 + 純淨分流比對
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
@@ -1303,8 +1302,12 @@ function renderFocusLists(){
 
   let productName = currentFocusProductName || '';
   let isWaterProduct = productName.includes('水性');
+  let isFleaProduct = productName.includes('蚤');
+  let isMiteProduct = productName.includes('蟎');
+  let isTermiteProduct = productName.includes('白蟻');
+  let isAntProduct = productName.includes('蟻') && !isTermiteProduct;
 
-  // 🎯 完全將跳蚤與塵蟎解聯的精準字典
+  // 🎯 塵蟎與跳蚤 100% 獨立不重疊之字典
   const PEST_SYNONYMS = {
     '跳蚤': ['跳蚤', '除蚤', '蚤', '防蚤', '滅蚤', '殺蚤', '蚤藥'],
     '除蚤': ['跳蚤', '除蚤', '蚤', '防蚤', '滅蚤', '殺蚤', '蚤藥'],
@@ -1350,12 +1353,39 @@ function renderFocusLists(){
   let filteredCases = allCases;
   if (!window.focusForceShowAll && targetKeywords.length > 0) {
     filteredCases = allCases.filter(c => {
-      const coreText = `${c.concept || ''} ${c.roleJob || ''} ${c.summary || ''} ${c.tagsSeo || ''}`.toLowerCase();
+      const conceptText = (c.concept || '').toLowerCase();
+      const jobText = (c.roleJob || '').toLowerCase();
+      const nameText = (c.roleName || '').toLowerCase();
+      const summaryText = (c.summary || '').toLowerCase();
+      const tagsText = (c.tagsSeo || '').toLowerCase();
+
+      const coreText = `${conceptText} ${jobText} ${nameText} ${summaryText} ${tagsText}`;
+
+      // 嚴格互斥防誤抓規則：
+      if (isFleaProduct) {
+        // 選除蚤：文字裡沒有「蚤/跳蚤」的（純防蟎噴霧）直接擋掉
+        if (!['蚤', '跳蚤', '除蚤', '防蚤', '滅蚤', '殺蚤'].some(f => coreText.includes(f))) return false;
+      }
+
+      if (isMiteProduct) {
+        // 選塵蟎：文字裡沒有「蟎/塵蟎」的直接擋掉
+        if (!['蟎', '塵蟎', '除蟎', '防蟎', '殺蟎'].some(m => coreText.includes(m))) return false;
+      }
+
+      if (isAntProduct && coreText.includes('白蟻') && !coreText.includes('螞蟻')) {
+        // 選螞蟻：純白蟻案例擋掉
+        return false;
+      }
+
+      if (isTermiteProduct && coreText.includes('螞蟻') && !coreText.includes('白蟻')) {
+        // 選白蟻：純螞蟻案例擋掉
+        return false;
+      }
 
       if (isWaterProduct) {
         return coreText.includes('水性');
       } else {
-        if ((c.concept || '').toLowerCase() === '水性除蟲噴霧') return false;
+        if (conceptText === '水性除蟲噴霧' || conceptText === '水性除蟲') return false;
         return targetKeywords.some(kw => kw && coreText.includes(kw.toLowerCase()));
       }
     });
