@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260814-frontend-focus-diversity-anti-homogeneity-fix -->
+<!-- v20260818-frontend-focus-remove-deprecated-temperature -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1293,7 +1293,6 @@ function backToStep1(){
   updateFocusBar();
 }
 
-// 🎯 100% 純淨「產品主題 (c.concept)」絕不讀取 tagsSeo 或 summary，零誤抓！
 function renderFocusLists(){
   const realList = document.getElementById('focus-real-list');
   if (!realList) return;
@@ -1305,56 +1304,45 @@ function renderFocusLists(){
 
   if (!window.focusForceShowAll && productName) {
     filteredCases = allCases.filter(c => {
-      // 🎯 只比對受訪者買的/測試的「產品主題 (concept)」
       const concept = (c.concept || '').trim().toLowerCase();
       if (!concept) return false;
 
-      // 1. 水性除蟲噴霧（水性獨佔）
       if (productName.includes('水性')) {
         return concept.includes('水性');
       }
 
-      // 2. 除蚤系列（產品主題必須含有「蚤」或「跳蚤」）
       if (productName.includes('蚤')) {
         return concept.includes('蚤');
       }
 
-      // 3. 塵蟎系列（產品主題必須含有「蟎」或「塵蟎」）
       if (productName.includes('蟎')) {
         return concept.includes('蟎');
       }
 
-      // 4. 除白蟻系列（產品主題必須含有「白蟻」）
       if (productName.includes('白蟻')) {
         return concept.includes('白蟻');
       }
 
-      // 5. 除蟻系列（產品主題必須含有「蟻」且絕對不能有「白蟻」）
       if (productName.includes('蟻') && !productName.includes('白蟻')) {
         return concept.includes('蟻') && !concept.includes('白蟻');
       }
 
-      // 6. 除鼠系列（產品主題必須含有「鼠」）
       if (productName.includes('鼠')) {
         return concept.includes('鼠');
       }
 
-      // 7. 除蟑系列（產品主題必須含有「蟑」）
       if (productName.includes('蟑')) {
         return concept.includes('蟑');
       }
 
-      // 8. 防蚊系列（產品主題必須含有「蚊」）
       if (productName.includes('蚊')) {
         return concept.includes('蚊');
       }
 
-      // 9. 果蠅 / 蒼蠅
       if (productName.includes('蠅')) {
         return concept.includes('蠅');
       }
 
-      // 10. 自訂系列 (通用關鍵字比對)
       const cleanCustom = productName.replace('系列','').replace('噴霧','').replace('專用','').trim().toLowerCase();
       if (cleanCustom) {
         return concept.includes(cleanCustom);
@@ -1624,7 +1612,7 @@ function appendFocusBubble(p, text){
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
 }
 
-// 🎯 注入【強效抗同質化 Prompt】，強迫角色捍衛預算、經驗與獨特觀點
+// 🎯 注入【強效抗同質化 Prompt】，同時移除報錯的 temperature 參數
 async function callFocusClaude(participant, userMsg, apiKey, images=[], docText=null){
   const model = 'claude-sonnet-5';
   const prevDiscussion = focusHistory.length > 0
@@ -1682,7 +1670,7 @@ ${participant.prompt || ''}
       body:JSON.stringify({ 
         model: model, 
         max_tokens: 1000, 
-        temperature: 0.8, // 提高調溫提升角色用語獨立性
+        // temperature: 0.8, (此參數已因模型限制而被移除)
         system:systemPrompt, 
         messages 
       })
