@@ -1,0 +1,205 @@
+<div style="max-width:1000px;margin:0 auto;padding:0 12px;box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, 'PingFang TC', 'Microsoft JhengHei', sans-serif;">
+  <style>
+    .fl-review-wrapper {
+      padding: 24px 16px 16px;
+      background-color: #fafafa;
+      border-radius: 12px;
+      margin: 16px 0;
+    }
+    .fl-review-header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .fl-review-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #222222;
+      margin: 0;
+    }
+    .fl-review-sub {
+      font-size: 14px;
+      color: #e65100;
+      margin-top: 6px;
+      font-weight: bold;
+    }
+    /* 輪播外框：兩側加上左右箭頭指示 */
+    .fl-slider-outer {
+      position: relative;
+      width: 100%;
+    }
+    .fl-arrow-indicator {
+      position: absolute;
+      top: 45%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #eaeaea;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      font-size: 16px;
+      color: #0E7A68;
+      font-weight: bold;
+      z-index: 5;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .fl-arrow-left {
+      left: 4px;
+    }
+    .fl-arrow-right {
+      right: 4px;
+    }
+    /* 卡片橫向滑動軌道 */
+    .fl-review-container {
+      display: flex;
+      overflow-x: auto;
+      padding: 10px 12px 16px 12px;
+    }
+    /* 底部顯眼綠色橫桿 (Custom Scrollbar) */
+    .fl-review-container::-webkit-scrollbar {
+      height: 8px;
+    }
+    .fl-review-container::-webkit-scrollbar-track {
+      background: #E3EDEA;
+      border-radius: 10px;
+    }
+    .fl-review-container::-webkit-scrollbar-thumb {
+      background: #0E7A68;
+      border-radius: 10px;
+    }
+    .fl-review-container::-webkit-scrollbar-thumb:hover {
+      background: #0B5C50;
+    }
+    /* 單張評價卡片 */
+    .fl-review-card {
+      min-width: 260px;
+      max-width: 280px;
+      flex: 0 0 270px;
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid #e8e8e8;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      margin-right: 12px;
+    }
+    .fl-review-card:last-child {
+      margin-right: 0;
+    }
+    .fl-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      align-self: flex-start;
+    }
+    .fl-stars {
+      color: #ffb300;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .fl-text {
+      font-size: 14px;
+      color: #444444;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .fl-highlight {
+      background: linear-gradient(180deg, transparent 55%, #fff176 0%);
+      font-weight: bold;
+      color: #111111;
+    }
+    .fl-author {
+      font-size: 12px;
+      color: #888888;
+      margin-top: 12px;
+      display: block;
+      text-align: right;
+    }
+  </style>
+
+  <div class="fl-review-wrapper">
+    <div class="fl-review-header">
+      <p class="fl-review-title">★★★★★ 5.0 官網買家真實好評</p>
+      <div class="fl-review-sub">【解決的痛點】｜【使用後的結果承諾】</div>
+    </div>
+
+    <div class="fl-slider-outer">
+      <div class="fl-arrow-indicator fl-arrow-left">❮</div>
+      <div class="fl-arrow-indicator fl-arrow-right">❯</div>
+
+      <div class="fl-review-container">
+        <!-- 卡片 1：情境標籤對應長圖痛點區第 1 個情境 -->
+        <div class="fl-review-card">
+          <div>
+            <span class="fl-badge">✓ 官網驗證買家｜【情境標籤 1】</span>
+            <div class="fl-stars">★★★★★ 5.0</div>
+            <p class="fl-text">【買家評價原文前段】<span class="fl-highlight">【結果句，螢光標示】</span>【買家評價原文後段】</p>
+          </div>
+          <span class="fl-author">—— 【平台】買家 【姓氏＋稱謂】（【年/月】）</span>
+        </div>
+
+        <!-- 卡片 2：情境標籤對應長圖痛點區第 2 個情境 -->
+        <div class="fl-review-card">
+          <div>
+            <span class="fl-badge">✓ 官網驗證買家｜【情境標籤 2】</span>
+            <div class="fl-stars">★★★★★ 5.0</div>
+            <p class="fl-text">【買家評價原文前段】<span class="fl-highlight">【結果句，螢光標示】</span>【買家評價原文後段】</p>
+          </div>
+          <span class="fl-author">—— 【平台】買家 【姓氏＋稱謂】（【年/月】）</span>
+        </div>
+
+        <!-- 卡片 3：情境標籤對應長圖痛點區第 3 個情境 -->
+        <div class="fl-review-card">
+          <div>
+            <span class="fl-badge">✓ 官網驗證買家｜【情境標籤 3】</span>
+            <div class="fl-stars">★★★★★ 5.0</div>
+            <p class="fl-text">【買家評價原文前段】<span class="fl-highlight">【結果句，螢光標示】</span>【買家評價原文後段】</p>
+          </div>
+          <span class="fl-author">—— 【平台】買家 【姓氏＋稱謂】（【年/月】）</span>
+        </div>
+
+        <!-- 卡片 4 -->
+        <div class="fl-review-card">
+          <div>
+            <span class="fl-badge">✓ 官網驗證買家｜【情境標籤 4】</span>
+            <div class="fl-stars">★★★★★ 5.0</div>
+            <p class="fl-text">【買家評價原文前段】<span class="fl-highlight">【結果句，螢光標示】</span>【買家評價原文後段】</p>
+          </div>
+          <span class="fl-author">—— 【平台】買家 【姓氏＋稱謂】（【年/月】）</span>
+        </div>
+
+        <!-- 卡片 5 -->
+        <div class="fl-review-card">
+          <div>
+            <span class="fl-badge">✓ 官網驗證買家｜【情境標籤 5】</span>
+            <div class="fl-stars">★★★★★ 5.0</div>
+            <p class="fl-text">【買家評價原文前段】<span class="fl-highlight">【結果句，螢光標示】</span>【買家評價原文後段】</p>
+          </div>
+          <span class="fl-author">—— 【平台】買家 【姓氏＋稱謂】（【年/月】）</span>
+        </div>
+
+        <!-- 卡片 6：要增加評價，複製一整組 fl-review-card 即可 -->
+        <div class="fl-review-card">
+          <div>
+            <span class="fl-badge">✓ 官網驗證買家｜【情境標籤 6】</span>
+            <div class="fl-stars">★★★★★ 5.0</div>
+            <p class="fl-text">【買家評價原文前段】<span class="fl-highlight">【結果句，螢光標示】</span>【買家評價原文後段】</p>
+          </div>
+          <span class="fl-author">—— 【平台】買家 【姓氏＋稱謂】（【年/月】）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
