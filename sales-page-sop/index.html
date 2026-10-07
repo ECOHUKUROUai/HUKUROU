@@ -740,11 +740,6 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
      tpl:true,
      how:['直接套用下方 HTML 範本，替換【】內的文字','標題：★★★★★ 5.0＋「官網買家真實好評」；副標用強調色寫痛點與結果','每張卡片：✓ 官網驗證買家｜<b>情境標籤</b>，3 個標籤對應長圖痛點區的情境','內文用螢光標出結果句（當晚就沒有再被咬了）；署名：姓氏＋年／月','左右箭頭＋進度條，右側露出半張卡片','收集 3 個平台、10 則以上；引用 Dcard／蝦皮時標明來源'],
      cases:[{f:'c51.jpg',c:'臭蟲噴霧・現行 HTML 評價模組'}]},
-    {key:'video', layer:2, sym:'tri', name:'影片', count:'YouTube', src:['均谷','Amber'],
-     why:'放在描述區頂部、評價模組下方，用 YouTube 嵌入。定位與長度尚未定案，廣告影片建議 20–30 秒。',
-     how:['白蟻噴霧把影片從最下方往上移，與信任徽章一起有效'],
-     data:[{v:'有效',p:'白蟻噴霧',t:'信任徽章／影片上移',f:'',per:'',c:''}],
-     cases:[]},
     {key:'combo', layer:2, sym:'tri', name:'升級組合／組合表格', count:'HTML', src:['Amber','均谷'],
      why:'',
      cases:[]},
@@ -821,7 +816,12 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
     {key:'label', layer:3, sym:'star', tpls:['T15'], name:'產品標示／使用說明書', count:'1 張', src:['Amber','Weekend','均谷'],
      why:'法規要求。套用既有樣板，只需調整尺寸。',
      how:['固定放長圖最後','許可證字號、有效成分、注意事項須與實際標示一致'],
-     cases:[{f:'c15.jpg',c:'臭蟲噴霧'}]}
+     cases:[{f:'c15.jpg',c:'臭蟲噴霧'}]},
+    {key:'video', layer:3, sym:'tri', name:'影片', count:'YouTube', src:['均谷','Amber'],
+     why:'放在銷售頁最後面，用 YouTube 嵌入。定位與長度尚未定案，廣告影片建議 20–30 秒。',
+     how:['白蟻噴霧把影片從最下方往上移，與信任徽章一起有效'],
+     data:[{v:'有效',p:'白蟻噴霧',t:'信任徽章／影片上移',f:'',per:'',c:''}],
+     cases:[]}
   ];
   const MODKEYS = Object.fromEntries(MODULES.map(m => [m.key, m]));
 
